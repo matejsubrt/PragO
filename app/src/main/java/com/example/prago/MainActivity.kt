@@ -1,11 +1,13 @@
 package com.example.prago
 
-import android.content.res.Resources.Theme
+import SharedViewModel
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,142 +15,85 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.prago.ui.theme.PragOTheme
 
+val sliderLabels = listOf("Transfer Buffer", "Transfer length", "Comfort Preference", "Bike Trip Buffer")
+val sliderMaxValues = listOf(3f, 2f, 3f, 3f)
+//val sliderDefaultValues = listOf(2f, 1f, 2f, 2f)
+
+
+
+
+val transferBufferLabels = listOf("None", "Short", "Normal", "long")
+val transferLengthLabels = listOf("Long\n(750m)", "Medium\n (400m)", "Short\n (250m)")
+val comfortLabels = listOf("Shortest\nExtreme", "Shortest\nTime", "Balanced", "Least\nTransfers")
+val bikeTripBufferLabels = listOf("None", "Short", "Medium", "Long")
+
+val labelLists = listOf(transferBufferLabels, transferLengthLabels, comfortLabels, bikeTripBufferLabels)
+
+val LocalNavController = compositionLocalOf<NavController> { error("No NavController provided") }
+val LocalSharedViewModel = compositionLocalOf<SharedViewModel> { error("No SharedViewModel provided") }
+
 class MainActivity : ComponentActivity() {
+    //private val viewModel: MyViewModel by viewModels()
+    private val viewModel: SharedViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             PragOTheme {
-                SearchPage()
+                PragOApp(viewModel) // Pass the viewModel to PragOApp
             }
         }
     }
 }
 
+
+
 @Composable
-fun SearchPage(){
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Column(){
-            Header()
-            Body()
+fun PragOApp(viewModel: SharedViewModel) {
+    val navController = rememberNavController()
+    CompositionLocalProvider(LocalNavController provides navController, LocalSharedViewModel provides viewModel) {
+        NavHost(navController, startDestination = "searchPage") {
+            composable("searchPage") { SearchPage() }
+            composable("resultPage") { ResultPage(null) }
         }
     }
 }
 
-@Composable
-fun Header(){
-    Row(
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.primary)
-            .fillMaxWidth()
-            .height(52.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ){
-        Icon(
-            painter = painterResource(id = R.drawable.menu),
-            contentDescription = null,
-            modifier = Modifier
-                .size(tripIconSize.dp)
-                .padding(all = 4.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = "PragO",
-            style = TextStyle(
-                fontWeight = FontWeight.Bold,
-                fontSize = 32.sp,
-                color = Color.White
-            )
-        )
-    }
-}
-
-@Composable
-fun Body(){
-    Column(modifier = Modifier.padding(16.dp)) {
-        // Label "From" with text input
-        LabelWithTextInput(label = "From")
-
-        // Label "To" with text input
-        LabelWithTextInput(label = "To")
-        Divider(thickness = 1.dp, modifier = Modifier.fillMaxWidth(), color = Color.White)
-
-        // Label "Shared Bikes" with toggle switch
-        LabelWithToggleSwitch(label = "Shared Bikes")
-
-        // Sliders with integer values 0-3
-        SliderWithValue(label = "Slider 1")
-        SliderWithValue(label = "Slider 2")
-        SliderWithValue(label = "Slider 3")
-
-        // Search button
-        Button(onClick = { /* Handle search action */ }, modifier = Modifier
-            .align(Alignment.CenterHorizontally)) {
-            Text(text = "Search")
-        }
-    }
-}
-
-@Preview
-@Composable
-fun HeaderPreview(){
-    PragOTheme(darkTheme = false){
-        Header()
-    }
-
-}
-
-@Composable
-fun LabelWithTextInput(label: String) {
-    Column(modifier = Modifier.padding(vertical = 8.dp)) {
-        Text(text = label, fontWeight = FontWeight.Bold)
-        OutlinedTextField(value = "", onValueChange = {}, modifier = Modifier.fillMaxWidth())
-    }
-}
-
-@Composable
-fun LabelWithToggleSwitch(label: String) {
-    Column(modifier = Modifier.padding(vertical = 8.dp)) {
-        Text(text = label, fontWeight = FontWeight.Bold)
-        Switch(checked = false, onCheckedChange = { /* Handle switch action */ })
-    }
-}
-
-@Composable
-fun SliderWithValue(label: String) {
-    Column(modifier = Modifier.padding(vertical = 8.dp)) {
-        Text(text = label, fontWeight = FontWeight.Bold)
-        Slider(value = 0f, onValueChange = { /* Handle slider action */ }, valueRange = 0f..3f, steps = 1, modifier = Modifier.fillMaxWidth())
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun MainActivityPreview() {
-    PragOTheme(darkTheme = true) {
-        SearchPage()
-    }
-}

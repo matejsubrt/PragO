@@ -1,7 +1,7 @@
 package com.example.prago
 
-import android.graphics.drawable.Icon
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,12 +9,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,23 +27,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.prago.ui.theme.GrayEB
+import com.example.prago.ui.theme.PragOTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-val lineNameSize = 16
-val stopNameSize = 12
-val tripIconSize = 48
+val lineNameSize = 17
+val stopNameSize = 14
+val tripIconSize = 42
 val transferIconSize = 32
 val transferTextSize = 14
 val headerTextSize = 16
@@ -55,6 +59,17 @@ val stopNameStyle = TextStyle(
 
 
 val colorNextbike = Color(0, 0, 128)
+
+val distanceBoxWidth = 46.dp
+val timeBoxWidth = 60.dp
+val boxHeight = 24.dp
+val boxTextSize = 13.sp
+
+val boxTextStyle = TextStyle(
+    fontSize = boxTextSize,
+    fontWeight = FontWeight.Medium
+)
+
 
 
 @Composable
@@ -145,8 +160,8 @@ fun CountDown(
         text = formattedTime,
         modifier = modifier,
         style = TextStyle(
-            color = if (departed) Color.LightGray else Color.White,
-            fontWeight = FontWeight.Bold,
+            color = if (departed) Color(0xFFE0E0E0) else MaterialTheme.colorScheme.onBackground,
+            fontWeight = if (departed) FontWeight.Normal else FontWeight.Bold,
             fontSize = headerTextSize.sp
         )
     )
@@ -178,7 +193,7 @@ fun ResultHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.DarkGray) // Dark grey background for the header
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)) // Dark grey background for the header
             .padding(vertical = 8.dp, horizontal = 16.dp), // Adjust padding as needed
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -210,11 +225,13 @@ fun StopRow(stopName: String, time: LocalDateTime){
     ){
         Text(
             text = stopName,
-            style = stopNameStyle
+            style = stopNameStyle,
+            color = MaterialTheme.colorScheme.onTertiaryContainer
         )
         Text(
             text = formattedTime,
-            style = stopNameStyle
+            style = stopNameStyle,
+            color = MaterialTheme.colorScheme.onTertiaryContainer
         )
     }
 }
@@ -224,7 +241,9 @@ fun StopRow(stopName: String, time: LocalDateTime){
 fun UsedTripCard(trip: UsedTrip) {
     Row(
         verticalAlignment = Alignment.CenterVertically, // Align items vertically in the center
-        modifier = Modifier.background(Color.Gray)
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.tertiaryContainer)
+            .padding(start = 2.dp, top = 0.dp, end = 2.dp, bottom = 4.dp)
     ) {
         val icon = when (trip.vehicleType) {
             0 -> R.drawable.tram
@@ -244,7 +263,8 @@ fun UsedTripCard(trip: UsedTrip) {
             contentDescription = null,
             modifier = Modifier
                 .size(tripIconSize.dp)
-                .padding(all = 4.dp)
+                .padding(all = 4.dp),
+            tint = MaterialTheme.colorScheme.onTertiaryContainer
         )
         Column(
             modifier = Modifier.padding(start = 4.dp, top = 2.dp, end = 8.dp, bottom = 4.dp)
@@ -268,20 +288,22 @@ fun UsedTripCard(trip: UsedTrip) {
 fun UsedTransferCard(transfer: UsedTransfer) {
     Row(
         modifier = Modifier
-            .background(Color.LightGray)
-            .fillMaxWidth(),
+            .background(Color(0xFF686868))
+            .fillMaxWidth()
+            .padding(start = 2.dp, top = 2.dp, end = 2.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
 
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(2f)) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(3f)) {
             Spacer(modifier = Modifier.width((tripIconSize.dp - transferIconSize.dp) / 2))
             Icon(
                 painter = painterResource(id = R.drawable.walk),
                 contentDescription = null,
                 modifier = Modifier
                     .size(transferIconSize.dp)
-                    .padding(all = 4.dp)
+                    .padding(all = 4.dp),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
             )
             Spacer(modifier = Modifier.width((tripIconSize.dp - transferIconSize.dp) / 2))
             Text(
@@ -289,37 +311,50 @@ fun UsedTransferCard(transfer: UsedTransfer) {
                 style = TextStyle(
                     fontWeight = FontWeight.Medium
                 ),
-                color = Color.DarkGray
+                color = MaterialTheme.colorScheme.onSecondaryContainer
             )
         }
 
         Row(
-            modifier = Modifier.padding(end = 8.dp).weight(1f),
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.padding(end = 8.dp).weight(2f),
+            horizontalArrangement = Arrangement.End
         ) {
             Box(
                 modifier = Modifier
-                    .background(Color.Gray.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                    .background(Color(0xFF888888), RoundedCornerShape(4.dp))
                     .padding(horizontal = 8.dp)
+                    .width(distanceBoxWidth)
+                    .height(boxHeight),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = formatDistance(transfer.distance),
-                    style = TextStyle(color = Color.Black),
-                    modifier = Modifier.padding(4.dp) // Add padding to the text
+                    style = boxTextStyle,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(4.dp),
+                    fontSize = boxTextSize
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))
             Box(
                 modifier = Modifier
-                    .background(Color.Gray.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                    .background(Color(0xFF888888), RoundedCornerShape(4.dp))
                     .padding(horizontal = 8.dp)
+                    .width(timeBoxWidth)
+                    .height(boxHeight),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = formatTime(transfer.time),
-                    style = TextStyle(color = Color.Black),
-                    modifier = Modifier.padding(4.dp) // Add padding to the text
+                    style = boxTextStyle,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(4.dp),
+                    fontSize = boxTextSize
                 )
             }
+
         }
     }
 }
@@ -331,8 +366,9 @@ fun UsedTransferCard(transfer: UsedTransfer) {
 fun UsedBikeTripCard(bikeTrip: UsedBikeTrip){
     Row(
         modifier = Modifier
-            .background(Color.Gray)
-            .fillMaxWidth(),
+            .background(MaterialTheme.colorScheme.tertiaryContainer)
+            .fillMaxWidth()
+            .padding(start = 2.dp, top = 0.dp, end = 2.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ){
         Icon(
@@ -340,7 +376,8 @@ fun UsedBikeTripCard(bikeTrip: UsedBikeTrip){
             contentDescription = null,
             modifier = Modifier
                 .size(tripIconSize.dp)
-                .padding(all = 4.dp)
+                .padding(all = 4.dp),
+            tint = MaterialTheme.colorScheme.onTertiaryContainer
         )
         Column(
             modifier = Modifier.padding(start = 4.dp, top = 2.dp, end = 8.dp, bottom = 4.dp)
@@ -351,22 +388,30 @@ fun UsedBikeTripCard(bikeTrip: UsedBikeTrip){
                 verticalAlignment = Alignment.CenterVertically
             ){
                 TripNameLine("Nextbike", colorNextbike)
-                Row(
-                    horizontalArrangement = Arrangement.End, // Align items to the end (right) of the row
-                    verticalAlignment = Alignment.CenterVertically
+                Box(
+                    modifier = Modifier
+                        .background(Color(0xFF888888), RoundedCornerShape(16.dp))
+                        .padding(horizontal = 2.dp),
+                    contentAlignment = Alignment.Center
                 ){
-                    Icon(
-                        painter = painterResource(id = R.drawable.bike),
-                        contentDescription = null,
-                        tint = colorNextbike,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .padding(all = 4.dp)
-                    )
-                    Text(
-                        text = "${bikeTrip.remainingBikes}",
-                        color = colorNextbike
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.End, // Align items to the end (right) of the row
+                        verticalAlignment = Alignment.CenterVertically
+                    ){
+                        Icon(
+                            painter = painterResource(id = R.drawable.bike),
+                            contentDescription = null,
+                            tint = colorNextbike,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .padding(all = 4.dp)
+                        )
+                        Text(
+                            text = "${bikeTrip.remainingBikes}",
+                            color = colorNextbike,
+                            fontSize = 15.sp
+                        )
+                    }
                 }
             }
 
@@ -379,11 +424,13 @@ fun UsedBikeTripCard(bikeTrip: UsedBikeTrip){
                 Column(){
                     Text(
                         text = bikeTrip.srcStopInfo.name,
-                        style = stopNameStyle
+                        style = stopNameStyle,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                     Text(
                         text = bikeTrip.destStopInfo.name,
-                        style = stopNameStyle
+                        style = stopNameStyle,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                 }
                 Row(
@@ -391,25 +438,37 @@ fun UsedBikeTripCard(bikeTrip: UsedBikeTrip){
                 ){
                     Box(
                         modifier = Modifier
-                            .background(Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                            .background(Color(0xFF888888), RoundedCornerShape(4.dp))
                             .padding(horizontal = 8.dp)
+                            .width(distanceBoxWidth)
+                            .height(boxHeight),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = formatDistance(bikeTrip.distance),
-                            style = TextStyle(color = Color.Black),
-                            modifier = Modifier.padding(4.dp) // Add padding to the text
+                            style = boxTextStyle,
+                            modifier = Modifier.padding(4.dp),
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            textAlign = TextAlign.Center,
+                            fontSize = boxTextSize
                         )
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                     Box(
                         modifier = Modifier
-                            .background(Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                            .background(Color(0xFF888888), RoundedCornerShape(4.dp))
                             .padding(horizontal = 8.dp)
+                            .width(timeBoxWidth)
+                            .height(boxHeight),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = formatTime(bikeTrip.time),
-                            style = TextStyle(color = Color.Black),
-                            modifier = Modifier.padding(4.dp) // Add padding to the text
+                            style = boxTextStyle,
+                            modifier = Modifier.padding(4.dp),
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            textAlign = TextAlign.Center,
+                            fontSize = boxTextSize
                         )
                     }
                 }
@@ -423,33 +482,35 @@ fun UsedBikeTripCard(bikeTrip: UsedBikeTrip){
 
 
 @Composable
-fun ResultCard(result: ConnectionSearchResult){
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(all = 0.dp)
-            .background(Color.LightGray),
-        shape = RoundedCornerShape(16.dp) // Applying the shape modifier directly
-    ) {
-        Column(
+fun ResultCard(result: ConnectionSearchResult?){
+    if(result != null)
+        Card(
+            shape = RoundedCornerShape(16.dp),
             modifier = Modifier
-                .padding(0.dp)
-                .background(Color.LightGray)
-        ){
-            ResultHeader(result.departureDateTime, result.arrivalDateTime)
-            result.usedSegmentTypes.forEach{segmentType ->
+                .fillMaxWidth()
+                .padding(all = 0.dp)
+                .border(width = 4.dp, color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(16.dp))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(16.dp)) // Apply rounded corner shape here
+            ){
+                ResultHeader(result.departureDateTime, result.arrivalDateTime)
                 var transferIndex = 0
                 var tripIndex = 0
                 var bikeTripIndex = 0
-                when(segmentType){
-                    0 -> UsedTransferCard(result.usedTransfers[transferIndex++])
-                    1 -> UsedTripCard(result.usedTrips[tripIndex++])
-                    2 -> UsedBikeTripCard(result.usedBikeTrips[bikeTripIndex++])
+                result.usedSegmentTypes.forEach{segmentType ->
+                    when(segmentType){
+                        0 -> UsedTransferCard(result.usedTransfers[transferIndex++])
+                        1 -> UsedTripCard(result.usedTrips[tripIndex++])
+                        2 -> UsedBikeTripCard(result.usedBikeTrips[bikeTripIndex++])
+                    }
                 }
             }
         }
-    }
 }
+
 
 @Composable
 @Preview
@@ -492,7 +553,7 @@ fun ResultCardPreview() {
         departureDateTime = LocalDateTime.now(),
         arrivalDateTime = LocalDateTime.now().plusHours(1)
     )
-    Surface(){
+    PragOTheme(darkTheme = true){
         ResultCard(result = result)
     }
 }
