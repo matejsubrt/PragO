@@ -1,4 +1,4 @@
-package com.example.prago
+package com.example.prago.composables
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -10,16 +10,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.example.prago.activities.LocalSharedViewModel
+import com.example.prago.dataClasses.ColorStruct
+import com.example.prago.dataClasses.ConnectionSearchResult
+import com.example.prago.dataClasses.StopInfo
+import com.example.prago.dataClasses.StopPass
+import com.example.prago.dataClasses.UsedBikeTrip
+import com.example.prago.dataClasses.UsedTransfer
+import com.example.prago.dataClasses.UsedTrip
 import com.example.prago.ui.theme.PragOTheme
 import java.time.LocalDateTime
 
 
 @Composable
-fun ResultPage(searchResult: ConnectionSearchResult?){
+fun ResultScreen(searchResult: ConnectionSearchResult?){
     val viewModel = LocalSharedViewModel.current
     val searchResult by viewModel.searchResult.observeAsState()
 
@@ -42,7 +48,7 @@ fun ResultPage(searchResult: ConnectionSearchResult?){
 
 @Preview(showBackground = true)
 @Composable
-fun ResultPagePreview() {
+fun ResultScreenPreview() {
     PragOTheme(darkTheme = true) {
         val result = ConnectionSearchResult(
             usedTrips = listOf(
@@ -82,6 +88,6 @@ fun ResultPagePreview() {
             departureDateTime = LocalDateTime.now(),
             arrivalDateTime = LocalDateTime.now().plusHours(1)
         )
-        ResultPage(result)
+        ResultScreen(result)
     }
 }

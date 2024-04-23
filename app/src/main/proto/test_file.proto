@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+option java_package = "com.example.prago";
+option java_multiple_files = true;
+
+
+
+
+
+message StopList {
+  string generatedAt = 1;
+  string dataFormatVersion = 2;
+  repeated StopGroup stopGroups = 3;
+
+  message StopGroup {
+    string name = 1;
+    string districtCode = 2;
+    int32 idosCategory = 3;
+    string idosName = 4;
+    string fullName = 5;
+    string uniqueName = 6;
+    int32 node = 7;
+    int32 cis = 8;
+    double avgLat = 9;
+    double avgLon = 10;
+    double avgJtskX = 11;
+    double avgJtskY = 12;
+    string municipality = 13;
+    repeated Stop stops = 14;
+
+    message Stop {
+      string id = 1;
+      string platform = 2;
+      string altIdosName = 3;
+      double lat = 4;
+      double lon = 5;
+      double jtskX = 6;
+      double jtskY = 7;
+      string zone = 8;
+      string wheelchairAccess = 9;
+      repeated string gtfsIds = 10;
+      // Define the Line message separately
+      repeated Line lines = 11;
+
+      message Line {
+        int32 id = 1;
+        string name = 2;
+        string type = 3;
+        string direction = 4;
+        string direction2 = 5;
+      }
+    }
+  }
+}

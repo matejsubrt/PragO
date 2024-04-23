@@ -1,8 +1,13 @@
+//import com.google.protobuf.gradle.*
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    //id ("com.android.application")
+    //id ("org.jetbrains.kotlin.android")
     kotlin("plugin.serialization") version "1.5.21" // Add this line
     id ("kotlinx-serialization")
+    id ("com.google.protobuf")
 }
 
 
@@ -42,9 +47,27 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
     }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+//    packaging {
+//        resources {
+//            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+//        }
+//    }
+    protobuf{
+        protoc{
+            artifact = "com.google.protobuf:protoc:3.20.1"
+        }
+
+        generateProtoTasks{
+            all().forEach { task ->
+                task.builtins {
+                    create("java") {
+                        option("lite")
+                    }
+                    create("kotlin") {
+                        option("lite")
+                    }
+                }
+            }
         }
     }
 }
@@ -72,7 +95,12 @@ dependencies {
     implementation("org.danilopianini:khttp:1.3.1")
     implementation ("com.github.commandiron:WheelPickerCompose:1.1.11")
     // build.gradle.kts
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07")
+    implementation ("androidx.datastore:datastore:1.0.0")
+    implementation ("com.google.protobuf:protobuf-javalite:3.21.5")
+    implementation ("com.google.protobuf:protobuf-kotlin-lite:3.21.5")
     implementation ("androidx.compose.runtime:runtime-livedata:1.6.5")
+    implementation ("androidx.datastore:datastore-preferences:1.0.0")
 
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
 }

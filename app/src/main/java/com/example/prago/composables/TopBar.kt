@@ -1,4 +1,4 @@
-package com.example.prago
+package com.example.prago.composables
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,10 +23,14 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.prago.activities.LocalNavController
+import com.example.prago.R
 
 
 @Composable
 fun MainTopBar(){
+    val navController = LocalNavController.current
     Row(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.primary)
@@ -39,7 +43,7 @@ fun MainTopBar(){
             modifier = Modifier
                 .size(48.dp)
                 .padding(all = 4.dp)
-                .clickable {  }
+                .clickable { navController.navigate("settingsScreen") }
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.menu),
@@ -61,8 +65,7 @@ fun MainTopBar(){
 
 
 @Composable
-fun ResultTopBar(){
-    val navController = LocalNavController.current
+fun ResultTopBar(navController: NavController){
     Row(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.primary)
@@ -92,4 +95,10 @@ fun ResultTopBar(){
             )
         )
     }
+}
+
+@Composable
+fun ResultTopBar(){
+    val navController = LocalNavController.current
+    ResultTopBar(navController)
 }

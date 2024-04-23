@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <style name="Theme.PragO" parent="android:Theme.Material.Light.NoActionBar">
-        <!--<item name="android:windowSplashScreenBackground">#FFFFFF</item>-->
-        <item name="android:windowBackground">#FFFFFF</item>
+        <item name="android:windowSplashScreenBackground">#3D3D3D</item>
+        <item name="android:windowBackground">#3D3D3D</item>
     </style>
 </resources>

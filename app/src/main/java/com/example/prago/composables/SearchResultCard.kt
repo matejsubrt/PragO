@@ -1,4 +1,4 @@
-package com.example.prago
+package com.example.prago.composables
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,7 +34,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.prago.ui.theme.GrayEB
+import com.example.prago.R
+import com.example.prago.dataClasses.ColorStruct
+import com.example.prago.dataClasses.ConnectionSearchResult
+import com.example.prago.dataClasses.StopInfo
+import com.example.prago.dataClasses.StopPass
+import com.example.prago.dataClasses.UsedBikeTrip
+import com.example.prago.dataClasses.UsedTransfer
+import com.example.prago.dataClasses.UsedTrip
 import com.example.prago.ui.theme.PragOTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
@@ -63,7 +69,7 @@ val colorNextbike = Color(0, 0, 128)
 val distanceBoxWidth = 46.dp
 val timeBoxWidth = 60.dp
 val boxHeight = 24.dp
-val boxTextSize = 13.sp
+val boxTextSize = 12.sp
 
 val boxTextStyle = TextStyle(
     fontSize = boxTextSize,
@@ -73,13 +79,35 @@ val boxTextStyle = TextStyle(
 
 
 @Composable
-private fun formatTime(time: Int): String {
-    return if (time >= 60) {
+private fun formatTime(time: Long): String {
+    return if(time >= 60 * 60 * 24){
+        val days = time / (60*60*24)
+        "$days days"
+    } else if (time >= 60 * 60){
+        val hours = time / (60 * 60)
+        val minutes = (time % (60 * 60)) / 60
+        val formattedMinutes = String.format("%02d", minutes)
+        "$hours:$formattedMinutes h"
+    } else if (time >= 60) {
         val minutes = time / 60
         val seconds = time % 60
-        "$minutes:${seconds.toString().padStart(2, '0')} min"
+        val formattedSeconds = String.format("%02d", seconds)
+        "$minutes:$formattedSeconds min"
     } else {
         "$time s"
+    }
+}
+
+@Composable
+private fun formatDurationTime(time: Long): String {
+    return if(time >= 60 * 60){
+        val hours = time / (60 * 60)
+        val minutes = (time % (60 * 60)) / 60
+        val formattedMinutes = String.format("%02d", minutes)
+        "$hours:$formattedMinutes h"
+    } else{
+        val minutes = time / 60
+        "$minutes min"
     }
 }
 
@@ -116,7 +144,7 @@ fun TotalTime(
 ) {
     val duration = Duration.between(departureTime, arrivalTime)
     Text(
-        text = "${duration.toMinutes()} min",
+        text = formatDurationTime(time = duration.seconds),
         modifier = modifier,
         style = TextStyle(
             color = Color.White,
@@ -150,10 +178,11 @@ fun CountDown(
 
     val formattedTime = if (departed) {
         "Departed"
-    } else if (displaySeconds) {
-        "${timeLeft.toMinutes()}:${timeLeft.seconds % 60} min"
-    } else {
-        "${timeLeft.toMinutes()} min"
+    } //else if (displaySeconds) {
+        //formatTime(timeLeft.seconds)
+    //}
+    else {
+        "In " + formatTime(timeLeft.seconds)
     }
 
     Text(
@@ -290,12 +319,12 @@ fun UsedTransferCard(transfer: UsedTransfer) {
         modifier = Modifier
             .background(Color(0xFF686868))
             .fillMaxWidth()
-            .padding(start = 2.dp, top = 2.dp, end = 2.dp, bottom = 4.dp),
+            .padding(start = 2.dp, top = 2.dp, end = 2.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
 
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(3f)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Spacer(modifier = Modifier.width((tripIconSize.dp - transferIconSize.dp) / 2))
             Icon(
                 painter = painterResource(id = R.drawable.walk),
@@ -316,7 +345,7 @@ fun UsedTransferCard(transfer: UsedTransfer) {
         }
 
         Row(
-            modifier = Modifier.padding(end = 8.dp).weight(2f),
+            modifier = Modifier.padding(end = 8.dp),
             horizontalArrangement = Arrangement.End
         ) {
             Box(
@@ -346,7 +375,7 @@ fun UsedTransferCard(transfer: UsedTransfer) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = formatTime(transfer.time),
+                    text = formatTime(transfer.time.toLong()),
                     style = boxTextStyle,
                     color = MaterialTheme.colorScheme.onTertiaryContainer,
                     textAlign = TextAlign.Center,
@@ -433,44 +462,47 @@ fun UsedBikeTripCard(bikeTrip: UsedBikeTrip){
                         color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                 }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ){
-                    Box(
-                        modifier = Modifier
-                            .background(Color(0xFF888888), RoundedCornerShape(4.dp))
-                            .padding(horizontal = 8.dp)
-                            .width(distanceBoxWidth)
-                            .height(boxHeight),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = formatDistance(bikeTrip.distance),
-                            style = boxTextStyle,
-                            modifier = Modifier.padding(4.dp),
-                            color = MaterialTheme.colorScheme.onTertiaryContainer,
-                            textAlign = TextAlign.Center,
-                            fontSize = boxTextSize
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Box(
-                        modifier = Modifier
-                            .background(Color(0xFF888888), RoundedCornerShape(4.dp))
-                            .padding(horizontal = 8.dp)
-                            .width(timeBoxWidth)
-                            .height(boxHeight),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = formatTime(bikeTrip.time),
-                            style = boxTextStyle,
-                            modifier = Modifier.padding(4.dp),
-                            color = MaterialTheme.colorScheme.onTertiaryContainer,
-                            textAlign = TextAlign.Center,
-                            fontSize = boxTextSize
-                        )
-                    }
+
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ){
+                Box(
+                    modifier = Modifier
+                        .background(Color(0xFF888888), RoundedCornerShape(4.dp))
+                        .padding(horizontal = 8.dp)
+                        .width(distanceBoxWidth)
+                        .height(boxHeight),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = formatDistance(bikeTrip.distance),
+                        style = boxTextStyle,
+                        modifier = Modifier.padding(4.dp),
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        textAlign = TextAlign.Center,
+                        fontSize = boxTextSize
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Box(
+                    modifier = Modifier
+                        .background(Color(0xFF888888), RoundedCornerShape(4.dp))
+                        .padding(horizontal = 8.dp)
+                        .width(timeBoxWidth)
+                        .height(boxHeight),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = formatTime(bikeTrip.time.toLong()),
+                        style = boxTextStyle,
+                        modifier = Modifier.padding(4.dp),
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        textAlign = TextAlign.Center,
+                        fontSize = boxTextSize
+                    )
                 }
             }
         }
@@ -489,12 +521,19 @@ fun ResultCard(result: ConnectionSearchResult?){
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(all = 0.dp)
-                .border(width = 4.dp, color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(16.dp))
+                .border(
+                    width = 4.dp,
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(16.dp)
+                )
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(16.dp)) // Apply rounded corner shape here
+                    .background(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(16.dp)
+                    ) // Apply rounded corner shape here
             ){
                 ResultHeader(result.departureDateTime, result.arrivalDateTime)
                 var transferIndex = 0
