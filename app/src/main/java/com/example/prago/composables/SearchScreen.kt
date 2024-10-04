@@ -604,16 +604,32 @@ fun Body(){
                                 json = request.toJsonObject()
                             )
 
-                            if (response.statusCode == 200) {
-                                val connectionSearchResult = Json.decodeFromString<ConnectionSearchResult>(response.text)
-                                withContext(Dispatchers.Main) {
-                                    viewModel.searchResult.value = connectionSearchResult
-                                    navController.navigate("resultPage")
+                            when (response.statusCode) {
+                                200 -> {
+                                    val connectionSearchResult = Json.decodeFromString<ConnectionSearchResult>(response.text)
+                                    withContext(Dispatchers.Main) {
+                                        viewModel.searchResult.value = connectionSearchResult
+                                        navController.navigate("resultPage")
+                                    }
                                 }
-                            } else {
-                                withContext(Dispatchers.Main) {
-                                    errorMessage = "Error: ${response.statusCode}. ${response.text}"
-                                    showDialog = true
+                                502 -> {
+                                    withContext(Dispatchers.Main) {
+                                        errorMessage = "The server is currently down. Please try again later."
+                                        showDialog = true
+                                    }
+                                }
+                                404 -> {
+                                    withContext(Dispatchers.Main) {
+                                        errorMessage = "The connection could not be found. Please try changing the search parameters."
+                                        showDialog = true
+                                    }
+                                }
+                                else -> {
+                                    withContext(Dispatchers.Main) {
+                                        //errorMessage = "Error: ${response.statusCode}. ${response.text}"
+                                        errorMessage = response.text
+                                        showDialog = true
+                                    }
                                 }
                             }
                         } catch (e: Exception) {
