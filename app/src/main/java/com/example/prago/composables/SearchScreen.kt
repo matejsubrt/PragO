@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -32,6 +33,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -485,6 +487,23 @@ fun Body(){
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    var showDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
+    // TODO: Implement better error handling - user-friendly error messages and popups
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            confirmButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("OK")
+                }
+            },
+            title = { Text(text = "Error") },
+            text = { Text(errorMessage) }
+        )
+    }
+
     LazyColumn(
         modifier = Modifier.padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -561,7 +580,7 @@ fun Body(){
                     GlobalScope.launch(Dispatchers.IO) {
                         try {
                             val settings = SearchSettings(
-                                walkingPace = viewModel.walkingPace.value ?: 12, // TODO: add long time settings
+                                walkingPace = viewModel.walkingPace.value ?: 12,
                                 cyclingPace = viewModel.cyclingPace.value ?: 5,
                                 bikeUnlockTime = viewModel.bikeUnlockTime.value ?: 30,
                                 bikeLockTime = viewModel.bikeLockTime.value ?: 15,
@@ -579,17 +598,29 @@ fun Body(){
                                 byEarliestDeparture = viewModel.byEarliestDeparture.value,
                                 settings = settings
                             )
+
                             val response: Response = khttp.post(
                                 url = "http://prago.xyz/connection/stop-to-stop",
                                 json = request.toJsonObject()
                             )
 
-                            val connectionSearchResult = Json.decodeFromString<ConnectionSearchResult>(response.text)
-                            withContext(Dispatchers.Main) {
-                                viewModel.searchResult.value = connectionSearchResult
-                                navController.navigate("resultPage")
+                            if (response.statusCode == 200) {
+                                val connectionSearchResult = Json.decodeFromString<ConnectionSearchResult>(response.text)
+                                withContext(Dispatchers.Main) {
+                                    viewModel.searchResult.value = connectionSearchResult
+                                    navController.navigate("resultPage")
+                                }
+                            } else {
+                                withContext(Dispatchers.Main) {
+                                    errorMessage = "Error: ${response.statusCode}. ${response.text}"
+                                    showDialog = true
+                                }
                             }
                         } catch (e: Exception) {
+                            withContext(Dispatchers.Main) {
+                                errorMessage = "An error occurred: ${e.message}"
+                                showDialog = true
+                            }
                             e.printStackTrace()
                         }
                     }
@@ -600,7 +631,7 @@ fun Body(){
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 )
-            ){
+            ) {
                 Text(
                     text = "Search",
                     fontSize = 28.sp,
