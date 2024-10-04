@@ -7,7 +7,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,23 +15,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
@@ -49,23 +42,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.unit.toSize
-import androidx.compose.ui.window.PopupProperties
 import com.commandiron.wheel_picker_compose.WheelDatePicker
 import com.commandiron.wheel_picker_compose.WheelTimePicker
 import com.commandiron.wheel_picker_compose.core.TimeFormat
@@ -118,122 +105,122 @@ fun AutoCompletePreview() {
     }
 }
 
-fun normalizeCzech(input: String): String {
-    val original = listOf('ě', 'š', 'č', 'ř', 'ž', 'ý', 'á', 'í', 'é', 'ú', 'ů', 'ť', 'ď', 'ň', 'ó')
-    val replacement = listOf('e', 's', 'c', 'r', 'z', 'y', 'a', 'i', 'e', 'u', 'u', 't', 'd', 'n', 'o')
+//fun normalizeCzech(input: String): String {
+//    val original = listOf('ě', 'š', 'č', 'ř', 'ž', 'ý', 'á', 'í', 'é', 'ú', 'ů', 'ť', 'ď', 'ň', 'ó')
+//    val replacement = listOf('e', 's', 'c', 'r', 'z', 'y', 'a', 'i', 'e', 'u', 'u', 't', 'd', 'n', 'o')
+//
+//    var result = input
+//    for ((orig, repl) in original.zip(replacement)) {
+//        result = result.replace(orig, repl)
+//    }
+//    return result
+//}
 
-    var result = input
-    for ((orig, repl) in original.zip(replacement)) {
-        result = result.replace(orig, repl)
-    }
-    return result
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AutoComplete(optionsList: List<String>, labelText: String, placeholder: String, text: String, onTextChange: (String) -> Unit) {
-    var stopName by remember {
-        mutableStateOf("")
-    }
-
-    var textFieldSize by remember {
-        mutableStateOf(Size.Zero)
-    }
-
-    var expanded by remember {
-        mutableStateOf(false)
-    }
-    val interactionSource = remember {
-        MutableInteractionSource()
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = {
-                    expanded = false
-                }
-            )
-    ) {
-
-        Text(
-            text = labelText,
-            fontWeight = FontWeight.Bold
-        )
-
-        OutlinedTextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .onGloballyPositioned { coordinates ->
-                    textFieldSize = coordinates.size.toSize()
-                },
-            value = text,
-            onValueChange = { newValue ->
-                stopName = newValue
-                expanded = true
-                onTextChange(newValue)
-            },
-            placeholder = { Text(placeholder) },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Done
-            ),
-            singleLine = true
-        )
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier
-                .heightIn(min = 0.dp, max = 150.dp)
-                .background(MaterialTheme.colorScheme.surface),
-            properties = PopupProperties(focusable = false)
-        ) {
-            val sortedList = optionsList.sorted()
-            val filteredList = if (stopName.isEmpty()) {
-                sortedList.take(10)
-            } else {
-                sortedList.filter { item ->
-                    normalizeCzech(item.lowercase()).contains(normalizeCzech(stopName.lowercase()))
-                }.take(10)
-            }
-
-            filteredList.forEach { item ->
-                DropdownMenuItem(
-                    onClick = {
-                        stopName = item
-                        expanded = false
-                        onTextChange(item)
-                    },
-                    text = { Text(text = item) }
-                )
-            }
-        }
-
-    }
-}
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun AutoComplete(optionsList: List<String>, labelText: String, placeholder: String, text: String, onTextChange: (String) -> Unit) {
+//    var stopName by remember {
+//        mutableStateOf("")
+//    }
+//
+//    var textFieldSize by remember {
+//        mutableStateOf(Size.Zero)
+//    }
+//
+//    var expanded by remember {
+//        mutableStateOf(false)
+//    }
+//    val interactionSource = remember {
+//        MutableInteractionSource()
+//    }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .clickable(
+//                interactionSource = interactionSource,
+//                indication = null,
+//                onClick = {
+//                    expanded = false
+//                }
+//            )
+//    ) {
+//
+//        Text(
+//            text = labelText,
+//            fontWeight = FontWeight.Bold
+//        )
+//
+//        OutlinedTextField(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .onGloballyPositioned { coordinates ->
+//                    textFieldSize = coordinates.size.toSize()
+//                },
+//            value = text,
+//            onValueChange = { newValue ->
+//                stopName = newValue
+//                expanded = true
+//                onTextChange(newValue)
+//            },
+//            placeholder = { Text(placeholder) },
+//            keyboardOptions = KeyboardOptions(
+//                keyboardType = KeyboardType.Text,
+//                imeAction = ImeAction.Done
+//            ),
+//            singleLine = true
+//        )
+//
+//        DropdownMenu(
+//            expanded = expanded,
+//            onDismissRequest = { expanded = false },
+//            modifier = Modifier
+//                .heightIn(min = 0.dp, max = 150.dp)
+//                .background(MaterialTheme.colorScheme.surface),
+//            properties = PopupProperties(focusable = false)
+//        ) {
+//            val sortedList = optionsList.sorted()
+//            val filteredList = if (stopName.isEmpty()) {
+//                sortedList.take(10)
+//            } else {
+//                sortedList.filter { item ->
+//                    normalizeCzech(item.lowercase()).contains(normalizeCzech(stopName.lowercase()))
+//                }.take(10)
+//            }
+//
+//            filteredList.forEach { item ->
+//                DropdownMenuItem(
+//                    onClick = {
+//                        stopName = item
+//                        expanded = false
+//                        onTextChange(item)
+//                    },
+//                    text = { Text(text = item) }
+//                )
+//            }
+//        }
+//
+//    }
+//}
 
 
-@Composable
-fun StopNameOption(
-    title: String,
-    onSelect: (String) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                onSelect(title)
-            }
-            .padding(10.dp)
-    ) {
-        Text(text = title, fontSize = 16.sp)
-    }
-
-}
+//@Composable
+//fun StopNameOption(
+//    title: String,
+//    onSelect: (String) -> Unit
+//) {
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .clickable {
+//                onSelect(title)
+//            }
+//            .padding(10.dp)
+//    ) {
+//        Text(text = title, fontSize = 16.sp)
+//    }
+//
+//}
 
 
 
@@ -495,8 +482,8 @@ fun Body(){
     val navController = LocalNavController.current
     val viewModel = LocalSharedViewModel.current
     val stopListDataStore = LocalStopListDataStore.current
-    var context = LocalContext.current
-    var scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     LazyColumn(
         modifier = Modifier.padding(16.dp),
@@ -574,10 +561,10 @@ fun Body(){
                     GlobalScope.launch(Dispatchers.IO) {
                         try {
                             val settings = SearchSettings(
-                                walkingPace = 12, // TODO: add long time settings
-                                cyclingPace = 5,
-                                bikeUnlockTime = 30,
-                                bikeLockTime = 15,
+                                walkingPace = viewModel.walkingPace.value ?: 12, // TODO: add long time settings
+                                cyclingPace = viewModel.cyclingPace.value ?: 5,
+                                bikeUnlockTime = viewModel.bikeUnlockTime.value ?: 30,
+                                bikeLockTime = viewModel.bikeLockTime.value ?: 15,
                                 useSharedBikes = viewModel.useSharedBikes.value,
                                 bikeMax15Minutes = true,
                                 transferTime = viewModel.transferBuffer.value.toInt(),

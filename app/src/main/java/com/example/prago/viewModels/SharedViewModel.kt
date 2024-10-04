@@ -149,6 +149,11 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
     var selectedTime = mutableStateOf(LocalTime.now())
     var byEarliestDeparture = mutableStateOf(true)
 
+    val walkingPace = MutableStateFlow<Int?>(null)
+    val cyclingPace = MutableStateFlow<Int?>(null)
+    val bikeUnlockTime = MutableStateFlow<Int?>(null)
+    val bikeLockTime = MutableStateFlow<Int?>(null)
+
 
     init {
         viewModelScope.launch {
@@ -157,6 +162,11 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
             comfortPreference.value = retrieveFloatSetting("comfortPreference", 2f)
             bikeTripBuffer.value = retrieveFloatSetting("bikeTripBuffer", 2f)
             useSharedBikes.value = retrieveBoolSetting("useSharedBikes", false)
+
+            walkingPace.value = retrieveIntSetting("walkingPace", 12)
+            cyclingPace.value = retrieveIntSetting("cyclingPace", 5)
+            bikeUnlockTime.value = retrieveIntSetting("bikeUnlockTime", 30)
+            bikeLockTime.value = retrieveIntSetting("bikeLockTime", 15)
         }
         viewModelScope.launch(Dispatchers.IO) {
             Log.i("DEBUG", "Init started")
@@ -188,14 +198,21 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
         return normalized.replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
     }
 
+    fun splitNormalizedWords(normalizedInput: String): List<String> {
+        return normalizedInput.split("[\\s,-]+".toRegex()).map { it.trim() }
+    }
+
     val fromSearchResults: StateFlow<List<StopEntry>> =
         snapshotFlow { fromSearchQuery }
             .combine(stopNamesFlow) { fromSearchQuery, stopNames ->
-                when {
-                    fromSearchQuery.isNotEmpty() -> stopNames.filter { stopName ->
-                        stopName.normalizedName.contains(fromSearchQuery, ignoreCase = true)
+                val queryParts = fromSearchQuery.trim().split("\\s+".toRegex()).map { it.trim() }
+                stopNames.filter { stopName ->
+                    val nameParts = splitNormalizedWords(stopName.normalizedName)
+
+                    // Ensure that each part of the query matches the beginning of corresponding words in the stop name
+                    queryParts.all { queryPart ->
+                        nameParts.any { namePart -> namePart.startsWith(queryPart, ignoreCase = true) }
                     }
-                    else -> stopNames
                 }
             }.stateIn(
                 scope = viewModelScope,
@@ -206,11 +223,13 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
     val toSearchResults: StateFlow<List<StopEntry>> =
         snapshotFlow { toSearchQuery }
             .combine(stopNamesFlow) { toSearchQuery, stopNames ->
-                when {
-                    toSearchQuery.isNotEmpty() -> stopNames.filter { stopName ->
-                        stopName.normalizedName.contains(toSearchQuery, ignoreCase = true)
+                val queryParts = toSearchQuery.trim().split("\\s+".toRegex()).map { it.trim() }
+                stopNames.filter { stopName ->
+                    val nameParts = splitNormalizedWords(stopName.normalizedName)
+
+                    queryParts.all { queryPart ->
+                        nameParts.any { namePart -> namePart.startsWith(queryPart, ignoreCase = true) }
                     }
-                    else -> stopNames
                 }
             }.stateIn(
                 scope = viewModelScope,
@@ -224,6 +243,7 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
         toSearchQuery = newQuery
     }
 
+    @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
     suspend fun downloadAndStoreJson(url: String) {
         //Log.i("APP", "HERE")
         viewModelScope.launch(Dispatchers.IO) {
@@ -292,7 +312,7 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
     }
 
 
-    val settingsFlow: Flow<Preferences> = preferencesDataStore.data
+    //val settingsFlow: Flow<Preferences> = preferencesDataStore.data
 
 
     companion object {
