@@ -19,9 +19,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.prago.StopList
-import com.example.prago.composables.ResultScreen
+import com.example.prago.composables.resultScreen.ResultScreen
 import com.example.prago.composables.SettingsScreen
 import com.example.prago.composables.StopSearchScreen
+import com.example.prago.composables.searchScreen.SearchScreen
 import com.example.prago.ui.theme.PragOTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -122,7 +123,7 @@ fun PragOApp(mainViewModel: SharedViewModel, isConnectedToWifi: Boolean) {
         LocalStopListDataStore provides mainViewModel.stopListDataStore
     ) {
         NavHost(navController, startDestination = "searchPage") {
-            composable("searchPage") { com.example.prago.composables.SearchScreen() }
+            composable("searchPage") { SearchScreen() }
             composable("resultPage") { ResultScreen(null) }
             composable("fromStopSelect") { StopSearchScreen(mainViewModel, navController, false) }
             composable("toStopSelect") { StopSearchScreen(mainViewModel, navController, true) }

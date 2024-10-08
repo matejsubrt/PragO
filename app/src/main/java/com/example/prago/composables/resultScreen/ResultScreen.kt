@@ -1,4 +1,4 @@
-package com.example.prago.composables
+package com.example.prago.composables.resultScreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.prago.activities.LocalSharedViewModel
+import com.example.prago.composables.ResultTopBar
 import com.example.prago.dataClasses.ColorStruct
 import com.example.prago.dataClasses.ConnectionSearchResult
 import com.example.prago.dataClasses.StopInfo

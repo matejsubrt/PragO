@@ -70,7 +70,8 @@ fun ResultTopBar(navController: NavController){
         modifier = Modifier
             .background(MaterialTheme.colorScheme.primary)
             .fillMaxWidth()
-            .height(52.dp),
+            .height(52.dp)
+            .padding(start = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ){
         Box(
