@@ -32,7 +32,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import khttp.get
 import khttp.responses.Response
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -42,7 +42,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.take
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import java.text.Normalizer
@@ -143,9 +142,9 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
     var toSearchQuery by mutableStateOf("")
         private set
 
-    fun getSearchQuery(srcStop: Boolean): String {
-        return if (srcStop) fromSearchQuery else toSearchQuery
-    }
+//    fun getSearchQuery(srcStop: Boolean): String {
+//        return if (srcStop) fromSearchQuery else toSearchQuery
+//    }
 
 
 
@@ -211,6 +210,7 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
         return normalizedInput.split("[\\s,-]+".toRegex()).map { it.trim() }
     }
 
+    @OptIn(FlowPreview::class)
     val fromSearchResults: StateFlow<List<StopEntry>> =
         snapshotFlow { fromSearchQuery }
             .debounce(300)
@@ -230,6 +230,7 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
                 started = SharingStarted.WhileSubscribed(5_000)
             )
 
+    @OptIn(FlowPreview::class)
     val toSearchResults: StateFlow<List<StopEntry>> =
         snapshotFlow { toSearchQuery }
             .debounce(300)
@@ -324,16 +325,16 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
     //val settingsFlow: Flow<Preferences> = preferencesDataStore.data
 
 
-    companion object {
-        private var INSTANCE: SharedViewModel? = null
-
-        fun getInstance(stopListDataStore: DataStore<StopList>, preferencesDataStore: DataStore<Preferences>): SharedViewModel {
-            if (INSTANCE == null) {
-                INSTANCE = SharedViewModel(stopListDataStore, preferencesDataStore)
-            }
-            return INSTANCE!!
-        }
-    }
+//    companion object {
+//        private var INSTANCE: SharedViewModel? = null
+//
+//        fun getInstance(stopListDataStore: DataStore<StopList>, preferencesDataStore: DataStore<Preferences>): SharedViewModel {
+//            if (INSTANCE == null) {
+//                INSTANCE = SharedViewModel(stopListDataStore, preferencesDataStore)
+//            }
+//            return INSTANCE!!
+//        }
+//    }
 }
 
 
