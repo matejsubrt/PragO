@@ -1,7 +1,11 @@
 package com.example.prago.composables
 
+import android.content.Intent
+import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -387,19 +392,96 @@ fun UsedTransferCard(transfer: UsedTransfer) {
         }
     }
 }
-
-
+@Preview
+@Composable
+fun FirstLastStopCardPreview(){
+    FirstLastStopCard("Stop 1", LocalDateTime.now())
+}
 
 
 @Composable
-fun UsedBikeTripCard(bikeTrip: UsedBikeTrip){
+fun FirstLastStopCard(stopName: String, time: LocalDateTime){
     Row(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.tertiaryContainer)
             .fillMaxWidth()
-            .padding(start = 2.dp, top = 0.dp, end = 2.dp, bottom = 4.dp),
+            .padding(start = 2.dp, top = 2.dp, end = 2.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+
+        Row(
+            modifier = Modifier.padding(end = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Spacer(modifier = Modifier.width((tripIconSize.dp - transferIconSize.dp) / 2))
+            Icon(
+                painter = painterResource(id = R.drawable.location),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(transferIconSize.dp)
+                    .padding(all = 4.dp),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Spacer(modifier = Modifier.width((tripIconSize.dp - transferIconSize.dp) / 2))
+            StopRow(
+                stopName = stopName,
+                time = time
+            )
+        }
+    }
+}
+
+
+//@Composable
+//fun OpenMapButton() {
+//    val context = LocalContext.current
+//    val mapUrl = "https://mapy.cz" // Replace with the specific URL you want to open
+//
+//    Button(onClick = {
+//        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mapUrl))
+//        if (intent.resolveActivity(context.packageManager) != null) {
+//            context.startActivity(intent)
+//        }
+//    }) {
+//        Text(text = "Open Mapy.cz")
+//    }
+//}
+
+fun GetMapyCzUrl(bikeTrip: UsedBikeTrip): String{
+    return "https:://mapy.cz/fnc/v1/route?mapset=outdoor&start=${bikeTrip.srcStopInfo.lon},${bikeTrip.srcStopInfo.lat}&end=${bikeTrip.destStopInfo.lon},${bikeTrip.destStopInfo.lat}&routeType=bike_road"
+}
+
+
+//fun OpenMapyCzBikeTrip(bikeTrip: UsedBikeTrip){
+//    val context = LocalContext.current
+//    val mapUrl = "https://mapy.cz/fnc/v1/route?mapset=outdoor&start=${bikeTrip.srcStopInfo.lat},${bikeTrip.srcStopInfo.lon}&end=${bikeTrip.destStopInfo.lat}&y=${bikeTrip.destStopInfo.lon}&routeType=bike_road" // Replace with the specific URL you want to open
+//
+//    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mapUrl))
+//    if (intent.resolveActivity(context.packageManager) != null) {
+//        context.startActivity(intent)
+//    }
+//}
+
+
+@Composable
+fun UsedBikeTripCard(bikeTrip: UsedBikeTrip) {
+    val context = LocalContext.current
+    val mapyCzUrl = GetMapyCzUrl(bikeTrip)
+
+    val intent = remember {Intent(Intent.ACTION_VIEW, Uri.parse(mapyCzUrl))}
+
+    Row(
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.tertiaryContainer)
+            .fillMaxWidth()
+            .padding(start = 2.dp, top = 0.dp, end = 2.dp, bottom = 4.dp)
+            .clickable {
+                Log.i("DEBUG", "Opening URL: $mapyCzUrl with Mapy.cz")
+                context.startActivity(intent)
+            },
         verticalAlignment = Alignment.CenterVertically
-    ){
+    ) {
         Icon(
             painter = painterResource(id = R.drawable.bike),
             contentDescription = null,
@@ -536,6 +618,13 @@ fun ResultCard(result: ConnectionSearchResult?){
                     ) // Apply rounded corner shape here
             ){
                 ResultHeader(result.departureDateTime, result.arrivalDateTime)
+
+
+                if(result.usedSegmentTypes[0] == 0){
+                    FirstLastStopCard(result.usedTransfers[0].srcStopInfo.name, result.departureDateTime)
+                }
+
+
                 var transferIndex = 0
                 var tripIndex = 0
                 var bikeTripIndex = 0
@@ -545,6 +634,11 @@ fun ResultCard(result: ConnectionSearchResult?){
                         1 -> UsedTripCard(result.usedTrips[tripIndex++])
                         2 -> UsedBikeTripCard(result.usedBikeTrips[bikeTripIndex++])
                     }
+                }
+
+
+                if(result.usedSegmentTypes[result.usedSegmentTypes.size - 1] == 0){
+                    FirstLastStopCard(result.usedTransfers[result.usedTransfers.size - 1].destStopInfo.name, result.arrivalDateTime)
                 }
             }
         }

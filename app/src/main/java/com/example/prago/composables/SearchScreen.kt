@@ -2,19 +2,25 @@ package com.example.prago.composables
 
 import android.content.Context
 import android.util.Log
+import android.widget.TimePicker
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,8 +31,10 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
@@ -34,6 +42,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -55,6 +65,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.chargemap.compose.numberpicker.FullHours
+import com.chargemap.compose.numberpicker.Hours
+import com.chargemap.compose.numberpicker.HoursNumberPicker
+import com.chargemap.compose.numberpicker.ListItemPicker
 import com.commandiron.wheel_picker_compose.WheelDatePicker
 import com.commandiron.wheel_picker_compose.WheelTimePicker
 import com.commandiron.wheel_picker_compose.core.TimeFormat
@@ -72,6 +86,7 @@ import com.example.prago.activities.sliderMaxValues
 import com.example.prago.dataClasses.toJsonObject
 import com.example.prago.ui.theme.Gray33
 import com.example.prago.ui.theme.PragOTheme
+import com.example.prago.viewModels.SharedViewModel
 import khttp.responses.Response
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -87,6 +102,7 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun SearchScreen(){
+    Log.i("DEBUG", "SearchScreen")
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column {
             MainTopBar()
@@ -107,226 +123,455 @@ fun AutoCompletePreview() {
     }
 }
 
-//fun normalizeCzech(input: String): String {
-//    val original = listOf('ě', 'š', 'č', 'ř', 'ž', 'ý', 'á', 'í', 'é', 'ú', 'ů', 'ť', 'ď', 'ň', 'ó')
-//    val replacement = listOf('e', 's', 'c', 'r', 'z', 'y', 'a', 'i', 'e', 'u', 'u', 't', 'd', 'n', 'o')
-//
-//    var result = input
-//    for ((orig, repl) in original.zip(replacement)) {
-//        result = result.replace(orig, repl)
-//    }
-//    return result
-//}
 
-//@OptIn(ExperimentalMaterial3Api::class)
 //@Composable
-//fun AutoComplete(optionsList: List<String>, labelText: String, placeholder: String, text: String, onTextChange: (String) -> Unit) {
-//    var stopName by remember {
-//        mutableStateOf("")
+//fun ArrivalDepartureButton(
+//    isDeparture: Boolean,
+//    onValueChanged: (Boolean) -> Unit
+//) {
+//    val icon = if (isDeparture) {
+//        R.drawable.departure // Icon for departure
+//    } else {
+//        R.drawable.arrival // Icon for arrival
 //    }
 //
-//    var textFieldSize by remember {
-//        mutableStateOf(Size.Zero)
-//    }
-//
-//    var expanded by remember {
-//        mutableStateOf(false)
-//    }
-//    val interactionSource = remember {
-//        MutableInteractionSource()
-//    }
-//
-//    Column(
+//    Box(
 //        modifier = Modifier
-//            .fillMaxWidth()
-//            .clickable(
-//                interactionSource = interactionSource,
-//                indication = null,
-//                onClick = {
-//                    expanded = false
-//                }
+//            .size(48.dp)
+//            .padding(all = 4.dp)
+//            .clickable { onValueChanged(!isDeparture) }
+//            .background(
+//                color = MaterialTheme.colorScheme.surface,
+//                shape = RoundedCornerShape(10.dp)
+//            )
+//            .border(
+//                width = 2.dp,
+//                color = MaterialTheme.colorScheme.primary,
+//                shape = RoundedCornerShape(10.dp)
 //            )
 //    ) {
-//
-//        Text(
-//            text = labelText,
-//            fontWeight = FontWeight.Bold
-//        )
-//
-//        OutlinedTextField(
+//        Icon(
+//            painter = painterResource(id = icon),
+//            contentDescription = null,
 //            modifier = Modifier
-//                .fillMaxWidth()
-//                .onGloballyPositioned { coordinates ->
-//                    textFieldSize = coordinates.size.toSize()
-//                },
-//            value = text,
-//            onValueChange = { newValue ->
-//                stopName = newValue
-//                expanded = true
-//                onTextChange(newValue)
-//            },
-//            placeholder = { Text(placeholder) },
-//            keyboardOptions = KeyboardOptions(
-//                keyboardType = KeyboardType.Text,
-//                imeAction = ImeAction.Done
-//            ),
-//            singleLine = true
+//                .fillMaxSize()
+//                .padding(4.dp),
+//            tint = MaterialTheme.colorScheme.secondary
 //        )
-//
-//        DropdownMenu(
-//            expanded = expanded,
-//            onDismissRequest = { expanded = false },
-//            modifier = Modifier
-//                .heightIn(min = 0.dp, max = 150.dp)
-//                .background(MaterialTheme.colorScheme.surface),
-//            properties = PopupProperties(focusable = false)
-//        ) {
-//            val sortedList = optionsList.sorted()
-//            val filteredList = if (stopName.isEmpty()) {
-//                sortedList.take(10)
-//            } else {
-//                sortedList.filter { item ->
-//                    normalizeCzech(item.lowercase()).contains(normalizeCzech(stopName.lowercase()))
-//                }.take(10)
-//            }
-//
-//            filteredList.forEach { item ->
-//                DropdownMenuItem(
-//                    onClick = {
-//                        stopName = item
-//                        expanded = false
-//                        onTextChange(item)
-//                    },
-//                    text = { Text(text = item) }
-//                )
-//            }
-//        }
-//
 //    }
 //}
-
-
-//@Composable
-//fun StopNameOption(
-//    title: String,
-//    onSelect: (String) -> Unit
-//) {
-//    Row(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .clickable {
-//                onSelect(title)
-//            }
-//            .padding(10.dp)
-//    ) {
-//        Text(text = title, fontSize = 16.sp)
-//    }
-//
-//}
-
-
 
 @Composable
 fun ArrivalDepartureButton(
+    modifier: Modifier,
+    departureButton: Boolean,
+    departureSelected: Boolean,
+    onValueChanged: (Boolean) -> Unit
+){
+    val currentlySelected = departureButton && departureSelected || !departureButton && !departureSelected
+    Button(
+        onClick = {
+            if (!currentlySelected) onValueChanged(departureButton)
+        },
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (currentlySelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiaryContainer,
+            contentColor = if (currentlySelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+        ),
+        modifier = modifier,
+        shape = RoundedCornerShape(6.dp)
+    ) {
+        Text(text = if(departureButton) "Departure" else "Arrival")
+    }
+}
+
+@Composable
+fun ArrivalDepartureButtonPair(
     isDeparture: Boolean,
     onValueChanged: (Boolean) -> Unit
 ) {
-    val icon = if (isDeparture) {
-        R.drawable.departure // Icon for departure
-    } else {
-        R.drawable.arrival // Icon for arrival
-    }
-
-    Box(
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
-            .size(48.dp)
-            .padding(all = 4.dp)
-            .clickable { onValueChanged(!isDeparture) }
-            .background(
-                color = MaterialTheme.colorScheme.surface,
-                shape = RoundedCornerShape(10.dp)
-            )
-            .border(
-                width = 2.dp,
-                color = MaterialTheme.colorScheme.primary,
-                shape = RoundedCornerShape(10.dp)
-            )
+            .fillMaxWidth()
+            .height(48.dp)
     ) {
-        Icon(
-            painter = painterResource(id = icon),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(4.dp),
-            tint = MaterialTheme.colorScheme.secondary
+        // Departure Button
+//        Button(
+//            onClick = { if (!isDeparture) onValueChanged(true) },
+//            colors = ButtonDefaults.buttonColors(
+//                containerColor = if (isDeparture) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiaryContainer,
+//                contentColor = if (isDeparture) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+//            ),
+//            modifier = Modifier.weight(1f).fillMaxHeight(),
+//            shape = RoundedCornerShape(6.dp)
+//        ) {
+//            Text(text = "Departure")
+//        }
+        ArrivalDepartureButton(
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+            departureButton = true,
+            departureSelected = isDeparture,
+            onValueChanged = onValueChanged
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        // Arrival Button
+//        Button(
+//            onClick = { if (isDeparture) onValueChanged(false) },
+//            colors = ButtonDefaults.buttonColors(
+//                containerColor = if (!isDeparture) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiaryContainer,
+//                contentColor = if (!isDeparture) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+//            ),
+//            modifier = Modifier
+//                .weight(1f)
+//                .fillMaxHeight(),
+//            shape = RoundedCornerShape(6.dp)
+//        ) {
+//            Text(text = "Arrival")
+//        }
+        ArrivalDepartureButton(
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+            departureButton = false,
+            departureSelected = isDeparture,
+            onValueChanged = onValueChanged
         )
     }
 }
 
+
+//@Composable
+//fun DatePicker(onDateSelected: (LocalDate) -> Unit) {
+//    WheelDatePicker(
+//        startDate = LocalDate.now(),
+//        minDate = LocalDate.now(),
+//        maxDate = LocalDate.now().plusDays(13),
+//        size = DpSize(132.dp, 80.dp),
+//        rowCount = 3,
+//        textStyle = MaterialTheme.typography.titleSmall,
+//        textColor = MaterialTheme.colorScheme.secondary,
+//        selectorProperties = WheelPickerDefaults.selectorProperties(
+//            enabled = true,
+//            shape = RoundedCornerShape(16.dp),
+//            color = MaterialTheme.colorScheme.surface,
+//            border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+//        ),
+//        onSnappedDate = onDateSelected
+//    )
+//}
+
 @Composable
-fun DatePicker(onDateSelected: (LocalDate) -> Unit) {
-    WheelDatePicker(
-        startDate = LocalDate.now(),
-        minDate = LocalDate.now(),
-        maxDate = LocalDate.now().plusDays(13),
-        size = DpSize(132.dp, 80.dp),
-        rowCount = 3,
-        textStyle = MaterialTheme.typography.titleSmall,
-        textColor = MaterialTheme.colorScheme.secondary,
-        selectorProperties = WheelPickerDefaults.selectorProperties(
-            enabled = true,
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surface,
-            border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-        ),
-        onSnappedDate = onDateSelected
+fun DatePicker(viewModel: SharedViewModel, onDateChanged: (LocalDate) -> Unit){
+    val startDate = LocalDate.now()
+    val days = 14
+
+    val dateLabelSequence = generateDateSequence(startDate, days)
+    val dateMap = dateLabelSequence.mapIndexed { index, label -> label to startDate.plusDays(index.toLong()) }.toMap()
+
+    var selectedDate by remember { mutableStateOf(viewModel.selectedDate.value) }
+
+
+    ListItemPicker(
+        modifier = Modifier,
+        label = { it },
+        value = dateMap.keys.first { dateMap[it] == selectedDate },
+        onValueChange = { label ->
+            selectedDate = dateMap[label] ?: startDate
+            onDateChanged(selectedDate)
+        },
+        list = dateLabelSequence,
+        dividersColor = MaterialTheme.colorScheme.primary,
+        textStyle = TextStyle(
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+            fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
+            fontFamily = MaterialTheme.typography.bodyMedium.fontFamily
+        )
     )
 }
 
+//@Composable
+//fun TimePicker(onTimeSelected: (LocalTime) -> Unit) {
+//    WheelTimePicker(
+//        startTime = LocalTime.now(),
+//        timeFormat = TimeFormat.HOUR_24,
+//        size = DpSize(86.dp, 80.dp),
+//        rowCount = 3,
+//        textStyle = MaterialTheme.typography.titleSmall,
+//        textColor = MaterialTheme.colorScheme.secondary,
+//        selectorProperties = WheelPickerDefaults.selectorProperties(
+//            enabled = true,
+//            shape = RoundedCornerShape(16.dp),
+//            color = MaterialTheme.colorScheme.surface,
+//            border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+//        ),
+//        onSnappedTime = onTimeSelected
+//    )
+//}
+
 @Composable
-fun TimePicker(onTimeSelected: (LocalTime) -> Unit) {
-    WheelTimePicker(
-        startTime = LocalTime.now(),
-        timeFormat = TimeFormat.HOUR_24,
-        size = DpSize(86.dp, 80.dp),
-        rowCount = 3,
-        textStyle = MaterialTheme.typography.titleSmall,
-        textColor = MaterialTheme.colorScheme.secondary,
-        selectorProperties = WheelPickerDefaults.selectorProperties(
-            enabled = true,
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surface,
-            border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-        ),
-        onSnappedTime = onTimeSelected
+fun TimePicker(viewModel: SharedViewModel, onTimeChanged: (LocalTime) -> Unit){
+    var selectedTime by remember { mutableStateOf(viewModel.selectedTime.value) }
+
+    var pickerValue by remember { mutableStateOf<Hours>(FullHours(viewModel.selectedTime.value.hour, viewModel.selectedTime.value.minute)) }
+
+    HoursNumberPicker(
+        modifier = Modifier.width(160.dp),
+        dividersColor = MaterialTheme.colorScheme.primary,
+        leadingZero = true,
+        value = pickerValue,
+        onValueChange = {
+            pickerValue = it
+            selectedTime = getLocalTimeFromHours(it)
+            onTimeChanged(selectedTime)
+        },
+        hoursDivider = {
+            Text(
+                modifier = Modifier.size(24.dp),
+                textAlign = TextAlign.Center,
+                text = ":"
+            )
+        },
+        textStyle = TextStyle(
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+            fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
+            fontFamily = MaterialTheme.typography.bodyMedium.fontFamily
+        )
     )
 }
 
+fun generateDateSequence(startDate: LocalDate, days: Int): List<String> {
+    val formatter = DateTimeFormatter.ofPattern("E d.M.") // Format: Mo/Tue/... DD.MM.
+    val sequence = mutableListOf<String>()
+
+    for (i in 0 until days) {
+        val currentDate = startDate.plusDays(i.toLong())
+        when (i) {
+            0 -> sequence.add("Today")
+            1 -> sequence.add("Tomorrow")
+            else -> sequence.add(currentDate.format(formatter))
+        }
+    }
+
+    return sequence
+}
+
+fun getLabelFromDate(date: LocalDate): String {
+    val formatter = DateTimeFormatter.ofPattern("E d.M.") // Format: Mo/Tue/... DD.MM.
+    return when (date) {
+        LocalDate.now() -> "Today"
+        LocalDate.now().plusDays(1) -> "Tomorrow"
+        else -> date.format(formatter)
+    }
+}
+
+fun getLabelFromTime(time: LocalTime): String {
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    return time.format(formatter)
+}
+
+fun getLocalTimeFromHours(hours: Hours): LocalTime {
+    return LocalTime.of(hours.hours, hours.minutes)
+}
+
+//@Composable
+//fun DateTimePickerRow(
+//    viewModel: SharedViewModel,
+//    byEarliestDeparture: Boolean,
+//    onArrDepChange: (Boolean) -> Unit,
+//    onTimeChanged: (LocalTime) -> Unit,
+//    onDateChanged: (LocalDate) -> Unit
+//) {
+//    Row(
+//        verticalAlignment = Alignment.CenterVertically,
+//        horizontalArrangement = Arrangement.SpaceBetween,
+//        modifier = Modifier.fillMaxWidth().height(48.dp)
+//    ) {
+//        Box(
+//            modifier = Modifier
+//                .clip(RoundedCornerShape(6.dp))
+//                .background(MaterialTheme.colorScheme.surface)
+//                .padding(8.dp) // Padding to ensure content is not cut off
+//        ) {
+//            Row(
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                // Date Picker
+//                //DatePicker(viewModel, onDateChanged)
+//
+//                DateTimeBottomSheet(viewModel = viewModel, byEarliestDeparture = byEarliestDeparture, onArrDepChange = onArrDepChange, onDateChanged = onDateChanged, onTimeChanged = onTimeChanged)
+//
+//                //Spacer(modifier = Modifier.width(4.dp)) // Spacing between Date and Time Pickers
+//
+//                // Time Picker
+//                //TimePicker(viewModel, onTimeChanged)
+//
+//                // Spacer to push the button to the far right
+//                //Spacer(modifier = Modifier.weight(1f))
+//
+//                // Arrival/Departure Button
+////                ArrivalDepartureButton(
+////                    isDeparture = byEarliestDeparture,
+////                    onValueChanged = onArrDepChange
+////                )
+//            }
+//        }
+//    }
+//}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DateTimePickerRow(
+fun DateTimeBottomSheet(
+    modifier: Modifier = Modifier,
+    viewModel: SharedViewModel,
     byEarliestDeparture: Boolean,
     onArrDepChange: (Boolean) -> Unit,
     onTimeChanged: (LocalTime) -> Unit,
     onDateChanged: (LocalDate) -> Unit
-){
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier.fillMaxWidth()
-    ){
+) {
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true // Prevent partial expansion
+    )
+    val scope = rememberCoroutineScope()
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(8.dp)
+            .height(36.dp)
+            .fillMaxSize()
+            .clickable(
+                onClick = {
+                    scope.launch {
+                        // Move sheetState.show() inside coroutine to prevent UI thread blocking
+                        sheetState.show()
+                    }
+                }
+            ),
+        contentAlignment = Alignment.CenterStart
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
-        ){
-            DatePicker(onDateChanged)
-            Spacer(modifier = Modifier.width(4.dp))
-            TimePicker(onTimeChanged)
+        ) {
+            val icon = if (byEarliestDeparture) {
+                R.drawable.departure // Icon for departure
+            } else {
+                R.drawable.arrival // Icon for arrival
+            }
+
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = null,
+                modifier = Modifier
+                    .height(24.dp)
+                    .padding(start = 4.dp, end = 4.dp),
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            val text = getLabelFromDate(viewModel.selectedDate.value) + " " + getLabelFromTime(viewModel.selectedTime.value)
+            Text(
+                text = text,
+                style = TextStyle(
+                    fontSize = 17.sp
+                )
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Text(
+                text = "Now",
+                style = TextStyle(
+                    fontSize = 17.sp,
+                    color = Color.Gray
+                ),
+                modifier = Modifier.clickable(
+                    onClick = {
+                        onDateChanged(LocalDate.now())
+                        onTimeChanged(LocalTime.now())
+                    }
+                )
+            )
         }
-        ArrivalDepartureButton(
-            isDeparture = byEarliestDeparture,
-            onValueChanged = onArrDepChange
-        )
+    }
+
+    if (sheetState.isVisible) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                scope.launch {
+                    sheetState.hide()
+                }
+            },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.background
+        ) {
+            Column(
+                Modifier.padding(start = 12.dp, end = 12.dp, bottom = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                ArrivalDepartureButtonPair(byEarliestDeparture, onArrDepChange)
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(start = 8.dp, top = 0.dp, end = 8.dp, bottom = 4.dp)
+                    ) {
+                        DatePicker(viewModel, onDateChanged)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(start = 8.dp, top = 0.dp, end = 8.dp, bottom = 4.dp)
+                    ) {
+                        TimePicker(viewModel, onTimeChanged)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp, 40.dp)
+                            .clickable(
+                                onClick = {
+                                    scope.launch {
+                                        sheetState.hide()
+                                    }
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Done",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
+                    }
+                }
+            }
+        }
     }
 }
+
 
 
 
@@ -348,9 +593,6 @@ fun TextInput(
             .padding(start = 8.dp, top = 0.dp, end = 8.dp, bottom = 4.dp)
     ) {
         Column() {
-            // Pass the stopNameList to the AutoComplete functions
-            //AutoComplete(optionsList = stopNameList, labelText = "From:", placeholder = "Source stop", text = fromText, onTextChange = onFromValueChange)
-            //AutoComplete(optionsList = stopNameList, labelText = "To:", placeholder = "Destination stop", text = toText, onTextChange = onToValueChange)
             LabelWithTextInput(label = "From:", placeholder = "Source stop", text = fromText, onTextChange = onFromValueChange, onClick = {navControler.navigate("fromStopSelect")})
             LabelWithTextInput(label = "To:", placeholder = "Destination stop", text = toText, onTextChange = onToValueChange, onClick = {navControler.navigate("toStopSelect")})
         }
@@ -366,7 +608,7 @@ fun SlidersInput(
     onValueChanges: List<(Float) -> Unit>,
     maxValues: List<Float>,
     labelLists: List<List<String>>,
-    useSharedBikes: Boolean // Add a parameter to determine if the slider should be shown
+    useSharedBikes: Boolean
 ) {
 
     Column(
@@ -458,7 +700,6 @@ fun SlidersBox(
                 }
             }
 
-            // SlidersInput composable, conditionally visible based on slidersInputVisible
             AnimatedVisibility(visible = slidersInputVisible) {
                 SlidersInput(
                     labels = labels,
@@ -519,7 +760,8 @@ fun Body(){
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            DateTimePickerRow(
+            DateTimeBottomSheet(
+                viewModel = viewModel,
                 byEarliestDeparture = viewModel.byEarliestDeparture.value,
                 onArrDepChange = { viewModel.byEarliestDeparture.value = it },
                 onDateChanged = { viewModel.selectedDate.value = it},
@@ -612,15 +854,15 @@ fun Body(){
                                         navController.navigate("resultPage")
                                     }
                                 }
-                                502 -> {
-                                    withContext(Dispatchers.Main) {
-                                        errorMessage = "The server is currently down. Please try again later."
-                                        showDialog = true
-                                    }
-                                }
                                 404 -> {
                                     withContext(Dispatchers.Main) {
                                         errorMessage = "The connection could not be found. Please try changing the search parameters."
+                                        showDialog = true
+                                    }
+                                }
+                                502 -> {
+                                    withContext(Dispatchers.Main) {
+                                        errorMessage = "The server is currently down. Please try again later."
                                         showDialog = true
                                     }
                                 }
@@ -690,7 +932,11 @@ fun LabelWithTextInput(
                     onClick()
                     Log.i("DEBUG", "OnClick finished")
                 }
-                .border(1.5.dp, MaterialTheme.colorScheme.primary, shape = MaterialTheme.shapes.small)
+                .border(
+                    1.5.dp,
+                    MaterialTheme.colorScheme.primary,
+                    shape = MaterialTheme.shapes.small
+                )
                 .background(Gray33)
                 .padding(8.dp),
             contentAlignment = Alignment.CenterStart

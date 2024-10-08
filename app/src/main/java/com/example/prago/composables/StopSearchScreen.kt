@@ -25,6 +25,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -106,17 +107,23 @@ fun OnSearchQueryChange(it: String, viewModel: SharedViewModel, to: Boolean){
 
 val onSearchQueryChange: MutableSharedFlow<String> = MutableSharedFlow()
 
+
+
 @Composable
 fun StopSearchScreen(viewModel: SharedViewModel, navController: NavController, to: Boolean) {
     Log.i("DEBUG", "Search Screen start")
     val searchResults by if(to) viewModel.toSearchResults.collectAsStateWithLifecycle() else viewModel.fromSearchResults.collectAsStateWithLifecycle()
+    val searchQuery = if(to) viewModel.toSearchQuery else viewModel.fromSearchQuery
     //val searchResults = listOf(StopEntry("Chodov", "Chodov", "1"), StopEntry("Biskupcova", "Biskupcova", "2"), StopEntry("ABC", "ABC", "3"),StopEntry("ABC", "ABC", "4"))
+    Log.i("DEBUG", "Recomposition triggered - Search Query: $searchQuery, Results size: ${searchResults.size}")
+
+
     StopSearchScreen(
-        searchQuery = if(to) viewModel.toSearchQuery else viewModel.fromSearchQuery,
+        searchQuery = searchQuery,
         searchResults = searchResults,
         onSearchQueryChange = { OnSearchQueryChange(it, viewModel, to) },
-        navController = navController
-        //onSearchQueryChange = { viewModel.onToSearchQueryChange(it) }
+        navController = navController,
+        srcStop = !to
     )
     Log.i("DEBUG", "Search Screen end")
 }
@@ -127,68 +134,82 @@ fun StopSearchScreen(
     searchQuery: String,
     searchResults: List<StopEntry>,
     onSearchQueryChange: (String) -> Unit,
-    navController: NavController
+    navController: NavController,
+    srcStop: Boolean
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
-    SearchBar(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Red),
-        query = searchQuery,
-        onQueryChange = onSearchQueryChange,
-        onSearch = { keyboardController?.hide() },
-        placeholder = {
-            Text(text = "Search movies")
-        },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Search,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                contentDescription = null
-            )
-        },
-        trailingIcon = {
-            if (searchQuery.isNotEmpty()) {
-                IconButton(onClick = { onSearchQueryChange("") }) {
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        Column(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.background),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            ResultTopBar(navController)
+            SearchBar(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Red),
+                query = searchQuery,
+                onQueryChange = onSearchQueryChange,
+                onSearch = { keyboardController?.hide() },
+                placeholder = {
+                    val text = if (srcStop) "Source stop" else "Destination stop"
+                    Text(text = text)
+                },
+                leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Close,
+                        imageVector = Icons.Default.Search,
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        contentDescription = "Clear search"
+                        contentDescription = null
                     )
-                }
-            }
-        },
-        content = {
-            if (searchResults.isEmpty()) {
-                StopListEmptyState()
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(12.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(
-                        count = searchResults.size,
-                        key = { index -> searchResults[index].id},
-                        itemContent = { index ->
-                            StopNameSuggestion(stopName = searchResults[index].czechName) {
-                                keyboardController?.hide()
-                                Log.i("DEBUG", "Stop selected")
-                                onSearchQueryChange(it) // Update search query state
-                                navController.popBackStack()
-                                Log.i("DEBUG", "Navigated back to search screen")
-                            }
+                },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { onSearchQueryChange("") }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                contentDescription = "Clear search"
+                            )
                         }
-                    )
-                }
-            }
-        },
-        active = true,
-        onActiveChange = {},
-        tonalElevation = 0.dp,
-        colors = SearchBarDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        )
-    )
+                    }
+                },
+                content = {
+                    if (searchResults.isEmpty()) {
+                        StopListEmptyState()
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(12.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            val itemsCount = if (searchResults.size > 16) 16 else searchResults.size
+                            items(
+                                count = itemsCount,
+                                key = { index -> searchResults[index].id },
+                                itemContent = { index ->
+                                    StopNameSuggestion(stopName = searchResults[index].czechName) {
+                                        keyboardController?.hide()
+                                        Log.i("DEBUG", "Stop selected")
+                                        onSearchQueryChange(it) // Update search query state
+                                        //navController.popBackStack()
+                                        navController.navigate("searchPage")
+                                        Log.i("DEBUG", "Navigated back to search screen")
+                                    }
+                                }
+                            )
+                        }
+                    }
+                },
+                active = true,
+                onActiveChange = {},
+                tonalElevation = 0.dp,
+                colors = SearchBarDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                )
+            )
+        }
+    }
+
 }
 

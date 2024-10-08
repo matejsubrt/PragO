@@ -32,6 +32,7 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -94,7 +95,7 @@ dependencies {
     implementation("com.google.android.material:material:1.5.0")
     implementation("org.danilopianini:khttp:1.3.1")
     implementation ("com.github.commandiron:WheelPickerCompose:1.1.11")
-    // build.gradle.kts
+
     implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07")
     implementation ("androidx.datastore:datastore:1.0.0")
     implementation ("com.google.protobuf:protobuf-javalite:3.21.5")
@@ -103,4 +104,5 @@ dependencies {
     implementation ("androidx.datastore:datastore-preferences:1.0.0")
 
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+    implementation("com.chargemap.compose:numberpicker:1.0.3")
 }

@@ -37,9 +37,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.take
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import java.text.Normalizer
@@ -127,17 +130,23 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
 {
     private val _stopNameList = MutableStateFlow<List<StopEntry>>(emptyList())
     val stopNamesFlow: StateFlow<List<StopEntry>> = _stopNameList
-    //val stopNamesFlow = flowOf(listOf(StopEntry("Chodov", "Chodov", "1"), StopEntry("Biskupcova", "Biskupcove", "2"), StopEntry("Větrník", "Vetrnik", "3")))
     var searchResult = MutableLiveData<ConnectionSearchResult>()
 
 
+
+    // Saved search parameter values
+    // TODO: check if both pairs needed
     var fromText = mutableStateOf("")
     var toText = mutableStateOf("")
     var fromSearchQuery by mutableStateOf("")
         private set
-
     var toSearchQuery by mutableStateOf("")
         private set
+
+    fun getSearchQuery(srcStop: Boolean): String {
+        return if (srcStop) fromSearchQuery else toSearchQuery
+    }
+
 
 
     var useSharedBikes = mutableStateOf(false)
@@ -204,6 +213,7 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
 
     val fromSearchResults: StateFlow<List<StopEntry>> =
         snapshotFlow { fromSearchQuery }
+            .debounce(300)
             .combine(stopNamesFlow) { fromSearchQuery, stopNames ->
                 val queryParts = fromSearchQuery.trim().split("\\s+".toRegex()).map { it.trim() }
                 stopNames.filter { stopName ->
@@ -213,7 +223,7 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
                     queryParts.all { queryPart ->
                         nameParts.any { namePart -> namePart.startsWith(queryPart, ignoreCase = true) }
                     }
-                }
+                }.take(16)
             }.stateIn(
                 scope = viewModelScope,
                 initialValue = emptyList(),
@@ -222,6 +232,7 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
 
     val toSearchResults: StateFlow<List<StopEntry>> =
         snapshotFlow { toSearchQuery }
+            .debounce(300)
             .combine(stopNamesFlow) { toSearchQuery, stopNames ->
                 val queryParts = toSearchQuery.trim().split("\\s+".toRegex()).map { it.trim() }
                 stopNames.filter { stopName ->
@@ -230,8 +241,10 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
                     queryParts.all { queryPart ->
                         nameParts.any { namePart -> namePart.startsWith(queryPart, ignoreCase = true) }
                     }
-                }
-            }.stateIn(
+                }.take(16)
+            }
+            .distinctUntilChanged()
+            .stateIn(
                 scope = viewModelScope,
                 initialValue = emptyList(),
                 started = SharingStarted.WhileSubscribed(5_000)
@@ -261,10 +274,6 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
             } catch (e: Exception) {
                 print(e)
             }
-
-            //if (response.statusCode != 200) throw IOException("Unexpected code ${response.statusCode}")
-
-
         }
     }
 

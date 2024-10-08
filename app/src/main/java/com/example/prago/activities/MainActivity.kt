@@ -47,11 +47,9 @@ val labelLists = listOf(transferBufferLabels, transferLengthLabels, comfortLabel
 val LocalNavController = compositionLocalOf<NavController> { error("No NavController provided") }
 val LocalSharedViewModel = compositionLocalOf<SharedViewModel> { error("No SharedViewModel provided") }
 val LocalStopListDataStore = compositionLocalOf<DataStore<StopList>> { error("No StopListDataStore provided") }
-//val LocalSearchViewModel = compositionLocalOf<SearchViewModel> { error("No SearchViewModel provided") }
 
 class MainActivity : ComponentActivity() {
     private lateinit var mainViewModel: SharedViewModel
-    //private lateinit var searchViewModel: SearchViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +57,6 @@ class MainActivity : ComponentActivity() {
         val isConnectedToWifi = isWifiConnected()
 
         mainViewModel = SharedViewModel(applicationContext.stopListDataStore, applicationContext.preferencesDataStore)
-        //searchViewModel = SearchViewModel(applicationContext.stopListDataStore)
         setContent {
             PragOTheme {
                 PragOApp(mainViewModel, isConnectedToWifi) // Pass the viewModel to PragOApp
@@ -88,11 +85,13 @@ fun PragOApp(mainViewModel: SharedViewModel, isConnectedToWifi: Boolean) {
         LaunchedEffect(Unit) {
             var generatedAtString = ""
             val exampleCounterFlow: Flow<String> = context.stopListDataStore.data
+                .take(1) // TODO: check this location
                 .map { value ->
                     // The exampleCounter property is generated from the proto schema.
                     value.generatedAt
                 }
-            exampleCounterFlow.take(1).collect { value ->
+            exampleCounterFlow//.take(1)
+                .collect { value ->
                 generatedAtString = value
                 println(value)
             }
@@ -120,11 +119,8 @@ fun PragOApp(mainViewModel: SharedViewModel, isConnectedToWifi: Boolean) {
     CompositionLocalProvider(
         LocalNavController provides navController,
         LocalSharedViewModel provides mainViewModel,
-        LocalStopListDataStore provides mainViewModel.stopListDataStore,
-        //LocalSearchViewModel provides searchViewModel
+        LocalStopListDataStore provides mainViewModel.stopListDataStore
     ) {
-        //var ToSearchScreen = SearchScreen(mainViewModel, navController, true)
-        //var FromSearchScreen = SearchScreen(mainViewModel, navController, false)
         NavHost(navController, startDestination = "searchPage") {
             composable("searchPage") { com.example.prago.composables.SearchScreen() }
             composable("resultPage") { ResultScreen(null) }
