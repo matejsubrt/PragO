@@ -124,7 +124,7 @@ fun PragOApp(mainViewModel: SharedViewModel, isConnectedToWifi: Boolean) {
     ) {
         NavHost(navController, startDestination = "searchPage") {
             composable("searchPage") { SearchScreen() }
-            composable("resultPage") { ResultScreen(null) }
+            composable("resultPage") { ResultScreen() }
             composable("fromStopSelect") { StopSearchScreen(mainViewModel, navController, false) }
             composable("toStopSelect") { StopSearchScreen(mainViewModel, navController, true) }
             composable("settingsScreen") { SettingsScreen() }

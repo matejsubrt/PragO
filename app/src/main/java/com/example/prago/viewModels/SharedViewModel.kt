@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package com.example.prago.viewModels
 
 import android.content.Context
@@ -19,9 +21,13 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import com.example.prago.dataClasses.ConnectionSearchResult
 import com.example.prago.StopList
+import com.example.prago.dataClasses.CreateStopToStopRangeRequest
+import com.example.prago.dataClasses.SearchSettings
 import com.example.prago.dataClasses.StopListDataClass
+import com.example.prago.dataClasses.toJsonObject
 import com.google.protobuf.InvalidProtocolBufferException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,9 +48,12 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import java.text.Normalizer
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 
 object StopListSerializer : Serializer<StopList> {
@@ -129,7 +138,9 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
 {
     private val _stopNameList = MutableStateFlow<List<StopEntry>>(emptyList())
     val stopNamesFlow: StateFlow<List<StopEntry>> = _stopNameList
-    var searchResult = MutableLiveData<ConnectionSearchResult>()
+    //var searchResult = MutableLiveData<ConnectionSearchResult>()
+
+    var searchResultList = MutableLiveData<List<ConnectionSearchResult>>()
 
 
 
@@ -146,7 +157,9 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
 //        return if (srcStop) fromSearchQuery else toSearchQuery
 //    }
 
-
+    var expandingSearchToPast = mutableStateOf(false)
+    var expandingSearchToFuture = mutableStateOf(false)
+    var expansionToPastItems = mutableStateOf(0)
 
     var useSharedBikes = mutableStateOf(false)
     var transferBuffer = mutableStateOf(2f)
@@ -157,10 +170,14 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
     var selectedTime = mutableStateOf(LocalTime.now())
     var byEarliestDeparture = mutableStateOf(true)
 
+    var searchRangeStart = mutableStateOf(LocalDateTime.now())
+    var searchRangeEnd = mutableStateOf(LocalDateTime.now())
+
     val walkingPace = MutableStateFlow<Int?>(null)
     val cyclingPace = MutableStateFlow<Int?>(null)
     val bikeUnlockTime = MutableStateFlow<Int?>(null)
     val bikeLockTime = MutableStateFlow<Int?>(null)
+
 
 
     init {
@@ -257,7 +274,7 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
         toSearchQuery = newQuery
     }
 
-    @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+    @OptIn(ExperimentalSerializationApi::class)
     suspend fun downloadAndStoreJson(url: String) {
         //Log.i("APP", "HERE")
         viewModelScope.launch(Dispatchers.IO) {
@@ -321,6 +338,221 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
         return preferences[dataStoreKey] ?: defaultValue
     }
 
+
+//    suspend fun expandSearch(toPast: Boolean) {
+//        resultsAreRefreshing.value = true
+//
+//        val rangeStart = if (toPast) searchRangeStart.value.minusMinutes(15) else searchRangeEnd.value
+//
+//        val response = sendRequest(rangeStart, 15)
+//
+//        when (response.statusCode) {
+//            200 -> {
+//                val connectionSearchResults: List<ConnectionSearchResult> =
+//                    Json.decodeFromString(response.text)
+//
+//                withContext(Dispatchers.Main) {
+//                    // Ensure both lists are non-nullable
+//                    val currentList = searchResultList.value ?: emptyList()
+//                    val newList = connectionSearchResults ?: emptyList()
+//
+//                    // Combine the lists
+//                    searchResultList.value = if (toPast) {
+//                        newList + currentList // Prepend results to the list
+//                    } else {
+//                        currentList + newList // Append results to the list
+//                    }
+//
+//
+//                    searchRangeStart.value = selectedDate.value.atTime(selectedTime.value)
+//                    searchRangeEnd.value = selectedDate.value.atTime(selectedTime.value).plusMinutes(15)
+//                }
+//            }
+//            404 -> {
+//                // do nothing
+//            }
+//            502 -> {
+//                // do nothing
+//            }
+//            else -> {
+//                // do nothing
+//            }
+//            //TODO: handle other status codes
+//        }
+//        resultsAreRefreshing.value = false
+//    }
+
+    suspend fun expandSearch(toPast: Boolean) {
+        if(toPast){
+            expandingSearchToPast.value = true
+            //expansionToPastItems.value = 0
+        }
+        else{
+            expandingSearchToFuture.value = true
+        }
+
+        Log.i("DEBUG", "Expanding search, toPast: $toPast")
+        val rangeStart = if (toPast) searchRangeStart.value.minusMinutes(15) else searchRangeEnd.value
+
+
+        Log.i("DEBUG", "Range start: $rangeStart")
+        val response = withContext(Dispatchers.IO) {
+            sendRequest(rangeStart, 15)
+        }
+
+        when (response.statusCode) {
+            200 -> {
+                val connectionSearchResults: List<ConnectionSearchResult> =
+                    Json.decodeFromString(response.text)
+                Log.i("DEBUG", "Results fetched")
+                //withContext(Dispatchers.Main) {
+                    val currentList = searchResultList.value ?: emptyList()
+                    var newList = connectionSearchResults
+
+                    if (toPast) {
+                        for(i in currentList.size - 1 downTo 0){
+                            if(currentList[i].arrivalDateTime == newList[newList.size - 1].arrivalDateTime){
+                                newList = newList.subList(0, newList.size - 1)
+                            }
+                        }
+
+                        searchResultList.value = newList + currentList
+                        expansionToPastItems.value = newList.size
+                        Log.i("DEBUG", "Newlist size: ${newList.size}")
+//                        if(newList[newList.size - 1].arrivalDateTime == currentList[0].arrivalDateTime){
+//                            searchResultList.value = newList.subList(0, newList.size - 1) + currentList
+//                            expansionToPastItems.value = newList.size - 1
+//                        } else{
+//                            searchResultList.value = newList + currentList
+//                            expansionToPastItems.value = newList.size
+//                        }
+                    } else {
+                        for(i in 0 until currentList.size){
+                            if(currentList[i].arrivalDateTime == newList[0].arrivalDateTime){
+                                newList = newList.subList(1, newList.size)
+                            }
+                        }
+
+                        searchResultList.value = currentList + newList
+
+
+//                        if(currentList[currentList.size - 1].arrivalDateTime == newList[0].arrivalDateTime){
+//                            searchResultList.value = currentList.subList(0, currentList.size - 1) + newList
+//                        } else{
+//                            searchResultList.value = currentList + newList
+//                        }
+                        //currentList + newList
+                    }
+
+
+
+                if(toPast){
+                    searchRangeStart.value = searchRangeStart.value.minusMinutes(15)
+                } else {
+                    searchRangeEnd.value = searchRangeEnd.value.plusMinutes(15)
+                }
+//                    searchRangeStart.value = //selectedDate.value.atTime(selectedTime.value)
+//                    searchRangeEnd.value = selectedDate.value.atTime(selectedTime.value).plusMinutes(15)
+                //}
+            }
+            404, 502 -> { /* handle other status codes if needed */ }
+            else -> { /* handle other status codes if needed */ }
+        }
+
+//        if(toPast){
+//            searchRangeStart.value = searchRangeStart.value.minusMinutes(15)
+//        } else {
+//            searchRangeEnd.value = searchRangeEnd.value.plusMinutes(15)
+//        }
+        expandingSearchToPast.value = false
+        expandingSearchToFuture.value = false
+    }
+
+
+
+
+
+    suspend fun sendRequest(rangeStart: LocalDateTime, rangeLength: Int): Response {
+        val settings = SearchSettings(
+            walkingPace = walkingPace.value ?: 12,
+            cyclingPace = cyclingPace.value ?: 5,
+            bikeUnlockTime = bikeUnlockTime.value ?: 30,
+            bikeLockTime = bikeLockTime.value ?: 15,
+            useSharedBikes = useSharedBikes.value,
+            bikeMax15Minutes = true,
+            transferTime = transferBuffer.value.toInt(),
+            comfortBalance = comfortPreference.value.toInt(),
+            walkingPreference = transferLength.value.toInt(),
+            bikeTripBuffer = bikeTripBuffer.value.toInt()
+        )
+
+        val request = CreateStopToStopRangeRequest(
+            srcStopName = fromText.value,
+            destStopName = toText.value,
+            dateTime = rangeStart
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
+            byEarliestDeparture = byEarliestDeparture.value,
+            settings = settings,
+            rangeLength = rangeLength
+        )
+
+        return khttp.post(
+            url = "http://prago.xyz/connection",
+            json = request.toJsonObject()
+        )
+    }
+
+
+
+
+    fun startSearch(
+        navController: NavController,
+        showDialog: (Boolean) -> Unit,
+        setErrorMessage: (String) -> Unit
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val response = sendRequest(selectedDate.value.atTime(selectedTime.value), 15)
+
+                when (response.statusCode) {
+                    200 -> {
+                        val connectionSearchResults = Json.decodeFromString<List<ConnectionSearchResult>>(response.text)
+                        withContext(Dispatchers.Main) {
+                            searchResultList.value = connectionSearchResults
+                            navController.navigate("resultPage")
+
+                            searchRangeStart.value = selectedDate.value.atTime(selectedTime.value)
+                            searchRangeEnd.value = selectedDate.value.atTime(selectedTime.value).plusMinutes(15)
+                        }
+                    }
+                    404 -> {
+                        withContext(Dispatchers.Main) {
+                            setErrorMessage("The connection could not be found. Please try changing the search parameters.")
+                            showDialog(true)
+                        }
+                    }
+                    502 -> {
+                        withContext(Dispatchers.Main) {
+                            setErrorMessage("The server is currently down. Please try again later.")
+                            showDialog(true)
+                        }
+                    }
+                    else -> {
+                        withContext(Dispatchers.Main) {
+                            setErrorMessage(response.text)
+                            showDialog(true)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    setErrorMessage("An error occurred: ${e.message}")
+                    showDialog(true)
+                }
+                e.printStackTrace()
+            }
+        }
+    }
 
     //val settingsFlow: Flow<Preferences> = preferencesDataStore.data
 

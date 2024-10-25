@@ -71,7 +71,7 @@ fun UsedBikeTripCard(bikeTrip: UsedBikeTrip) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ){
-                TripNameRow("Nextbike", colorNextbike)
+                TripNameRow("Nextbike", colorNextbike, false, 0)
                 Box(
                     modifier = Modifier
                         .background(Color(0xFF888888), RoundedCornerShape(16.dp))

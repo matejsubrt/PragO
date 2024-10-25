@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package com.example.prago.dataClasses
 
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -43,7 +45,11 @@ data class UsedTrip(
     val routeName: String,
     val color: ColorStruct,
     val stopPasses: List<StopPass>,
-    val vehicleType: Int
+    val vehicleType: Int,
+    val hasDelayInfo: Boolean,
+    val delayWhenBoarded: Int,
+    val currentDelay: Int,
+    val tripId: String
 )
 
 @Serializable
