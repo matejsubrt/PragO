@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.sp
 
 const val lineNameSize = 17
 const val stopNameSize = 14
+const val delayTextSize = 13
 const val tripIconSize = 42
 const val transferIconSize = 32
 const val transferTextSize = 14
@@ -18,6 +19,12 @@ val stopNameStyle = TextStyle(
     color = Color.Black,
     fontSize = stopNameSize.sp,
     fontWeight = FontWeight.Medium
+)
+
+val delayTextStyle = TextStyle(
+    color = Color.Black,
+    fontSize = delayTextSize.sp,
+    fontWeight = FontWeight.Bold
 )
 
 

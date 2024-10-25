@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.prago.dataClasses.ConnectionSearchResult
 import com.example.prago.formatters.formatDurationTime
 import com.example.prago.formatters.formatTime
 import kotlinx.coroutines.delay
@@ -58,17 +59,17 @@ fun CountDown(
     var displaySeconds by remember { mutableStateOf(false) }
     var departed by remember { mutableStateOf(false) }
 
-    LaunchedEffect(true) {
+    LaunchedEffect(departureTime) { // Trigger LaunchedEffect when departureTime changes
         flow {
             while (true) {
                 val currentTime = LocalDateTime.now()
                 timeLeft = Duration.between(currentTime, departureTime)
-                displaySeconds = timeLeft.seconds < 600 // Check if less than 10 minutes left
-                departed = timeLeft <= Duration.ZERO // Check if departure time has passed
+                displaySeconds = timeLeft.seconds < 600
+                departed = timeLeft <= Duration.ZERO
                 emit(Unit)
                 delay(1000)
             }
-        }.collect { } // Provide an empty collector
+        }.collect { }
     }
 
     val formattedTime = if (departed) {
@@ -110,8 +111,7 @@ fun CountDownPreview() {
 
 @Composable
 fun ResultHeader(
-    departureTime: LocalDateTime,
-    arrivalTime: LocalDateTime
+    searchResult: ConnectionSearchResult
 ) {
     Row(
         modifier = Modifier
@@ -121,7 +121,7 @@ fun ResultHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        CountDown(departureTime, Modifier.weight(1f))
-        TotalTime(departureTime, arrivalTime)
+        CountDown(searchResult.departureDateTime, Modifier.weight(1f))
+        TotalTime(searchResult.departureDateTime, searchResult.arrivalDateTime)
     }
 }

@@ -1,5 +1,6 @@
 package com.example.prago.composables.searchScreen
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,24 +31,13 @@ import androidx.compose.ui.unit.sp
 import com.example.prago.activities.LocalNavController
 import com.example.prago.activities.LocalSharedViewModel
 import com.example.prago.activities.LocalStopListDataStore
-import com.example.prago.dataClasses.SearchSettings
-import com.example.prago.dataClasses.StopToStopRequest
-import com.example.prago.dataClasses.ConnectionSearchResult
 import com.example.prago.activities.labelLists
 import com.example.prago.activities.sliderLabels
 import com.example.prago.activities.sliderMaxValues
 import com.example.prago.composables.MainTopBar
-import com.example.prago.dataClasses.toJsonObject
 import com.example.prago.ui.theme.PragOTheme
-import khttp.responses.Response
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
-import java.time.format.DateTimeFormatter
 
 
 @Composable
@@ -112,7 +102,7 @@ fun DateTimePickerRow(
 fun Body(){
     val navController = LocalNavController.current
     val viewModel = LocalSharedViewModel.current
-    val stopListDataStore = LocalStopListDataStore.current
+    //val stopListDataStore = LocalStopListDataStore.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -207,69 +197,12 @@ fun Body(){
 
             Button(
                 onClick = {
-                    GlobalScope.launch(Dispatchers.IO) {
-                        try {
-                            val settings = SearchSettings(
-                                walkingPace = viewModel.walkingPace.value ?: 12,
-                                cyclingPace = viewModel.cyclingPace.value ?: 5,
-                                bikeUnlockTime = viewModel.bikeUnlockTime.value ?: 30,
-                                bikeLockTime = viewModel.bikeLockTime.value ?: 15,
-                                useSharedBikes = viewModel.useSharedBikes.value,
-                                bikeMax15Minutes = true,
-                                transferTime = viewModel.transferBuffer.value.toInt(),
-                                comfortBalance = viewModel.comfortPreference.value.toInt(),
-                                walkingPreference = viewModel.transferLength.value.toInt(),
-                                bikeTripBuffer = viewModel.bikeTripBuffer.value.toInt()
-                            )
-                            val request = StopToStopRequest(
-                                srcStopName = viewModel.fromText.value,
-                                destStopName = viewModel.toText.value,
-                                dateTime = viewModel.selectedDate.value.atTime(viewModel.selectedTime.value).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
-                                byEarliestDeparture = viewModel.byEarliestDeparture.value,
-                                settings = settings
-                            )
-
-                            val response: Response = khttp.post(
-                                url = "http://prago.xyz/connection/stop-to-stop",
-                                json = request.toJsonObject()
-                            )
-
-                            when (response.statusCode) {
-                                200 -> {
-                                    val connectionSearchResult = Json.decodeFromString<ConnectionSearchResult>(response.text)
-                                    withContext(Dispatchers.Main) {
-                                        viewModel.searchResult.value = connectionSearchResult
-                                        navController.navigate("resultPage")
-                                    }
-                                }
-                                404 -> {
-                                    withContext(Dispatchers.Main) {
-                                        errorMessage = "The connection could not be found. Please try changing the search parameters."
-                                        showDialog = true
-                                    }
-                                }
-                                502 -> {
-                                    withContext(Dispatchers.Main) {
-                                        errorMessage = "The server is currently down. Please try again later."
-                                        showDialog = true
-                                    }
-                                }
-                                else -> {
-                                    withContext(Dispatchers.Main) {
-                                        //errorMessage = "Error: ${response.statusCode}. ${response.text}"
-                                        errorMessage = response.text
-                                        showDialog = true
-                                    }
-                                }
-                            }
-                        } catch (e: Exception) {
-                            withContext(Dispatchers.Main) {
-                                errorMessage = "An error occurred: ${e.message}"
-                                showDialog = true
-                            }
-                            e.printStackTrace()
-                        }
-                    }
+                    Log.i("DEBUG", "Search button clicked")
+                    viewModel.startSearch(
+                        navController = navController,
+                        showDialog = { showDialog = it },
+                        setErrorMessage = { errorMessage = it }
+                    )
                 },
                 modifier = Modifier
                     .width(256.dp)

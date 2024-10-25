@@ -96,6 +96,8 @@ dependencies {
     implementation("org.danilopianini:khttp:1.3.1")
     implementation ("com.github.commandiron:WheelPickerCompose:1.1.11")
 
+    implementation("androidx.compose.material3:material3")
+    implementation(platform("androidx.compose:compose-bom:2024.02.01"))
     implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07")
     implementation ("androidx.datastore:datastore:1.0.0")
     implementation ("com.google.protobuf:protobuf-javalite:3.21.5")

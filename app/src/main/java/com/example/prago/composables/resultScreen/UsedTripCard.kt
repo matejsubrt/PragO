@@ -11,12 +11,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.prago.R
+import com.example.prago.dataClasses.ColorStruct
+import com.example.prago.dataClasses.StopPass
 import com.example.prago.dataClasses.UsedTrip
+import java.time.LocalDateTime
 
 @Composable
 fun UsedTripCard(trip: UsedTrip) {
+
     Row(
         verticalAlignment = Alignment.CenterVertically, // Align items vertically in the center
         modifier = Modifier
@@ -47,7 +52,7 @@ fun UsedTripCard(trip: UsedTrip) {
         Column(
             modifier = Modifier.padding(start = 4.dp, top = 2.dp, end = 8.dp, bottom = 4.dp)
         ) {
-            LineRow(trip.routeName, trip.color)
+            LineRow(trip.routeName, trip.color, trip.hasDelayInfo, trip.currentDelay)
             StopRow(
                 stopName = trip.stopPasses[trip.getOnStopIndex].name,
                 time = trip.stopPasses[trip.getOnStopIndex].departureTime
@@ -58,4 +63,37 @@ fun UsedTripCard(trip: UsedTrip) {
             )
         }
     }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewUsedTripCard() {
+    val sampleTrip = UsedTrip(
+        getOnStopIndex = 0,
+        getOffStopIndex = 1,
+        routeName = "123",
+        color = ColorStruct(98, 0, 238),
+        stopPasses = listOf(
+            StopPass(
+                name = "Stop A",
+                id = "1",
+                arrivalTime = LocalDateTime.of(2024, 10, 23, 8, 0),
+                departureTime = LocalDateTime.of(2024, 10, 23, 8, 5)
+            ),
+            StopPass(
+                name = "Stop B",
+                id = "2",
+                arrivalTime = LocalDateTime.of(2024, 10, 23, 8, 30),
+                departureTime = LocalDateTime.of(2024, 10, 23, 8, 35)
+            )
+        ),
+        vehicleType = 3,
+        hasDelayInfo = true,
+        delayWhenBoarded = 0,
+        currentDelay = -168,
+        tripId = "trip123"
+    )
+
+    UsedTripCard(trip = sampleTrip)
 }
