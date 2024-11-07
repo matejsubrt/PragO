@@ -22,6 +22,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.example.prago.R
 import com.example.prago.dataClasses.ConnectionSearchResult
 import com.example.prago.StopList
 import com.example.prago.dataClasses.CreateStopToStopRangeRequest
@@ -168,6 +169,7 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
     var bikeTripBuffer = mutableStateOf(2f)
     var selectedDate = mutableStateOf(LocalDate.now())
     var selectedTime = mutableStateOf(LocalTime.now())
+    var departureNow = mutableStateOf(true)
     var byEarliestDeparture = mutableStateOf(true)
 
     var searchRangeStart = mutableStateOf(LocalDateTime.now())
@@ -506,13 +508,23 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
 
 
     fun startSearch(
+        context: Context,
         navController: NavController,
         showDialog: (Boolean) -> Unit,
         setErrorMessage: (String) -> Unit
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val response = sendRequest(selectedDate.value.atTime(selectedTime.value), 15)
+                var startDateTime = LocalDateTime.now()
+                if(departureNow.value){
+                    startDateTime = LocalDateTime.now()
+                    selectedDate.value = startDateTime.toLocalDate()
+                    selectedTime.value = startDateTime.toLocalTime()
+                } else {
+                    startDateTime = selectedDate.value.atTime(selectedTime.value)
+                }
+                //val startDateTime = if (departureNow.value) LocalDateTime.now() else selectedDate.value.atTime(selectedTime.value)
+                val response = sendRequest(startDateTime, 15)
 
                 when (response.statusCode) {
                     200 -> {
@@ -527,13 +539,13 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
                     }
                     404 -> {
                         withContext(Dispatchers.Main) {
-                            setErrorMessage("The connection could not be found. Please try changing the search parameters.")
+                            setErrorMessage(context.getString(R.string.error_msg_404))
                             showDialog(true)
                         }
                     }
                     502 -> {
                         withContext(Dispatchers.Main) {
-                            setErrorMessage("The server is currently down. Please try again later.")
+                            setErrorMessage(context.getString(R.string.error_msg_502))
                             showDialog(true)
                         }
                     }
@@ -546,7 +558,7 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    setErrorMessage("An error occurred: ${e.message}")
+                    setErrorMessage(context.getString(R.string.an_error_occurred) + ":" + e.message)
                     showDialog(true)
                 }
                 e.printStackTrace()

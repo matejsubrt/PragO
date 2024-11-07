@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -114,7 +115,7 @@ fun ArrivalDepartureButton(
         modifier = modifier,
         shape = RoundedCornerShape(6.dp)
     ) {
-        Text(text = if(departureButton) "Departure" else "Arrival")
+        Text(text = if(departureButton) stringResource(R.string.departure) else stringResource(R.string.arrival))
     }
 }
 
@@ -142,7 +143,9 @@ fun ArrivalDepartureButtonPair(
             Text(text = "Departure")
         }*/
         ArrivalDepartureButton(
-            modifier = Modifier.weight(1f).fillMaxHeight(),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
             departureButton = true,
             departureSelected = isDeparture,
             onValueChanged = onValueChanged
@@ -165,7 +168,9 @@ fun ArrivalDepartureButtonPair(
             Text(text = "Arrival")
         }*/
         ArrivalDepartureButton(
-            modifier = Modifier.weight(1f).fillMaxHeight(),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
             departureButton = false,
             departureSelected = isDeparture,
             onValueChanged = onValueChanged
@@ -181,7 +186,8 @@ fun DateTimeBottomSheet(
     byEarliestDeparture: Boolean,
     onArrDepChange: (Boolean) -> Unit,
     onTimeChanged: (LocalTime) -> Unit,
-    onDateChanged: (LocalDate) -> Unit
+    onDateChanged: (LocalDate) -> Unit,
+    onNowSelected: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true // Prevent partial expansion
@@ -225,7 +231,11 @@ fun DateTimeBottomSheet(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            val text = getLabelFromDate(viewModel.selectedDate.value) + " " + getLabelFromTime(viewModel.selectedTime.value)
+            val text = if(viewModel.departureNow.value){
+                stringResource(R.string.now)
+            }else{
+                getLabelFromDate(viewModel.selectedDate.value) + " " + getLabelFromTime(viewModel.selectedTime.value)
+            }
             Text(
                 text = text,
                 style = TextStyle(
@@ -236,15 +246,16 @@ fun DateTimeBottomSheet(
             Spacer(modifier = Modifier.weight(1f))
 
             Text(
-                text = "Now",
+                text = stringResource(R.string.now),
                 style = TextStyle(
                     fontSize = 17.sp,
                     color = Color.Gray
                 ),
                 modifier = Modifier.clickable(
                     onClick = {
-                        onDateChanged(LocalDate.now())
-                        onTimeChanged(LocalTime.now())
+                        //onDateChanged(LocalDate.now())
+                        //onTimeChanged(LocalTime.now())
+                        onNowSelected()
                     }
                 )
             )
@@ -268,7 +279,7 @@ fun DateTimeBottomSheet(
 
                 ArrivalDepartureButtonPair(byEarliestDeparture, onArrDepChange)
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(60.dp))
 
                 Row(
                     horizontalArrangement = Arrangement.Center,
@@ -293,7 +304,7 @@ fun DateTimeBottomSheet(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(200.dp))
 
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,

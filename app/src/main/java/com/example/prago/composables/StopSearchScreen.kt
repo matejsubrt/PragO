@@ -34,10 +34,12 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.example.prago.R
 import kotlinx.coroutines.flow.MutableSharedFlow
 
 
@@ -85,11 +87,11 @@ fun StopListEmptyState(
         modifier = modifier.fillMaxSize()
     ) {
         Text(
-            text = "No stops found",
+            text = stringResource(R.string.no_stops_found),
             style = MaterialTheme.typography.titleSmall
         )
         Text(
-            text = "Try adjusting your search",
+            text = stringResource(R.string.try_adjusting_your_search),
             style = MaterialTheme.typography.bodyLarge
         )
     }
@@ -153,7 +155,7 @@ fun StopSearchScreen(
                 onQueryChange = onSearchQueryChange,
                 onSearch = { keyboardController?.hide() },
                 placeholder = {
-                    val text = if (srcStop) "Source stop" else "Destination stop"
+                    val text = if (srcStop) stringResource(R.string.source_stop) else stringResource(R.string.destination_stop)
                     Text(text = text)
                 },
                 leadingIcon = {
@@ -169,7 +171,7 @@ fun StopSearchScreen(
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                contentDescription = "Clear search"
+                                contentDescription = stringResource(R.string.clear_search)
                             )
                         }
                     }

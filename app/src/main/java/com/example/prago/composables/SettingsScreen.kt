@@ -32,12 +32,14 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.prago.R
 import com.example.prago.activities.LocalNavController
 import com.example.prago.activities.LocalSharedViewModel
 import com.example.prago.ui.theme.PragOTheme
@@ -170,7 +172,7 @@ fun SettingsScreen() {
 
             EditableIntSettingRow(
                 viewModel = viewModel,
-                label = "Walking pace",
+                label = stringResource(R.string.walking_pace),
                 preferencesKey = "walkingPace",
                 defaultValue = walkingPace,
                 units = "min/km",
@@ -179,7 +181,7 @@ fun SettingsScreen() {
 
             EditableIntSettingRow(
                 viewModel = viewModel,
-                label = "Cycling pace",
+                label = stringResource(R.string.cycling_pace),
                 preferencesKey = "cyclingPace",
                 defaultValue = cyclingPace,
                 units = "min/km",
@@ -188,7 +190,7 @@ fun SettingsScreen() {
 
             EditableIntSettingRow(
                 viewModel = viewModel,
-                label = "Bike unlock time",
+                label = stringResource(R.string.bike_unlock_time),
                 preferencesKey = "bikeUnlockTime",
                 defaultValue = bikeUnlockTime,
                 units = "s",
@@ -197,7 +199,7 @@ fun SettingsScreen() {
 
             EditableIntSettingRow(
                 viewModel = viewModel,
-                label = "Bike lock time",
+                label = stringResource(R.string.bike_lock_time),
                 preferencesKey = "bikeLockTime",
                 defaultValue = bikeLockTime,
                 units = "s",
@@ -228,7 +230,7 @@ fun SettingsScreen() {
                 )
             ) {
                 AutoResizedText(
-                    text = "Save and return",
+                    text = stringResource(R.string.save_and_return),
                     style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface
                 )

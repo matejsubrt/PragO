@@ -31,19 +31,15 @@ import com.example.prago.viewModels.preferencesDataStore
 import com.example.prago.viewModels.stopListDataStore
 import java.time.LocalDateTime
 
-val sliderLabels = listOf("Transfer Buffer", "Transfer length", "Comfort Preference", "Bike Trip Buffer")
-val sliderMaxValues = listOf(3f, 2f, 3f, 3f)
+
 //val sliderDefaultValues = listOf(2f, 1f, 2f, 2f)
 
 
 
 
-val transferBufferLabels = listOf("None", "Short", "Normal", "long")
-val transferLengthLabels = listOf("Long\n(750m)", "Medium\n (400m)", "Short\n (250m)")
-val comfortLabels = listOf("Shortest\nExtreme", "Shortest\nTime", "Balanced", "Least\nTransfers")
-val bikeTripBufferLabels = listOf("None", "Short", "Medium", "Long")
 
-val labelLists = listOf(transferBufferLabels, transferLengthLabels, comfortLabels, bikeTripBufferLabels)
+
+
 
 val LocalNavController = compositionLocalOf<NavController> { error("No NavController provided") }
 val LocalSharedViewModel = compositionLocalOf<SharedViewModel> { error("No SharedViewModel provided") }

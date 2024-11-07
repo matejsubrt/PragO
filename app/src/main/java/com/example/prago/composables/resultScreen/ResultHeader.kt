@@ -18,11 +18,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.prago.R
 import com.example.prago.dataClasses.ConnectionSearchResult
 import com.example.prago.formatters.formatDurationTime
 import com.example.prago.formatters.formatTime
@@ -73,12 +75,12 @@ fun CountDown(
     }
 
     val formattedTime = if (departed) {
-        "Departed"
+        stringResource(R.string.departed)
     } //else if (displaySeconds) {
     //formatTime(timeLeft.seconds)
     //}
     else {
-        "In " + formatTime(timeLeft.seconds)
+        stringResource(R.string.in_time) + " " + formatTime(timeLeft.seconds)
     }
 
     Text(

@@ -24,16 +24,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.prago.R
 import com.example.prago.activities.LocalNavController
 import com.example.prago.activities.LocalSharedViewModel
-import com.example.prago.activities.LocalStopListDataStore
-import com.example.prago.activities.labelLists
-import com.example.prago.activities.sliderLabels
-import com.example.prago.activities.sliderMaxValues
 import com.example.prago.composables.MainTopBar
 import com.example.prago.ui.theme.PragOTheme
 import kotlinx.coroutines.launch
@@ -109,6 +107,40 @@ fun Body(){
     var showDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
+    val sliderLabels = listOf(
+        stringResource(R.string.transfer_buffer),
+        stringResource(R.string.transfer_length),
+        stringResource(R.string.comfort_preference),
+        stringResource(R.string.bike_trip_buffer)
+    )
+    val sliderMaxValues = listOf(3f, 2f, 3f, 3f)
+
+    val transferBufferLabels = listOf(
+        stringResource(R.string.buffer_none),
+        stringResource(R.string.buffer_short),
+        stringResource(R.string.buffer_normal),
+        stringResource(R.string.buffer_long)
+    )
+    val transferLengthLabels = listOf(
+        stringResource(R.string.long_transfer) + "\n (750m)",
+        stringResource(R.string.medium_transfer) + "\n  (400m)",
+        stringResource(R.string.short_transfer) + "\n  (250m)"
+    )
+    val comfortLabels = listOf(stringResource(R.string.comfort_shortest_extreme),
+        stringResource(R.string.comfort_shortest),
+        stringResource(R.string.comfort_balanced), stringResource(R.string.comfort_least_transfers)
+    )
+    val bikeTripBufferLabels = listOf(
+        stringResource(R.string.buffer_none),
+        stringResource(R.string.buffer_short),
+        stringResource(R.string.buffer_normal),
+        stringResource(R.string.buffer_long)
+    )
+
+
+    val labelLists = listOf(transferBufferLabels, transferLengthLabels, comfortLabels, bikeTripBufferLabels)
+
+
     // TODO: Implement better error handling - user-friendly error messages and popups
     if (showDialog) {
         AlertDialog(
@@ -118,7 +150,7 @@ fun Body(){
                     Text("OK")
                 }
             },
-            title = { Text(text = "Error") },
+            title = { Text(text = stringResource(R.string.error)) },
             text = { Text(errorMessage) }
         )
     }
@@ -142,13 +174,14 @@ fun Body(){
                 viewModel = viewModel,
                 byEarliestDeparture = viewModel.byEarliestDeparture.value,
                 onArrDepChange = { viewModel.byEarliestDeparture.value = it },
-                onDateChanged = { viewModel.selectedDate.value = it},
-                onTimeChanged = { viewModel.selectedTime.value = it}
+                onDateChanged = { viewModel.selectedDate.value = it; viewModel.departureNow.value = false},
+                onTimeChanged = { viewModel.selectedTime.value = it; viewModel.departureNow.value = false},
+                onNowSelected = { viewModel.departureNow.value = true; viewModel.byEarliestDeparture.value = true }
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            LabelWithToggleSwitch(label = "Use Shared Bikes", checked = viewModel.useSharedBikes.value) {
+            LabelWithToggleSwitch(label = stringResource(R.string.use_shared_bikes), checked = viewModel.useSharedBikes.value) {
                 viewModel.useSharedBikes.value = it
                 scope.launch{
                     viewModel.saveBoolSetting("useSharedBikes", it)
@@ -199,6 +232,7 @@ fun Body(){
                 onClick = {
                     Log.i("DEBUG", "Search button clicked")
                     viewModel.startSearch(
+                        context = context,
                         navController = navController,
                         showDialog = { showDialog = it },
                         setErrorMessage = { errorMessage = it }
@@ -212,7 +246,7 @@ fun Body(){
                 )
             ) {
                 Text(
-                    text = "Search",
+                    text = stringResource(R.string.search),
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface

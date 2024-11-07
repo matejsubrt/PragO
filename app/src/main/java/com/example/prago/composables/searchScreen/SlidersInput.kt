@@ -29,12 +29,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.prago.R
 
 
 @Composable
@@ -179,7 +181,7 @@ fun SlidersBox(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Extended settings",
+                        text = stringResource(R.string.extended_settings),
                         style = TextStyle(
                             color = MaterialTheme.colorScheme.primary,
                             fontSize = 16.sp,
@@ -188,7 +190,7 @@ fun SlidersBox(
                     )
                     Icon(
                         imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = "Expand Sliders",
+                        contentDescription = stringResource(R.string.expand_sliders),
                         modifier = Modifier
                             .size(24.dp)
                             .rotate(if (slidersInputVisible) 180f else 0f),

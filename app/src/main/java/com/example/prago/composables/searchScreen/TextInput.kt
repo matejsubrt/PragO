@@ -18,9 +18,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.prago.R
 import com.example.prago.activities.LocalNavController
 import com.example.prago.ui.theme.Gray33
 
@@ -88,8 +90,8 @@ fun TextInput(
             .padding(start = 8.dp, top = 0.dp, end = 8.dp, bottom = 4.dp)
     ) {
         Column() {
-            LabelWithTextInput(label = "From:", placeholder = "Source stop", text = fromText, onTextChange = onFromValueChange, onClick = {navControler.navigate("fromStopSelect")})
-            LabelWithTextInput(label = "To:", placeholder = "Destination stop", text = toText, onTextChange = onToValueChange, onClick = {navControler.navigate("toStopSelect")})
+            LabelWithTextInput(label = stringResource(R.string.from) + ":", placeholder = stringResource(R.string.source_stop), text = fromText, onTextChange = onFromValueChange, onClick = {navControler.navigate("fromStopSelect")})
+            LabelWithTextInput(label = stringResource(R.string.to) + ":", placeholder = stringResource(R.string.destination_stop), text = toText, onTextChange = onToValueChange, onClick = {navControler.navigate("toStopSelect")})
         }
     }
 }
