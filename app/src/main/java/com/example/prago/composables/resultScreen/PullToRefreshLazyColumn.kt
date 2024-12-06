@@ -2,6 +2,7 @@
 
 package com.example.prago.composables.resultScreen
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -228,6 +229,7 @@ fun  PullToRefreshLazyColumn(
         }
     }
 
+
     LaunchedEffect(items) {
         hasLoadedItems = items.isNotEmpty()
     }
@@ -242,11 +244,12 @@ fun  PullToRefreshLazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(items, key = {it.arrivalDateTime.toString() + it.usedSegmentTypes.toString()}) {
+            items(items/*, key = {it.arrivalDateTime.toString() + it.usedSegmentTypes.toString()}*/) {
                 content(it)
             }
 
             if (isExpandingToFuture) {
+                Log.i("DEBUG", "Displaying loading indicator")
                 item {
                     Box(
                         modifier = Modifier
@@ -263,12 +266,15 @@ fun  PullToRefreshLazyColumn(
         if (pullToRefreshState.isRefreshing) {
             LaunchedEffect(Unit) {
                 onRefresh(true)
-                //val index = if(expansionToPastItems == 0) 0 else if(expansionToPastItems == 1) 0 else expansionToPastItems - 2
-                //Log.i("DEBUG", "Scrolling to $index")
-                //lazyListState.scrollToItem(0)
-                //pullToRefreshState.endRefresh()
             }
         }
+
+        LaunchedEffect(isExpandingToFuture) {
+            if (isExpandingToFuture) {
+                lazyListState.scrollToItem(items.size) // Scroll to bottom to ensure visibility of the indicator
+            }
+        }
+
 
         LaunchedEffect(isExpandingToPast) {
             if (isExpandingToPast) {

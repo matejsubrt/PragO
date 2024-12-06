@@ -31,7 +31,7 @@ fun ResultScreen(){
             PullToRefreshLazyColumn(
                 items = searchResultList ?: emptyList(),
                 content = { searchResult ->
-                    ResultCard(searchResult)
+                    ResultCard(searchResult, viewModel)
                 },
                 isExpandingToPast = viewModel.expandingSearchToPast.value,
                 isExpandingToFuture = viewModel.expandingSearchToFuture.value,

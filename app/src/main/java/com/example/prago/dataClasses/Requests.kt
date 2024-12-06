@@ -56,6 +56,15 @@ data class ConnectionRequest(
     @JsonName("settings") val settings: SearchSettings
 )
 
+data class AlternativeTripsRequest(
+    @JsonName("srcStopId") val srcStopId: String,
+    @JsonName("destStopId") val destStopId: String,
+    @JsonName("dateTime") val dateTime: String,
+    @JsonName("previous") val previous: Boolean,
+    @JsonName("count") val count: Int,
+    @JsonName("tripId") val tripId: String
+)
+
 fun CreateStopToStopRangeRequest(
     srcStopName: String,
     destStopName: String,

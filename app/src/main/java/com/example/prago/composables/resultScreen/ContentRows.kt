@@ -68,7 +68,7 @@ fun TripNameRow(text: String, color: Color, hasDelayData: Boolean, currentTripDe
 
 @Composable
 fun LineRow(lineName: String, colorStruct: ColorStruct, hasDelayData: Boolean, currentTripDelay: Int) {
-    val text = stringResource(R.string.line) + lineName
+    val text = stringResource(R.string.line) + " " + lineName
     val color = Color(colorStruct.r, colorStruct.g, colorStruct.b)
     TripNameRow(text = text, color = color, hasDelayData = hasDelayData, currentTripDelay = currentTripDelay)
 }

@@ -161,6 +161,7 @@ fun Body(){
     ) {
         item {
             TextInput(
+                viewModel = viewModel,
                 context = context,
                 fromText = viewModel.fromText.value,
                 toText = viewModel.toText.value,

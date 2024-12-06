@@ -8,14 +8,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.prago.dataClasses.ConnectionSearchResult
-
+import com.example.prago.viewModels.SharedViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 @Composable
-fun ResultCard(result: ConnectionSearchResult?){
+fun ResultCard(result: ConnectionSearchResult?, viewModel: SharedViewModel){
+    val coroutineScope = rememberCoroutineScope()
+
+
     if(result != null)
         Card(
             shape = RoundedCornerShape(16.dp),
@@ -50,7 +57,22 @@ fun ResultCard(result: ConnectionSearchResult?){
                 result.usedSegmentTypes.forEach{segmentType ->
                     when(segmentType){
                         0 -> UsedTransferCard(result.usedTransfers[transferIndex++])
-                        1 -> UsedTripCard(result.usedTrips[tripIndex++])
+                        1 -> {
+                            val currTripIndex = tripIndex
+                            UsedTripAlternativesRow(
+                                tripAlternatives = result.usedTripAlternatives[currTripIndex],
+                                onExpand = { toPast ->
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        viewModel.getAlternatives(result, currTripIndex, toPast)
+                                    }
+                                },
+                                onIndexChanged = { newIndex ->
+                                    viewModel.updateCurrIndex(result, currTripIndex, newIndex)
+                                }
+                            )
+                                //currIndex = result.usedTripsIndices[currTripIndex])
+                            tripIndex++
+                        }//UsedTripCard(result.usedTripsWithAlternatives[tripIndex][result.usedTripsIndices[tripIndex++]])//result.usedTrips[tripIndex++])
                         2 -> UsedBikeTripCard(result.usedBikeTrips[bikeTripIndex++])
                     }
                 }

@@ -5,6 +5,7 @@ package com.example.prago.viewModels
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -25,9 +26,12 @@ import androidx.navigation.NavController
 import com.example.prago.R
 import com.example.prago.dataClasses.ConnectionSearchResult
 import com.example.prago.StopList
+import com.example.prago.dataClasses.AlternativeTripsRequest
 import com.example.prago.dataClasses.CreateStopToStopRangeRequest
 import com.example.prago.dataClasses.SearchSettings
 import com.example.prago.dataClasses.StopListDataClass
+import com.example.prago.dataClasses.TripAlternatives
+import com.example.prago.dataClasses.UsedTrip
 import com.example.prago.dataClasses.toJsonObject
 import com.google.protobuf.InvalidProtocolBufferException
 import kotlinx.coroutines.Dispatchers
@@ -135,14 +139,12 @@ fun convertToStopList(stopListDataClass: StopListDataClass): StopList {
 data class StopEntry(val czechName: String, val normalizedName: String, val id: String)
 
 class SharedViewModel(val stopListDataStore: DataStore<StopList>,
-                      val preferencesDataStore: DataStore<Preferences>) : ViewModel()
-{
+                      val preferencesDataStore: DataStore<Preferences>) : ViewModel() {
     private val _stopNameList = MutableStateFlow<List<StopEntry>>(emptyList())
     val stopNamesFlow: StateFlow<List<StopEntry>> = _stopNameList
     //var searchResult = MutableLiveData<ConnectionSearchResult>()
 
     var searchResultList = MutableLiveData<List<ConnectionSearchResult>>()
-
 
 
     // Saved search parameter values
@@ -181,7 +183,6 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
     val bikeLockTime = MutableStateFlow<Int?>(null)
 
 
-
     init {
         viewModelScope.launch {
             transferBuffer.value = retrieveFloatSetting("transferBuffer", 2f)
@@ -201,7 +202,11 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
                 .map { stopList ->
                     // Map stop group names to list of StopEntry
                     val stopEntries = stopList.stopGroupsList.map { stopGroup ->
-                        StopEntry(czechName = stopGroup.name, normalizedName = normalizeCzech(stopGroup.name), id = stopGroup.name + stopGroup.districtCode + stopGroup.cis)
+                        StopEntry(
+                            czechName = stopGroup.name,
+                            normalizedName = normalizeCzech(stopGroup.name),
+                            id = stopGroup.name + stopGroup.districtCode + stopGroup.cis
+                        )
                     }
                     stopEntries
                 }
@@ -213,11 +218,6 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
             Log.i("DEBUG", "Init done")
         }
     }
-
-
-
-
-
 
 
     fun normalizeCzech(input: String): String {
@@ -240,7 +240,12 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
 
                     // Ensure that each part of the query matches the beginning of corresponding words in the stop name
                     queryParts.all { queryPart ->
-                        nameParts.any { namePart -> namePart.startsWith(queryPart, ignoreCase = true) }
+                        nameParts.any { namePart ->
+                            namePart.startsWith(
+                                queryPart,
+                                ignoreCase = true
+                            )
+                        }
                     }
                 }.take(16)
             }.stateIn(
@@ -259,7 +264,12 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
                     val nameParts = splitNormalizedWords(stopName.normalizedName)
 
                     queryParts.all { queryPart ->
-                        nameParts.any { namePart -> namePart.startsWith(queryPart, ignoreCase = true) }
+                        nameParts.any { namePart ->
+                            namePart.startsWith(
+                                queryPart,
+                                ignoreCase = true
+                            )
+                        }
                     }
                 }.take(16)
             }
@@ -269,9 +279,11 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
                 initialValue = emptyList(),
                 started = SharingStarted.WhileSubscribed(5_000)
             )
+
     fun onFromSearchQueryChange(newQuery: String) {
         fromSearchQuery = newQuery
     }
+
     fun onToSearchQueryChange(newQuery: String) {
         toSearchQuery = newQuery
     }
@@ -298,14 +310,12 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
     }
 
 
-
     suspend fun saveBoolSetting(key: String, value: Boolean) {
         val dataStoreKey = stringPreferencesKey(key)
         preferencesDataStore.edit { preferences ->
             preferences[dataStoreKey] = value.toString()
         }
     }
-
 
 
     suspend fun retrieveBoolSetting(key: String, defaultValue: Boolean): Boolean {
@@ -385,16 +395,16 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
 //    }
 
     suspend fun expandSearch(toPast: Boolean) {
-        if(toPast){
+        if (toPast) {
             expandingSearchToPast.value = true
             //expansionToPastItems.value = 0
-        }
-        else{
+        } else {
             expandingSearchToFuture.value = true
         }
 
         Log.i("DEBUG", "Expanding search, toPast: $toPast")
-        val rangeStart = if (toPast) searchRangeStart.value.minusMinutes(15) else searchRangeEnd.value
+        val rangeStart =
+            if (toPast) searchRangeStart.value.minusMinutes(15) else searchRangeEnd.value
 
 
         Log.i("DEBUG", "Range start: $rangeStart")
@@ -406,21 +416,24 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
             200 -> {
                 val connectionSearchResults: List<ConnectionSearchResult> =
                     Json.decodeFromString(response.text)
+                processRawSearchResults(connectionSearchResults)
                 Log.i("DEBUG", "Results fetched")
                 //withContext(Dispatchers.Main) {
-                    val currentList = searchResultList.value ?: emptyList()
-                    var newList = connectionSearchResults
+                val currentList = searchResultList.value ?: emptyList()
+                var newList = connectionSearchResults
 
-                    if (toPast) {
-                        for(i in currentList.size - 1 downTo 0){
-                            if(currentList[i].arrivalDateTime == newList[newList.size - 1].arrivalDateTime){
-                                newList = newList.subList(0, newList.size - 1)
-                            }
+                if (toPast) {
+                    for (i in currentList.size - 1 downTo 0) {
+                        if (currentList[i].arrivalDateTime == newList[newList.size - 1].arrivalDateTime) {
+                            newList = newList.subList(0, newList.size - 1)
                         }
+                    }
 
-                        searchResultList.value = newList + currentList
-                        expansionToPastItems.value = newList.size
-                        Log.i("DEBUG", "Newlist size: ${newList.size}")
+                    val newSearchResultList = cleanUpDuplicates(newList + currentList)
+
+                    searchResultList.value = newSearchResultList
+                    expansionToPastItems.value = newList.size
+                    Log.i("DEBUG", "Newlist size: ${newList.size}")
 //                        if(newList[newList.size - 1].arrivalDateTime == currentList[0].arrivalDateTime){
 //                            searchResultList.value = newList.subList(0, newList.size - 1) + currentList
 //                            expansionToPastItems.value = newList.size - 1
@@ -428,14 +441,16 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
 //                            searchResultList.value = newList + currentList
 //                            expansionToPastItems.value = newList.size
 //                        }
-                    } else {
-                        for(i in 0 until currentList.size){
-                            if(currentList[i].arrivalDateTime == newList[0].arrivalDateTime){
-                                newList = newList.subList(1, newList.size)
-                            }
+                } else {
+                    for (i in 0 until currentList.size) {
+                        if (currentList[i].arrivalDateTime == newList[0].arrivalDateTime) {
+                            newList = newList.subList(1, newList.size)
                         }
+                    }
 
-                        searchResultList.value = currentList + newList
+                    val  newSearchResultList = cleanUpDuplicates(currentList + newList)
+
+                    searchResultList.value = newSearchResultList
 
 
 //                        if(currentList[currentList.size - 1].arrivalDateTime == newList[0].arrivalDateTime){
@@ -443,12 +458,12 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
 //                        } else{
 //                            searchResultList.value = currentList + newList
 //                        }
-                        //currentList + newList
-                    }
+                    //currentList + newList
+                }
 
 
-
-                if(toPast){
+                //searchResultList.value = cleanUpDuplicates(searchResultList.value!!)
+                if (toPast) {
                     searchRangeStart.value = searchRangeStart.value.minusMinutes(15)
                 } else {
                     searchRangeEnd.value = searchRangeEnd.value.plusMinutes(15)
@@ -457,8 +472,12 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
 //                    searchRangeEnd.value = selectedDate.value.atTime(selectedTime.value).plusMinutes(15)
                 //}
             }
-            404, 502 -> { /* handle other status codes if needed */ }
-            else -> { /* handle other status codes if needed */ }
+
+            404, 502 -> { /* handle other status codes if needed */
+            }
+
+            else -> { /* handle other status codes if needed */
+            }
         }
 
 //        if(toPast){
@@ -470,42 +489,268 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
         expandingSearchToFuture.value = false
     }
 
+//    suspend fun sendAlternativeTripsRequest(
+//        srcStopId: String,
+//        destStopId: String,
+//        dateTime: String,
+//        previous: Boolean,
+//        count: Int
+//    ): Response = withContext(Dispatchers.IO) {
+//        val request = AlternativeTripsRequest(
+//            srcStopId = srcStopId,
+//            destStopId = destStopId,
+//            dateTime = dateTime,
+//            previous = previous,
+//            count = count
+//        )
+//
+//        khttp.post(
+//            url = "http://prago.xyz/alternative-trips",
+//            json = request.toJsonObject()
+//        )
+//    }
+
+    suspend fun sendRequest(rangeStart: LocalDateTime, rangeLength: Int): Response =
+        withContext(Dispatchers.IO) {
+            val settings = SearchSettings(
+                walkingPace = walkingPace.value ?: 12,
+                cyclingPace = cyclingPace.value ?: 5,
+                bikeUnlockTime = bikeUnlockTime.value ?: 30,
+                bikeLockTime = bikeLockTime.value ?: 15,
+                useSharedBikes = useSharedBikes.value,
+                bikeMax15Minutes = true,
+                transferTime = transferBuffer.value.toInt(),
+                comfortBalance = comfortPreference.value.toInt(),
+                walkingPreference = transferLength.value.toInt(),
+                bikeTripBuffer = bikeTripBuffer.value.toInt()
+            )
+
+            val request = CreateStopToStopRangeRequest(
+                srcStopName = fromText.value,
+                destStopName = toText.value,
+                dateTime = rangeStart.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
+                byEarliestDeparture = byEarliestDeparture.value,
+                settings = settings,
+                rangeLength = rangeLength
+            )
+
+            khttp.post(
+                url = "http://prago.xyz/connection",
+                json = request.toJsonObject()
+            )
+        }
+
+
+//    fun processRawSearchResults(rawSearchResults: List<ConnectionSearchResult>) {
+//        for (searchResult in rawSearchResults) {
+//            searchResult.usedTripAlternativesLists =
+//                searchResult.usedTrips.map { listOf(it) }.toMutableList()
+//            searchResult.usedTripsIndices = MutableList(searchResult.usedTrips.size) { 0 }
+//        }
+//    }
+
+    fun processRawSearchResults(rawSearchResults: List<ConnectionSearchResult>) {
+        /*for (searchResult in rawSearchResults) {
+            // Create a SnapshotStateList from a mutable list
+            searchResult.usedTripAlternatives =
+                mutableStateListOf(*searchResult.usedTrips.map {
+                    TripAlternatives(
+                        currIndex = 0,
+                        alternatives = listOf(it),
+                        count = 1
+                    )
+                }.toTypedArray())
 
 
 
+            // Create a SnapshotStateList for usedTripsIndices as well
+            //searchResult.usedTripsIndices = mutableStateListOf(*MutableList(searchResult.usedTrips.size) { 0 }.toTypedArray())
+        }*/
+    }
 
-    suspend fun sendRequest(rangeStart: LocalDateTime, rangeLength: Int): Response {
-        val settings = SearchSettings(
-            walkingPace = walkingPace.value ?: 12,
-            cyclingPace = cyclingPace.value ?: 5,
-            bikeUnlockTime = bikeUnlockTime.value ?: 30,
-            bikeLockTime = bikeLockTime.value ?: 15,
-            useSharedBikes = useSharedBikes.value,
-            bikeMax15Minutes = true,
-            transferTime = transferBuffer.value.toInt(),
-            comfortBalance = comfortPreference.value.toInt(),
-            walkingPreference = transferLength.value.toInt(),
-            bikeTripBuffer = bikeTripBuffer.value.toInt()
-        )
+//    fun cleanUpDuplicates(searchResults: List<ConnectionSearchResult>): List<ConnectionSearchResult> {
+//        val orderedSearchResults = searchResults.sortedBy { it.departureDateTime }
+//
+//
+//
+//
+//
+//        val seenCombinations = mutableSetOf<Pair<String, String>>()
+//        return searchResults.filter { result ->
+//            Log.i("DEBUG", "arrivalDateTime: ${result.arrivalDateTime}, usedSegmentTypes: ${result.usedSegmentTypes.joinToString()}")
+//            val key = (result.arrivalDateTime.toString()) to result.usedSegmentTypes.joinToString()
+//            if (key in seenCombinations) {
+//                false
+//            } else {
+//                seenCombinations.add(key)
+//                true
+//            }
+//            true
+//        }
+//    }
 
-        val request = CreateStopToStopRangeRequest(
-            srcStopName = fromText.value,
-            destStopName = toText.value,
-            dateTime = rangeStart
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
-            byEarliestDeparture = byEarliestDeparture.value,
-            settings = settings,
-            rangeLength = rangeLength
-        )
 
-        return khttp.post(
-            url = "http://prago.xyz/connection",
-            json = request.toJsonObject()
-        )
+    fun cleanUpDuplicates(searchResults: List<ConnectionSearchResult>): List<ConnectionSearchResult> {
+        val orderedSearchResults = searchResults.sortedBy { it.departureDateTime }
+        val cleanedResults = mutableListOf<ConnectionSearchResult>()
+
+        for (result in orderedSearchResults) {
+            if (cleanedResults.isEmpty() ||
+                result.departureDateTime != cleanedResults.last().departureDateTime ||
+                result.arrivalDateTime != cleanedResults.last().arrivalDateTime ||
+                result.usedSegmentTypes != cleanedResults.last().usedSegmentTypes
+            ) {
+                cleanedResults.add(result)
+            }
+        }
+
+        return cleanedResults
     }
 
 
 
+
+
+
+
+//    suspend fun getAlternativeTrips(resultIndex: Int, tripIndex: Int, before: Boolean): Response =
+//        withContext(Dispatchers.IO) {
+//            val searchResultToModify = searchResultList.value?.get(resultIndex)
+//            val usedTrip = searchResultToModify!!.usedTrips.get(tripIndex)
+//
+//            val srcStopId = usedTrip.stopPasses[usedTrip.getOnStopIndex].id
+//            val destStopId = usedTrip.stopPasses[usedTrip.getOffStopIndex].id
+//            val dateTime = usedTrip.stopPasses[usedTrip.getOnStopIndex].departureTime.format(
+//                DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+//            )
+//            val count = 5
+//
+//            val alternativesRequest = AlternativeTripsRequest(
+//                srcStopId = srcStopId,
+//                destStopId = destStopId,
+//                dateTime = dateTime,
+//                previous = before,
+//                count = count
+//            )
+//
+//            khttp.post(
+//                url = "http://prago.xyz/alternative-trips",
+//                json = alternativesRequest.toJsonObject()
+//            )
+//        }
+
+
+    suspend fun getAlternatives(
+        searchResult: ConnectionSearchResult,
+        tripIndex: Int,
+        before: Boolean
+    ) {
+        //val usedTrip = if(before) // first
+        //    searchResult.usedTripAlternativesLists[tripIndex][0]
+        //else // last
+        //    searchResult.usedTripAlternativesLists[tripIndex][searchResult.usedTripAlternativesLists[tripIndex].size - 1]
+
+        val usedTripAlternatives = searchResult.usedTripAlternatives[tripIndex]
+        val oldTripAltList = usedTripAlternatives.alternatives
+        val usedTrip = if(before) usedTripAlternatives.alternatives[0] else usedTripAlternatives.alternatives[usedTripAlternatives.alternatives.size - 1]
+
+        //val usedTrip = searchResult.usedTripAlternativesLists[tripIndex][searchResult.usedTripsIndices[tripIndex]]//searchResult.usedTrips.get(tripIndex)
+
+        val srcStopId = usedTrip.stopPasses[usedTrip.getOnStopIndex].id
+        val destStopId = usedTrip.stopPasses[usedTrip.getOffStopIndex].id
+
+        val rangeStartWithDelay = usedTrip.stopPasses[usedTrip.getOnStopIndex].departureTime.plusSeconds(usedTrip.delayWhenBoarded.toLong())
+        val rangeStartDateTime = if(before) {
+            rangeStartWithDelay
+        } else {
+            rangeStartWithDelay.plusSeconds(1)
+        }
+        val dateTime = rangeStartDateTime.format(
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+        )
+        val count = 5
+
+        val tripId = usedTrip.tripId
+
+        Log.i("DEBUG", "---------------------------------------------------")
+        Log.i("DEBUG", "Sending request with:")
+        Log.i("DEBUG", "srcStopId: $srcStopId")
+        Log.i("DEBUG", "destStopId: $destStopId")
+        Log.i("DEBUG", "dateTime: $dateTime")
+        Log.i("DEBUG", "before: $before")
+        Log.i("DEBUG", "count: $count")
+        Log.i("DEBUG", "---------------------------------------------------")
+
+        val alternativesRequest = AlternativeTripsRequest(
+            srcStopId = srcStopId,
+            destStopId = destStopId,
+            dateTime = dateTime,
+            previous = before,
+            count = count,
+            tripId = tripId
+        )
+
+        val response = khttp.post(
+            url = "http://prago.xyz/alternative-trips",
+            json = alternativesRequest.toJsonObject()
+        )
+
+        when (response.statusCode) {
+            200 -> {
+                //Log.i("DEBUG", "Old alt count: ${searchResult.usedTripAlternativesLists[tripIndex].size}")
+                val newTripAltList = Json.decodeFromString<List<UsedTrip>>(response.text)
+                //Log.i("DEBUG", "Alternatives: ${alternatives.size}")
+                //val existingTripAlternatives = searchResult.usedTripAlternativesLists.get(tripIndex)
+                //val existingIndex = searchResult.usedTripsIndices.get(tripIndex)
+                //Log.i("DEBUG", "Existing alt count: ${existingTripAlternatives.size}, alternatives size: ${alternatives.size}")
+                //searchResult.usedTripAlternativesLists[tripIndex] =
+                //    if (before) (alternatives + existingTripAlternatives) else (existingTripAlternatives + alternatives)
+                val allTripAltList: List<UsedTrip> = if(before) (newTripAltList + oldTripAltList) else (oldTripAltList + newTripAltList)
+                val newIndex = if(before) (newTripAltList.size - 1) else (oldTripAltList.size)
+                searchResult.usedTripAlternatives[tripIndex] = TripAlternatives(
+                    currIndex = newIndex,
+                    alternatives = allTripAltList,
+                    count = allTripAltList.size
+                )
+                Log.i("DEBUG", "Changed index to $newIndex, new count: ${allTripAltList.size}")
+                //searchResult.usedTripsIndices[tripIndex] =
+                //    if (before) (alternatives.size - 1) else (existingTripAlternatives.size)
+
+                //if(before){
+                    //Log.i("DEBUG", "NEW ALT SIZE: ${searchResult.usedTripAlternativesLists[tripIndex].size}")
+                    //searchResult.expandedToPast = true
+                //} else{
+                    //Log.i("DEBUG", "NEW ALT SIZE: ${searchResult.usedTripAlternativesLists[tripIndex].size}")
+                    //searchResult.expandedToFuture = true
+                //}
+
+
+                //Log.i("DEBUG", "New alt count: ${searchResult.usedTripAlternativesLists[tripIndex].size}")
+            }
+
+            404, 502 -> {
+                Log.i(
+                    "ERROR",
+                    "Error while fetching alternatives"
+                )/* handle other status codes if needed */
+            }
+
+            else -> {
+                Log.i(
+                    "ERROR",
+                    "Error while fetching alternatives"
+                )/* handle other status codes if needed */
+            }
+        }
+    }
+
+    fun updateCurrIndex(result: ConnectionSearchResult, tripIndex: Int, newIndex: Int) {
+        // Find the matching result and update its tripAlternatives.currIndex
+        val resultIndex = searchResultList.value!!.indexOf(result)
+        if (resultIndex != -1) {
+            searchResultList.value!![resultIndex].usedTripAlternatives[tripIndex].currIndex = newIndex
+        }
+    }
 
     fun startSearch(
         context: Context,
@@ -516,7 +761,7 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 var startDateTime = LocalDateTime.now()
-                if(departureNow.value){
+                if (departureNow.value) {
                     startDateTime = LocalDateTime.now()
                     selectedDate.value = startDateTime.toLocalDate()
                     selectedTime.value = startDateTime.toLocalTime()
@@ -528,28 +773,38 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
 
                 when (response.statusCode) {
                     200 -> {
-                        val connectionSearchResults = Json.decodeFromString<List<ConnectionSearchResult>>(response.text)
+                        var connectionSearchResults =
+                            Json.decodeFromString<List<ConnectionSearchResult>>(response.text)
+                        processRawSearchResults(connectionSearchResults)
+                        connectionSearchResults = cleanUpDuplicates(connectionSearchResults)
+
                         withContext(Dispatchers.Main) {
                             searchResultList.value = connectionSearchResults
                             navController.navigate("resultPage")
 
-                            searchRangeStart.value = selectedDate.value.atTime(selectedTime.value)
-                            searchRangeEnd.value = selectedDate.value.atTime(selectedTime.value).plusMinutes(15)
+                            searchRangeStart.value =
+                                selectedDate.value.atTime(selectedTime.value)
+                            searchRangeEnd.value =
+                                selectedDate.value.atTime(selectedTime.value).plusMinutes(15)
                         }
                     }
+
                     404 -> {
                         withContext(Dispatchers.Main) {
                             setErrorMessage(context.getString(R.string.error_msg_404))
                             showDialog(true)
                         }
                     }
+
                     502 -> {
                         withContext(Dispatchers.Main) {
                             setErrorMessage(context.getString(R.string.error_msg_502))
                             showDialog(true)
                         }
                     }
+
                     else -> {
+                        Log.i("DEBUG", "Error while fetching alternatives")
                         withContext(Dispatchers.Main) {
                             setErrorMessage(response.text)
                             showDialog(true)
@@ -565,6 +820,7 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
             }
         }
     }
+}
 
     //val settingsFlow: Flow<Preferences> = preferencesDataStore.data
 
@@ -579,6 +835,6 @@ class SharedViewModel(val stopListDataStore: DataStore<StopList>,
 //            return INSTANCE!!
 //        }
 //    }
-}
+
 
 
