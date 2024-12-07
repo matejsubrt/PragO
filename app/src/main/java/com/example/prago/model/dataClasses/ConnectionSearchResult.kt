@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalSerializationApi::class)
 
-package com.example.prago.dataClasses
+package com.example.prago.model.dataClasses
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -13,7 +13,6 @@ import java.time.LocalDateTime
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.Transient
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
@@ -22,7 +21,6 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import java.time.format.DateTimeFormatter
 import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -153,7 +151,9 @@ object TripAlternativesSerializer : KSerializer<TripAlternatives> {
             while (true) {
                 when (val index = decodeElementIndex(descriptor)) {
                     0 -> currIndex = decodeIntElement(descriptor, 0)
-                    1 -> alternatives = decodeSerializableElement(descriptor, 1, ListSerializer(UsedTrip.serializer()))
+                    1 -> alternatives = decodeSerializableElement(
+                        descriptor, 1, ListSerializer(
+                            UsedTrip.serializer()))
                     2 -> count = decodeIntElement(descriptor, 2)
                     CompositeDecoder.DECODE_DONE -> break
                     else -> throw SerializationException("Unexpected index: $index")
@@ -179,8 +179,34 @@ class ConnectionSearchResult(
     @Serializable(with = LocalDateTimeSerializer::class)
     val departureDateTime: LocalDateTime,
     @Serializable(with = LocalDateTimeSerializer::class)
-    val arrivalDateTime: LocalDateTime
-)
+    val arrivalDateTime: LocalDateTime,
+    val secondsAfterLastTrip: Int,
+    val secondsBeforeFirstTrip: Int
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ConnectionSearchResult) return false
+
+        return departureDateTime == other.departureDateTime &&
+                arrivalDateTime == other.arrivalDateTime &&
+                usedSegmentTypes == other.usedSegmentTypes // not ideal, but should be enough for our use case (can theoretically lead to false positives if 2 connections have same departure and arrival time, but use different trips)
+    }
+
+    override fun hashCode(): Int {
+        var result = usedTripAlternatives.hashCode()
+        result = 31 * result + usedTrips.hashCode()
+        result = 31 * result + usedTransfers.hashCode()
+        result = 31 * result + usedBikeTrips.hashCode()
+        result = 31 * result + usedSegmentTypes.hashCode()
+        result = 31 * result + transferCount
+        result = 31 * result + tripCount
+        result = 31 * result + bikeTripCount
+        result = 31 * result + departureDateTime.hashCode()
+        result = 31 * result + arrivalDateTime.hashCode()
+        return result
+    }
+}
+
 
 // Custom Serializer for SnapshotStateList
 object SnapshotStateListSerializer : KSerializer<SnapshotStateList<TripAlternatives>> {
@@ -199,9 +225,20 @@ object SnapshotStateListSerializer : KSerializer<SnapshotStateList<TripAlternati
 
 
 
-
-fun main() {
-    val jsonString = """/* Your JSON String here */"""
-    val connectionSearchResult = Json.decodeFromString<ConnectionSearchResult>(jsonString)
-    println(connectionSearchResult)
+sealed class ConnectionSearchResultState {
+    data class Success(val results: List<ConnectionSearchResult>) : ConnectionSearchResultState()
+    data class Failure(val statusCode: Int, val errorMessage: String) : ConnectionSearchResultState()
 }
+
+sealed class AlternativeTripsResultState {
+    data class Success(val results: List<UsedTrip>) : AlternativeTripsResultState()
+    data class Failure(val statusCode: Int, val errorMessage: String) : AlternativeTripsResultState()
+}
+
+
+
+//fun main() {
+//    val jsonString = """/* Your JSON String here */"""
+//    val connectionSearchResult = Json.decodeFromString<ConnectionSearchResult>(jsonString)
+//    println(connectionSearchResult)
+//}

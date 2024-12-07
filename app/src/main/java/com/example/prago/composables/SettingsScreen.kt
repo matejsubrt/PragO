@@ -1,6 +1,6 @@
 package com.example.prago.composables
 
-import com.example.prago.viewModels.SharedViewModel
+//import com.example.prago.viewModel.SharedViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,6 +22,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,31 +41,38 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.prago.R
+import com.example.prago.activities.LocalAppViewModel
 import com.example.prago.activities.LocalNavController
-import com.example.prago.activities.LocalSharedViewModel
+//import com.example.prago.activities.LocalSharedViewModel
 import com.example.prago.ui.theme.PragOTheme
+import com.example.prago.viewModel.AppViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun EditableIntSettingRow(
-    viewModel: SharedViewModel,
+    viewModel: AppViewModel,
     label: String,
     preferencesKey: String,
     defaultValue: Int,
     units: String,
     onValueChange: (Int) -> Unit
 ) {
-    var currentValue by remember { mutableStateOf(defaultValue) }
+    //var currentValue by remember { mutableStateOf(defaultValue) }
+    val currentValue by viewModel.getIntSettingValue(preferencesKey, defaultValue).collectAsState()
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val scope = rememberCoroutineScope()
+
+
     val textState = remember { mutableStateOf(currentValue.toString()) }
 
-    LaunchedEffect(preferencesKey) {
-        currentValue = viewModel.retrieveIntSetting(preferencesKey, defaultValue)
-        textState.value = currentValue.toString()
-    }
+
+
+//    LaunchedEffect(preferencesKey) {
+//        currentValue = viewModel.retrieveIntSetting(preferencesKey, defaultValue)
+//        textState.value = currentValue.toString()
+//    }
 
     Card(modifier = Modifier.padding(8.dp)) {
         Row(
@@ -91,8 +99,8 @@ fun EditableIntSettingRow(
                     value = textState.value,
                     onValueChange = { newValue ->
                         textState.value = newValue.filter { it.isDigit() }
-                        currentValue = textState.value.toIntOrNull() ?: defaultValue
-                        onValueChange(currentValue) // Notify parent of the new value
+                        var intValue = textState.value.toIntOrNull() ?: defaultValue
+                        onValueChange(intValue) // Notify parent of the new value
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Done,
@@ -101,10 +109,12 @@ fun EditableIntSettingRow(
                     keyboardActions = KeyboardActions(onDone = {
                         focusManager.clearFocus()
                         keyboardController?.hide()
-                        currentValue = textState.value.toIntOrNull() ?: defaultValue
-                        scope.launch {
-                            viewModel.saveIntSetting(preferencesKey, currentValue)
-                        }
+                        //currentValue = textState.value.toIntOrNull() ?: defaultValue
+//                        scope.launch {
+//                            viewModel.saveIntSetting(preferencesKey, currentValue)
+//                        }
+                        var intValue = textState.value.toIntOrNull() ?: defaultValue
+                        onValueChange(intValue) // Notify parent of the new value
                     }),
                     modifier = Modifier
                         .weight(1f)
@@ -131,24 +141,14 @@ fun EditableIntSettingRow(
 
 @Composable
 fun SettingsScreen() {
-    val viewModel = LocalSharedViewModel.current
+    val viewModel = LocalAppViewModel.current
     val navController = LocalNavController.current
 
-    // State holders for each setting value, initialized to default values temporarily
-    var walkingPace by remember { mutableStateOf(12) }
-    var cyclingPace by remember { mutableStateOf(5) }
-    var bikeUnlockTime by remember { mutableStateOf(30) }
-    var bikeLockTime by remember { mutableStateOf(15) }
+    val walkingPace by viewModel.walkingPace.collectAsState()
+    val cyclingPace by viewModel.cyclingPace.collectAsState()
+    val bikeUnlockTime by viewModel.bikeUnlockTime.collectAsState()
+    val bikeLockTime by viewModel.bikeLockTime.collectAsState()
 
-    val scope = rememberCoroutineScope()
-
-    // Load values from the DataStore when the composable is first composed
-    LaunchedEffect(Unit) {
-        walkingPace = viewModel.retrieveIntSetting("walkingPace", 12)
-        cyclingPace = viewModel.retrieveIntSetting("cyclingPace", 5)
-        bikeUnlockTime = viewModel.retrieveIntSetting("bikeUnlockTime", 30)
-        bikeLockTime = viewModel.retrieveIntSetting("bikeLockTime", 15)
-    }
 
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
@@ -176,7 +176,7 @@ fun SettingsScreen() {
                 preferencesKey = "walkingPace",
                 defaultValue = walkingPace,
                 units = "min/km",
-                onValueChange = { walkingPace = it }
+                onValueChange = { viewModel.saveWalkingPace(it) }
             )
 
             EditableIntSettingRow(
@@ -185,7 +185,7 @@ fun SettingsScreen() {
                 preferencesKey = "cyclingPace",
                 defaultValue = cyclingPace,
                 units = "min/km",
-                onValueChange = { cyclingPace = it }
+                onValueChange = { viewModel.saveCyclingPace(it) }
             )
 
             EditableIntSettingRow(
@@ -194,7 +194,7 @@ fun SettingsScreen() {
                 preferencesKey = "bikeUnlockTime",
                 defaultValue = bikeUnlockTime,
                 units = "s",
-                onValueChange = { bikeUnlockTime = it }
+                onValueChange = { viewModel.saveBikeUnlockTime(it) }
             )
 
             EditableIntSettingRow(
@@ -203,23 +203,13 @@ fun SettingsScreen() {
                 preferencesKey = "bikeLockTime",
                 defaultValue = bikeLockTime,
                 units = "s",
-                onValueChange = { bikeLockTime = it }
+                onValueChange = { viewModel.saveBikeLockTime(it) }
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = {
-                    viewModel.walkingPace.value = walkingPace
-                    viewModel.cyclingPace.value = cyclingPace
-                    viewModel.bikeUnlockTime.value = bikeUnlockTime
-                    viewModel.bikeLockTime.value = bikeLockTime
-                    scope.launch {
-                        viewModel.saveIntSetting("walkingPace", walkingPace)
-                        viewModel.saveIntSetting("cyclingPace", cyclingPace)
-                        viewModel.saveIntSetting("bikeUnlockTime", bikeUnlockTime)
-                        viewModel.saveIntSetting("bikeLockTime", bikeLockTime)
-                    }
                     navController.navigate("searchPage")
                 },
                 modifier = Modifier

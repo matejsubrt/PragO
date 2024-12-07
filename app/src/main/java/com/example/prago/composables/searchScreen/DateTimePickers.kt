@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,7 +21,8 @@ import com.chargemap.compose.numberpicker.Hours
 import com.chargemap.compose.numberpicker.HoursNumberPicker
 import com.chargemap.compose.numberpicker.ListItemPicker
 import com.example.prago.R
-import com.example.prago.viewModels.SharedViewModel
+import com.example.prago.viewModel.AppViewModel
+//import com.example.prago.viewModel.SharedViewModel
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -49,35 +51,15 @@ fun getLocalTimeFromHours(hours: Hours): LocalTime {
 
 
 
-/*@Composable
-fun DatePicker(onDateSelected: (LocalDate) -> Unit) {
-    WheelDatePicker(
-        startDate = LocalDate.now(),
-        minDate = LocalDate.now(),
-        maxDate = LocalDate.now().plusDays(13),
-        size = DpSize(132.dp, 80.dp),
-        rowCount = 3,
-        textStyle = MaterialTheme.typography.titleSmall,
-        textColor = MaterialTheme.colorScheme.secondary,
-        selectorProperties = WheelPickerDefaults.selectorProperties(
-            enabled = true,
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surface,
-            border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-        ),
-        onSnappedDate = onDateSelected
-    )
-}*/
-
 @Composable
-fun DatePicker(viewModel: SharedViewModel, onDateChanged: (LocalDate) -> Unit){
+fun DatePicker(viewModel: AppViewModel, onDateChanged: (LocalDate) -> Unit){
     val startDate = LocalDate.now()
     val days = 14
 
     val dateLabelSequence = generateDateSequence(LocalContext.current, startDate, days)
     val dateMap = dateLabelSequence.mapIndexed { index, label -> label to startDate.plusDays(index.toLong()) }.toMap()
 
-    var selectedDate by remember { mutableStateOf(viewModel.selectedDate.value) }
+    val selectedDate by viewModel.selectedDate.collectAsState()
 
 
     ListItemPicker(
@@ -85,7 +67,6 @@ fun DatePicker(viewModel: SharedViewModel, onDateChanged: (LocalDate) -> Unit){
         label = { it },
         value = dateMap.keys.first { dateMap[it] == selectedDate },
         onValueChange = { label ->
-            selectedDate = dateMap[label] ?: startDate
             onDateChanged(selectedDate)
         },
         list = dateLabelSequence,
@@ -99,28 +80,9 @@ fun DatePicker(viewModel: SharedViewModel, onDateChanged: (LocalDate) -> Unit){
     )
 }
 
-/*@Composable
-fun TimePicker(onTimeSelected: (LocalTime) -> Unit) {
-    WheelTimePicker(
-        startTime = LocalTime.now(),
-        timeFormat = TimeFormat.HOUR_24,
-        size = DpSize(86.dp, 80.dp),
-        rowCount = 3,
-        textStyle = MaterialTheme.typography.titleSmall,
-        textColor = MaterialTheme.colorScheme.secondary,
-        selectorProperties = WheelPickerDefaults.selectorProperties(
-            enabled = true,
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surface,
-            border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-        ),
-        onSnappedTime = onTimeSelected
-    )
-}*/
-
 @Composable
-fun TimePicker(viewModel: SharedViewModel, onTimeChanged: (LocalTime) -> Unit){
-    var selectedTime by remember { mutableStateOf(viewModel.selectedTime.value) }
+fun TimePicker(viewModel: AppViewModel, onTimeChanged: (LocalTime) -> Unit){
+    val selectedTime by viewModel.selectedTime.collectAsState()
 
     var pickerValue by remember { mutableStateOf<Hours>(FullHours(viewModel.selectedTime.value.hour, viewModel.selectedTime.value.minute)) }
 
@@ -131,7 +93,6 @@ fun TimePicker(viewModel: SharedViewModel, onTimeChanged: (LocalTime) -> Unit){
         value = pickerValue,
         onValueChange = {
             pickerValue = it
-            selectedTime = getLocalTimeFromHours(it)
             onTimeChanged(selectedTime)
         },
         hoursDivider = {

@@ -34,7 +34,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.prago.R
-import com.example.prago.dataClasses.ConnectionSearchResult
+import com.example.prago.model.dataClasses.ConnectionSearchResult
 
 //@OptIn(ExperimentalMaterial3Api::class)
 //@Composable
@@ -213,25 +213,40 @@ fun  PullToRefreshLazyColumn(
     var isLoading by remember { mutableStateOf(false) }
     var hasLoadedItems by remember { mutableStateOf(false) }
 
-    val reachedBottom: Boolean by remember {
+    val canScrollForward by remember {
         derivedStateOf {
-            val lastVisibleItem = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()
-            lastVisibleItem?.index == lazyListState.layoutInfo.totalItemsCount - 1 &&
-                    lazyListState.canScrollForward.not()
+            lazyListState.canScrollForward
         }
     }
 
-    LaunchedEffect(reachedBottom, isLoading) {
-        if (reachedBottom && hasLoadedItems && !isLoading && isExpandingToFuture.not()){
-            isLoading = true
-            onRefresh(false)
-            isLoading = false
+    LaunchedEffect(canScrollForward, isLoading, hasLoadedItems) {
+        Log.i("DEBUG", "Can scroll forward: ${canScrollForward}, hasLoadedItems: $hasLoadedItems, isLoading: ${!isLoading}, isExpandingToFuture: ${isExpandingToFuture.not()}")
+        if(hasLoadedItems && !isLoading && !isExpandingToFuture){
+            if(!canScrollForward){
+                Log.i("DEBUG", "Loading more items")
+                isLoading = true
+                onRefresh(false)
+                isLoading = false
+            }
+            if(!canScrollForward){
+                Log.i("DEBUG", "Loading more items")
+                isLoading = true
+                onRefresh(false)
+                isLoading = false
+            }
+            if(!canScrollForward){
+                Log.i("DEBUG", "Loading more items")
+                isLoading = true
+                onRefresh(false)
+                isLoading = false
+            }
         }
     }
 
 
     LaunchedEffect(items) {
         hasLoadedItems = items.isNotEmpty()
+        Log.i("DEBUG", "Has loaded items: $hasLoadedItems")
     }
 
     Box(
@@ -244,7 +259,7 @@ fun  PullToRefreshLazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(items/*, key = {it.arrivalDateTime.toString() + it.usedSegmentTypes.toString()}*/) {
+            items(items) {
                 content(it)
             }
 

@@ -1,7 +1,5 @@
 package com.example.prago.composables
 
-import com.example.prago.viewModels.SharedViewModel
-import com.example.prago.viewModels.StopEntry
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.prago.R
+import com.example.prago.model.StopEntry
+import com.example.prago.viewModel.AppViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 
 
@@ -97,13 +97,12 @@ fun StopListEmptyState(
     }
 }
 
-fun OnSearchQueryChange(it: String, viewModel: SharedViewModel, to: Boolean){
+fun OnSearchQueryChange(it: String, viewModel: AppViewModel, to: Boolean){
     if(to){
-        viewModel.onToSearchQueryChange(it)
-        viewModel.toText.value = it
+        viewModel.updateToSearchQuery(it)
     } else {
-        viewModel.onFromSearchQueryChange(it)
-        viewModel.fromText.value = it
+        viewModel.updateFromSearchQuery(it)
+        //TODO: fromText?
     }
 }
 
@@ -112,17 +111,19 @@ val onSearchQueryChange: MutableSharedFlow<String> = MutableSharedFlow()
 
 
 @Composable
-fun StopSearchScreen(viewModel: SharedViewModel, navController: NavController, to: Boolean) {
+fun StopSearchScreen(viewModel: AppViewModel, navController: NavController, to: Boolean) {
     Log.i("DEBUG", "Search Screen start")
-    val searchResults by if(to) viewModel.toSearchResults.collectAsStateWithLifecycle() else viewModel.fromSearchResults.collectAsStateWithLifecycle()
-    val searchQuery = if(to) viewModel.toSearchQuery else viewModel.fromSearchQuery
+
+    val searchSuggestions by if(to) viewModel.toStopSuggestions.collectAsStateWithLifecycle() else viewModel.fromStopSuggestions.collectAsStateWithLifecycle()
+    val searchQuery by if(to) viewModel.toSearchQuery.collectAsStateWithLifecycle() else viewModel.fromSearchQuery.collectAsStateWithLifecycle()
+
     //val searchResults = listOf(StopEntry("Chodov", "Chodov", "1"), StopEntry("Biskupcova", "Biskupcova", "2"), StopEntry("ABC", "ABC", "3"),StopEntry("ABC", "ABC", "4"))
-    Log.i("DEBUG", "Recomposition triggered - Search Query: $searchQuery, Results size: ${searchResults.size}")
+    Log.i("DEBUG", "Recomposition triggered - Search Query: $searchQuery, Results size: ${searchSuggestions.size}")
 
 
     StopSearchScreen(
         searchQuery = searchQuery,
-        searchResults = searchResults,
+        searchResults = searchSuggestions,
         onSearchQueryChange = { OnSearchQueryChange(it, viewModel, to) },
         navController = navController,
         srcStop = !to
@@ -193,8 +194,7 @@ fun StopSearchScreen(
                                     StopNameSuggestion(stopName = searchResults[index].czechName) {
                                         keyboardController?.hide()
                                         Log.i("DEBUG", "Stop selected")
-                                        onSearchQueryChange(it) // Update search query state
-                                        //navController.popBackStack()
+                                        onSearchQueryChange(it)
                                         navController.navigate("searchPage")
                                         Log.i("DEBUG", "Navigated back to search screen")
                                     }

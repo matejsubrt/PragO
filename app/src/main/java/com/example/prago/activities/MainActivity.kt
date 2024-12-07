@@ -1,6 +1,6 @@
 package com.example.prago.activities
 
-import com.example.prago.viewModels.SharedViewModel
+//import com.example.prago.viewModel.SharedViewModel
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -11,7 +11,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.datastore.core.DataStore
 import androidx.navigation.NavController
@@ -23,16 +25,17 @@ import com.example.prago.composables.resultScreen.ResultScreen
 import com.example.prago.composables.SettingsScreen
 import com.example.prago.composables.StopSearchScreen
 import com.example.prago.composables.searchScreen.SearchScreen
+import com.example.prago.model.ConnectionSearchApi
+import com.example.prago.model.SettingsRepository
+import com.example.prago.model.StopListRepository
 import com.example.prago.ui.theme.PragOTheme
+import com.example.prago.viewModel.AppViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
-import com.example.prago.viewModels.preferencesDataStore
-import com.example.prago.viewModels.stopListDataStore
+import com.example.prago.viewModel.preferencesDataStore
+import com.example.prago.viewModel.stopListDataStore
 import java.time.LocalDateTime
-
-
-//val sliderDefaultValues = listOf(2f, 1f, 2f, 2f)
 
 
 
@@ -42,21 +45,28 @@ import java.time.LocalDateTime
 
 
 val LocalNavController = compositionLocalOf<NavController> { error("No NavController provided") }
-val LocalSharedViewModel = compositionLocalOf<SharedViewModel> { error("No SharedViewModel provided") }
+val LocalAppViewModel = compositionLocalOf<AppViewModel> { error("No AppViewModel provided") }
 val LocalStopListDataStore = compositionLocalOf<DataStore<StopList>> { error("No StopListDataStore provided") }
 
+
+
+
 class MainActivity : ComponentActivity() {
-    private lateinit var mainViewModel: SharedViewModel
+    private lateinit var appViewModel: AppViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val settingsRepository = SettingsRepository(applicationContext.preferencesDataStore)
+        val stoplistRepository = StopListRepository(applicationContext.stopListDataStore)
+        val connectionSearchApi = ConnectionSearchApi()
+
         val isConnectedToWifi = isWifiConnected()
 
-        mainViewModel = SharedViewModel(applicationContext.stopListDataStore, applicationContext.preferencesDataStore)
+        appViewModel = AppViewModel(settingsRepository, stoplistRepository, connectionSearchApi)
         setContent {
             PragOTheme {
-                PragOApp(mainViewModel, isConnectedToWifi) // Pass the viewModel to PragOApp
+                PragOApp(appViewModel, isConnectedToWifi)
             }
         }
 
@@ -73,36 +83,30 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun PragOApp(mainViewModel: SharedViewModel, isConnectedToWifi: Boolean) {
+fun PragOApp(appViewModel: AppViewModel, isConnectedToWifi: Boolean) {
     val context = LocalContext.current
     val navController = rememberNavController()
+
+    val navigateToResults by appViewModel.navigateToResults.collectAsState()
+
+
+    LaunchedEffect(navigateToResults) {
+        if (navigateToResults) {
+            navController.navigate("resultPage")
+            appViewModel.resetNavigateToResults()
+        }
+    }
+
 
     if(isConnectedToWifi){
         Log.i("DEBUG", "Before LaunchedEffect")
         LaunchedEffect(Unit) {
-            var generatedAtString = ""
-            val exampleCounterFlow: Flow<String> = context.stopListDataStore.data
-                .take(1) // TODO: check this location
-                .map { value ->
-                    // The exampleCounter property is generated from the proto schema.
-                    value.generatedAt
-                }
-            exampleCounterFlow//.take(1)
-                .collect { value ->
-                generatedAtString = value
-                println(value)
-            }
 
-            var generatedAtDateTime: LocalDateTime = LocalDateTime.MIN
-            try{
-                generatedAtDateTime = LocalDateTime.parse(generatedAtString)
-            } catch(e: Exception){
-                //Log.i("APP", "Error parsing time")
-                //viewModel.downloadAndStoreJson("https://data.idos.cz/delays/json/stop-list.json")
-            }
+            val lastUpdateTime = appViewModel.stopListLastUpdateTime.value
 
-            if(generatedAtDateTime.plusDays(7).isBefore(LocalDateTime.now())){
-                mainViewModel.downloadAndStoreJson("https://data.pid.cz/stops/json/stops.json")
+            if(lastUpdateTime.plusDays(7).isBefore(LocalDateTime.now())){
+                //TODO: Change the URL implementation
+                appViewModel.downloadAndStoreStopList("https://data.pid.cz/stops/json/stops.json")
                 Log.i("DEBUG", "Data is outdated, downloading new data")
             }
             else{
@@ -115,14 +119,13 @@ fun PragOApp(mainViewModel: SharedViewModel, isConnectedToWifi: Boolean) {
 
     CompositionLocalProvider(
         LocalNavController provides navController,
-        LocalSharedViewModel provides mainViewModel,
-        LocalStopListDataStore provides mainViewModel.stopListDataStore
+        LocalAppViewModel provides appViewModel,
     ) {
         NavHost(navController, startDestination = "searchPage") {
             composable("searchPage") { SearchScreen() }
             composable("resultPage") { ResultScreen() }
-            composable("fromStopSelect") { StopSearchScreen(mainViewModel, navController, false) }
-            composable("toStopSelect") { StopSearchScreen(mainViewModel, navController, true) }
+            composable("fromStopSelect") { StopSearchScreen(appViewModel, navController, false) }
+            composable("toStopSelect") { StopSearchScreen(appViewModel, navController, true) }
             composable("settingsScreen") { SettingsScreen() }
         }
     }

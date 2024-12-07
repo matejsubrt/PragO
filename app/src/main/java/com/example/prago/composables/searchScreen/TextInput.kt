@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,7 +32,8 @@ import androidx.compose.ui.unit.sp
 import com.example.prago.R
 import com.example.prago.activities.LocalNavController
 import com.example.prago.ui.theme.Gray33
-import com.example.prago.viewModels.SharedViewModel
+import com.example.prago.viewModel.AppViewModel
+//import com.example.prago.viewModel.SharedViewModel
 
 
 @Composable
@@ -84,7 +84,8 @@ fun LabelWithTextInput(
 
 @Composable
 fun TextInput(
-    viewModel: SharedViewModel,
+    //viewModel: SharedViewModel,
+    viewModel: AppViewModel,
     context: Context,
     fromText: String,
     toText: String,
@@ -117,11 +118,9 @@ fun TextInput(
                     .size(32.dp)
                     .clickable(
                         onClick = {
-                            val fromSearchQuery = viewModel.fromText.value
-                            //viewModel.onFromSearchQueryChange(viewModel.toSearchQuery)
-                            //viewModel.onToSearchQueryChange(fromSearchQuery)
-                            viewModel.fromText.value = viewModel.toText.value
-                            viewModel.toText.value = fromSearchQuery
+                            val fromSearchQuery = viewModel.fromSearchQuery.value
+                            viewModel.updateFromSearchQuery(viewModel.toSearchQuery.value)
+                            viewModel.updateToSearchQuery(fromSearchQuery)
                         }
                     )
             )

@@ -14,12 +14,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,59 +30,56 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.prago.R
-import com.example.prago.dataClasses.ColorStruct
-import com.example.prago.dataClasses.StopPass
-import com.example.prago.dataClasses.TripAlternatives
-import com.example.prago.dataClasses.UsedTrip
+import com.example.prago.model.dataClasses.ColorStruct
+import com.example.prago.model.dataClasses.StopPass
+import com.example.prago.model.dataClasses.TripAlternatives
+import com.example.prago.model.dataClasses.UsedTrip
 import java.time.LocalDateTime
 import java.util.UUID
 
 //@OptIn(ExperimentalFoundationApi::class)
 //@Composable
-//fun UsedTripAlternativesRow(tripAlternatives: List<UsedTrip>, onIndexChange: (Int) -> Unit,  currIndex: Int, modifier: Modifier = Modifier) {
-//    val lazyListState = rememberLazyListState()
+//fun UsedTripAlternativesRow(
+//    tripAlternatives: TripAlternatives,
+//    onExpand: (Boolean) -> Unit,
+//    onIndexChanged: (Int) -> Unit,  // New callback for updating index
+//    modifier: Modifier = Modifier
+//) {
+//    val lazyListState = rememberLazyListState(initialFirstVisibleItemIndex = tripAlternatives.currIndex + 1)
 //    val snapBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState)
 //
-//    Log.i("DEBUG", "Curr index: $currIndex, tripAlternatives size: ${tripAlternatives.size}")
-//    //LaunchedEffect(key1 = currIndex) { lazyListState.scrollToItem(currIndex + 1) }
-//    LaunchedEffect(key1 = currIndex) {
-//        // If tripAlternatives is non-empty and currIndex is valid, scroll to the current index
-//        if (tripAlternatives.isNotEmpty()) {
-//            lazyListState.scrollToItem((currIndex+1).coerceIn(0, tripAlternatives.size))
-//        }
-//    }
+//
 //
 //    Box(
-//        modifier = modifier
-//            .fillMaxWidth(),
+//        modifier = modifier.fillMaxWidth(),
 //        contentAlignment = Alignment.Center
 //    ) {
 //        LazyRow(
-//            modifier = modifier
-//                .fillMaxWidth(),
+//            modifier = modifier.fillMaxWidth(),
 //            state = lazyListState,
 //            flingBehavior = snapBehavior
 //        ) {
+//            val itemHeight = 68.dp
 //            item {
 //                Box(
 //                    modifier = Modifier
 //                        .fillParentMaxWidth()
-//                        .padding(16.dp),
+//                        .height(itemHeight)
+//                        .background(MaterialTheme.colorScheme.tertiaryContainer),
 //                    contentAlignment = Alignment.Center
 //                ) {
 //                    CircularProgressIndicator()
 //                }
 //            }
-//            items(
-//                tripAlternatives
-//            ) { trip: UsedTrip ->
-//                UsedTripCard(trip = trip, modifier = Modifier.fillParentMaxWidth())
+//            items(tripAlternatives.alternatives) { trip: UsedTrip ->
+//                UsedTripCard(trip = trip, modifier = Modifier.fillParentMaxWidth().height(itemHeight))
 //            }
 //            item {
 //                Box(
 //                    modifier = Modifier
 //                        .fillParentMaxWidth()
-//                        .padding(16.dp),
+//                        .height(itemHeight)
+//                        .background(MaterialTheme.colorScheme.tertiaryContainer),
 //                    contentAlignment = Alignment.Center
 //                ) {
 //                    CircularProgressIndicator()
@@ -87,122 +87,40 @@ import java.util.UUID
 //            }
 //        }
 //
-////        LaunchedEffect(lazyListState) {
-////            snapshotFlow { lazyListState.firstVisibleItemIndex }
-////                .collect {
-////                    firstVisibleItemIndex -> Log.i("DEBUG", "First visible index: $firstVisibleItemIndex"); if(firstVisibleItemIndex == 0) onIndexChange(firstVisibleItemIndex) }
-////        }
-//        LaunchedEffect(lazyListState) {
-//            snapshotFlow {
-//                Pair(lazyListState.firstVisibleItemIndex, lazyListState.firstVisibleItemScrollOffset)
-//            }.collect { (firstVisibleItemIndex, firstVisibleItemScrollOffset) ->
-//                if (firstVisibleItemIndex == 0 && firstVisibleItemScrollOffset == 0) {
-//                    Log.i("DEBUG", "First item snapped")
-//                    onIndexChange(firstVisibleItemIndex)
+//        // Scroll to new currIndex when it changes
+//        LaunchedEffect(tripAlternatives.currIndex to UUID.randomUUID()) {
+//            lazyListState.scrollToItem(tripAlternatives.currIndex + 1)
+//        }
+//
+//
+//        // Observe scrolling state and update currIndex on snapping
+//        LaunchedEffect(lazyListState, tripAlternatives.alternatives) {
+//            snapshotFlow { lazyListState.isScrollInProgress }
+//                .collect { isScrolling ->
+//                    if (!isScrolling) {
+//                        val firstVisibleItemIndex = lazyListState.firstVisibleItemIndex
+//                        val firstVisibleItemScrollOffset = lazyListState.firstVisibleItemScrollOffset
+//                        val itemCount = tripAlternatives.alternatives.size // Current number of alternatives
+//
+//                        when {
+//                            firstVisibleItemIndex == 0 && firstVisibleItemScrollOffset == 0 && tripAlternatives.currIndex == 0 -> {
+//                                Log.i("DEBUG", "First item snapped")
+//                                onExpand(true)
+//                            }
+//                            firstVisibleItemIndex == itemCount + 1 -> {
+//                                Log.i("DEBUG", "Last item snapped")
+//                                onExpand(false)
+//                            }
+//                            firstVisibleItemIndex in 1..itemCount -> {
+//                                onIndexChanged(firstVisibleItemIndex - 1)
+//                            }
+//                        }
+//                    }
 //                }
-//            }
 //        }
 //    }
 //}
-/*@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun UsedTripAlternativesRow(
-    tripAlternatives: List<UsedTrip>,
-    onExpand: (Boolean) -> Unit,
-    expandedToPast: MutableState<Boolean>,
-    expandedToFuture: MutableState<Boolean>,
-    currIndex: Int,
-    modifier: Modifier = Modifier
-) {
-    val lazyListState = rememberLazyListState(initialFirstVisibleItemIndex = 1)//(currIndex + 1).coerceIn(0, tripAlternatives.size))
-    val snapBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState)
 
-    //Log.i("DEBUG", "Curr index: $currIndex, tripAlternatives size: ${tripAlternatives.size}")
-
-    Box(
-        modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
-    ) {
-        LazyRow(
-            modifier = modifier.fillMaxWidth(),
-            state = lazyListState,
-            flingBehavior = snapBehavior
-        ) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillParentMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-            items(tripAlternatives) { trip: UsedTrip ->
-                UsedTripCard(trip = trip, modifier = Modifier.fillParentMaxWidth())
-            }
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillParentMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-        }
-
-//        LaunchedEffect(expandedToPast) {
-//            if (expandedToPast.value && tripAlternatives.isNotEmpty()) {
-//                //TODO: remove absolute value
-//                lazyListState.animateScrollToItem(5)
-//                Log.i("DEBUG", "Scrolled to index: 5")
-//                expandedToPast.value = false
-//            }
-//        }
-
-//        LaunchedEffect(expandedToFuture) {
-//            if(expandedToFuture.value && tripAlternatives.size > 5){
-//                Log.i("DEBUG", "WTF")
-//                lazyListState.animateScrollToItem(tripAlternatives.size - 5 + 1)
-//                //Log.i("DEBUG", "Scrolled to index: ${tripAlternatives.size - 5}")
-//                expandedToFuture.value = false
-//            }
-//        }
-
-        LaunchedEffect(currIndex){
-            if(currIndex != 0){
-                lazyListState.animateScrollToItem(currIndex + 1)
-            }
-        }
-
-        // Observing scrolling state and item snapping
-        LaunchedEffect(lazyListState) {
-            snapshotFlow { lazyListState.isScrollInProgress }
-                .collect { isScrolling ->
-                    if (!isScrolling) {
-                        val firstVisibleItemIndex = lazyListState.firstVisibleItemIndex
-                        val firstVisibleItemScrollOffset = lazyListState.firstVisibleItemScrollOffset
-
-                        if (firstVisibleItemIndex == 0 && firstVisibleItemScrollOffset == 0/* && !expandedToPast.value*/) {
-                            Log.i("DEBUG", "First item snapped")
-                            onExpand(true)
-                        }
-                        else if(firstVisibleItemIndex == tripAlternatives.size + 1/* && !expandedToFuture.value*/){
-                            Log.i("DEBUG", "Last item snapped, firstvisindex = $firstVisibleItemIndex, alternatives size = ${tripAlternatives.size}")
-                            onExpand(false)
-
-                        }
-                        else if(firstVisibleItemIndex != 0 && firstVisibleItemIndex != tripAlternatives.size + 1){
-                            currIndex = firstVisibleItemIndex - 1
-
-                        }
-                    }
-                }
-        }
-    }
-}*/
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -212,76 +130,79 @@ fun UsedTripAlternativesRow(
     onIndexChanged: (Int) -> Unit,  // New callback for updating index
     modifier: Modifier = Modifier
 ) {
-    val lazyListState = rememberLazyListState(initialFirstVisibleItemIndex = tripAlternatives.currIndex + 1)
-    val snapBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState)
+    val pagerState = rememberPagerState(initialPage = tripAlternatives.currIndex + 1, pageCount = {tripAlternatives.alternatives.size + 2})
+
+    val expanding = remember { mutableStateOf(false) }
+
+    LaunchedEffect(pagerState.currentPage) {
+        if (pagerState.currentPage == pagerState.pageCount || pagerState.currentPage == 0) {
+            expanding.value = false
+        }
+        else{
+            onIndexChanged(pagerState.currentPage - 1)
+        }
+    }
 
     Box(
         modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
     ) {
-        LazyRow(
+        HorizontalPager(
             modifier = modifier.fillMaxWidth(),
-            state = lazyListState,
-            flingBehavior = snapBehavior
-        ) {
-            val itemHeight = 68.dp
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillParentMaxWidth()
-                        .height(itemHeight)
-                        .background(MaterialTheme.colorScheme.tertiaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+            state = pagerState,
+            key = { page ->
+                when (page) {
+                    0 -> "start-placeholder"
+                    tripAlternatives.alternatives.size + 1 -> "end-placeholder"
+                    else -> tripAlternatives.alternatives[page - 1].hashCode()
                 }
             }
-            items(tripAlternatives.alternatives) { trip: UsedTrip ->
-                UsedTripCard(trip = trip, modifier = Modifier.fillParentMaxWidth().height(itemHeight))
-            }
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillParentMaxWidth()
-                        .height(itemHeight)
-                        .background(MaterialTheme.colorScheme.tertiaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+        ) { page ->
+            val itemHeight = 68.dp
+            when (page) {
+                0 -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(itemHeight)
+                            .background(MaterialTheme.colorScheme.tertiaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                        if(!expanding.value){
+                            expanding.value = true
+                            onExpand(true)
+                            Log.i("DEBUG", "Expanding")
+                        }
+                    }
+                }
+                tripAlternatives.alternatives.size + 1 -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(itemHeight)
+                            .background(MaterialTheme.colorScheme.tertiaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                        if(!expanding.value){
+                            expanding.value = true
+                            onExpand(false)
+                            Log.i("DEBUG", "Expanding")
+                        }
+                    }
+                }
+                else -> {
+                    val trip = tripAlternatives.alternatives[page - 1]
+                    UsedTripCard(trip = trip, modifier = Modifier.fillMaxWidth().height(itemHeight))
                 }
             }
         }
 
         // Scroll to new currIndex when it changes
-        LaunchedEffect(tripAlternatives.currIndex to UUID.randomUUID()) {
-            lazyListState.scrollToItem(tripAlternatives.currIndex + 1)
-        }
-
-
-        // Observe scrolling state and update currIndex on snapping
-        LaunchedEffect(lazyListState, tripAlternatives.alternatives) {
-            snapshotFlow { lazyListState.isScrollInProgress }
-                .collect { isScrolling ->
-                    if (!isScrolling) {
-                        val firstVisibleItemIndex = lazyListState.firstVisibleItemIndex
-                        val firstVisibleItemScrollOffset = lazyListState.firstVisibleItemScrollOffset
-                        val itemCount = tripAlternatives.alternatives.size // Current number of alternatives
-
-                        when {
-                            firstVisibleItemIndex == 0 && firstVisibleItemScrollOffset == 0 && tripAlternatives.currIndex == 0 -> {
-                                Log.i("DEBUG", "First item snapped")
-                                onExpand(true)
-                            }
-                            firstVisibleItemIndex == itemCount + 1 -> {
-                                Log.i("DEBUG", "Last item snapped")
-                                onExpand(false)
-                            }
-                            firstVisibleItemIndex in 1..itemCount -> {
-                                onIndexChanged(firstVisibleItemIndex - 1)
-                            }
-                        }
-                    }
-                }
+        LaunchedEffect(tripAlternatives.currIndex) {
+            Log.i("DEBUG", "Scrolling to ${tripAlternatives.currIndex + 1} out of ${tripAlternatives.alternatives.size + 2}")
+            pagerState.scrollToPage(tripAlternatives.currIndex + 1)
         }
     }
 }

@@ -24,6 +24,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,7 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.prago.R
-import com.example.prago.viewModels.SharedViewModel
+import com.example.prago.viewModel.AppViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
@@ -182,7 +184,7 @@ fun ArrivalDepartureButtonPair(
 @Composable
 fun DateTimeBottomSheet(
     modifier: Modifier = Modifier,
-    viewModel: SharedViewModel,
+    viewModel: AppViewModel,
     byEarliestDeparture: Boolean,
     onArrDepChange: (Boolean) -> Unit,
     onTimeChanged: (LocalTime) -> Unit,
@@ -193,6 +195,12 @@ fun DateTimeBottomSheet(
         skipPartiallyExpanded = true // Prevent partial expansion
     )
     val scope = rememberCoroutineScope()
+
+    val departureNow by viewModel.departureNow.collectAsState()
+    val selectedDate by viewModel.selectedDate.collectAsState()
+    val selectedTime by viewModel.selectedTime.collectAsState()
+
+
 
     Box(
         modifier = Modifier
@@ -231,10 +239,10 @@ fun DateTimeBottomSheet(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            val text = if(viewModel.departureNow.value){
+            val text = if(departureNow){
                 stringResource(R.string.now)
             }else{
-                getLabelFromDate(viewModel.selectedDate.value) + " " + getLabelFromTime(viewModel.selectedTime.value)
+                getLabelFromDate(selectedDate) + " " + getLabelFromTime(selectedTime)
             }
             Text(
                 text = text,
@@ -253,8 +261,6 @@ fun DateTimeBottomSheet(
                 ),
                 modifier = Modifier.clickable(
                     onClick = {
-                        //onDateChanged(LocalDate.now())
-                        //onTimeChanged(LocalTime.now())
                         onNowSelected()
                     }
                 )

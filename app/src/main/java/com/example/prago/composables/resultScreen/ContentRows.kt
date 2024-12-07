@@ -20,7 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.prago.R
-import com.example.prago.dataClasses.ColorStruct
+import com.example.prago.model.dataClasses.ColorStruct
 import com.example.prago.formatters.formatTime
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

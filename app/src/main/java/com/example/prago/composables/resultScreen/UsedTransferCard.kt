@@ -25,7 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.prago.R
-import com.example.prago.dataClasses.UsedTransfer
+import com.example.prago.model.dataClasses.UsedTransfer
 import com.example.prago.formatters.formatDistance
 import com.example.prago.formatters.formatTime
 

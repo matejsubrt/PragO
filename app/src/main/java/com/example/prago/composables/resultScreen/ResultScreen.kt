@@ -1,25 +1,32 @@
 package com.example.prago.composables.resultScreen
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import com.example.prago.activities.LocalSharedViewModel
+import androidx.compose.ui.platform.LocalContext
+import com.example.prago.activities.LocalAppViewModel
 import com.example.prago.composables.ResultTopBar
 import kotlinx.coroutines.launch
 
 
 @Composable
 fun ResultScreen(){
-    val viewModel = LocalSharedViewModel.current
-    val searchResultList by viewModel.searchResultList.observeAsState()
+    val viewModel = LocalAppViewModel.current
+    val searchResultList by viewModel.searchResultList.collectAsState()
+
+    val isExpandingToPast by viewModel.expandingSearchToPast.collectAsState()
+    val isExpandingToFuture by viewModel.expandingSearchToFuture.collectAsState()
+
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
@@ -33,31 +40,15 @@ fun ResultScreen(){
                 content = { searchResult ->
                     ResultCard(searchResult, viewModel)
                 },
-                isExpandingToPast = viewModel.expandingSearchToPast.value,
-                isExpandingToFuture = viewModel.expandingSearchToFuture.value,
-                //expansionToPastItems = viewModel.expansionToPastItems.value,
+                isExpandingToPast = isExpandingToPast,
+                isExpandingToFuture = isExpandingToFuture,
                 onRefresh = {toPast ->
                     scope.launch{
-                        viewModel.expandSearch(toPast)
+                        Log.i("DEBUG", "Refreshing")
+                        viewModel.expandSearch(toPast, context)
                     }
-                })
-
-
-
-//            LazyColumn(
-//                modifier = Modifier.padding(8.dp)
-//            ) {
-//                searchResultList?.let { results ->
-//                    items(results) { result ->
-//                        Column {
-//                            //Log.i("DEBUG", "Curr delay: ${result.usedTrips[0].currentDelay}")
-//                            ResultCard(result)
-//                            Spacer(modifier = Modifier.height(16.dp)) // Adjust the height as needed
-//                        }
-//                    }
-//                }
-//            }
-
+                }
+            )
         }
     }
 }

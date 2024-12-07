@@ -28,8 +28,8 @@
     <string name="no_stops_found">Nenalezeny žádné zastávky</string>
     <string name="try_adjusting_your_search">Zkuste pozměnit vyhledávání</string>
     <string name="clear_search">Vyčistit vyhledávní</string>
-    <string name="error_msg_404">Spojení nebylo nalezeno. Prosím, zkuste pozměnit parametry.</string>
-    <string name="error_msg_502">Server je momentálně nedostupný. Zkuste to prosím později.</string>
+    <string name="error_msg_404_connection">Spojení nebylo nalezeno. Prosím, zkuste pozměnit parametry.</string>
+    <string name="error_msg_502_connection">Server je momentálně nedostupný. Zkuste to prosím později.</string>
     <string name="an_error_occurred">Nastala chyba</string>
     <string name="transfer_buffer">Rezerva přestupu</string>
     <string name="transfer_length">Délka přestupu</string>
@@ -46,4 +46,7 @@
     <string name="comfort_shortest">Krátký</string>
     <string name="comfort_balanced">Vyvážený</string>
     <string name="comfort_least_transfers">Nejméně\n  přestupů</string>
+    <string name="error_msg_404_alternatives">Nebyly nalezeny žádné alternativní spoje.</string>
+    <string name="error_msg_502_alternatives">Server je momentálně nedostupný.</string>
+    <string name="departure_anytime">Kdykoliv</string>
 </resources>

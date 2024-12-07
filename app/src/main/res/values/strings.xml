@@ -27,8 +27,8 @@
     <string name="no_stops_found">No stops found</string>
     <string name="try_adjusting_your_search">Try adjusting your search</string>
     <string name="clear_search">Clear search</string>
-    <string name="error_msg_404">The connection could not be found. Please try changing the search parameters.</string>
-    <string name="error_msg_502">The server is currently down. Please try again later.</string>
+    <string name="error_msg_404_connection">The connection could not be found. Please try changing the search parameters.</string>
+    <string name="error_msg_502_connection">The server is currently down. Please try again later.</string>
     <string name="an_error_occurred">An error occurred</string>
     <string name="transfer_buffer">Transfer Buffer</string>
     <string name="transfer_length">Transfer length</string>
@@ -45,4 +45,7 @@
     <string name="comfort_shortest">Shortest\nTime</string>
     <string name="comfort_balanced">Balanced</string>
     <string name="comfort_least_transfers">Least\nTransfers</string>
+    <string name="error_msg_404_alternatives">No alternative trips could be found.</string>
+    <string name="error_msg_502_alternatives">The server is currently down</string>
+    <string name="departure_anytime">Anytime</string>
 </resources>

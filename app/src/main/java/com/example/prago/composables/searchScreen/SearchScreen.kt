@@ -16,6 +16,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,8 +31,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.prago.R
+import com.example.prago.activities.LocalAppViewModel
 import com.example.prago.activities.LocalNavController
-import com.example.prago.activities.LocalSharedViewModel
+//import com.example.prago.activities.LocalSharedViewModel
 import com.example.prago.composables.MainTopBar
 import com.example.prago.ui.theme.PragOTheme
 import kotlinx.coroutines.launch
@@ -99,10 +101,23 @@ fun DateTimePickerRow(
 @Composable
 fun Body(){
     val navController = LocalNavController.current
-    val viewModel = LocalSharedViewModel.current
-    //val stopListDataStore = LocalStopListDataStore.current
+    val viewModel = LocalAppViewModel.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
+
+    val fromText by viewModel.fromSearchQuery.collectAsState()
+    val toText by viewModel.toSearchQuery.collectAsState()
+    val byEarliestDeparture by viewModel.byEarliestDeparture.collectAsState()
+
+    val useSharedBikes by viewModel.useSharedBikes.collectAsState()
+    val transferBuffer by viewModel.transferBuffer.collectAsState()
+    val transferLength by viewModel.transferLength.collectAsState()
+    val comfortPreference by viewModel.comfortPreference.collectAsState()
+    val bikeTripBuffer by viewModel.bikeTripBuffer.collectAsState()
+
+
+
 
     var showDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
@@ -159,71 +174,59 @@ fun Body(){
         modifier = Modifier.padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
         item {
             TextInput(
                 viewModel = viewModel,
                 context = context,
-                fromText = viewModel.fromText.value,
-                toText = viewModel.toText.value,
-                onFromValueChange = {viewModel.fromText.value = it},
-                onToValueChange = {viewModel.toText.value = it}
+                fromText = fromText,//viewModel.fromText.value,
+                toText = toText,
+                onFromValueChange = {viewModel.updateFromSearchQuery(it)},//{viewModel.fromText.value = it},
+                onToValueChange = {viewModel.updateToSearchQuery(it)} //{viewModel.toText.value = it}
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             DateTimeBottomSheet(
                 viewModel = viewModel,
-                byEarliestDeparture = viewModel.byEarliestDeparture.value,
-                onArrDepChange = { viewModel.byEarliestDeparture.value = it },
-                onDateChanged = { viewModel.selectedDate.value = it; viewModel.departureNow.value = false},
-                onTimeChanged = { viewModel.selectedTime.value = it; viewModel.departureNow.value = false},
-                onNowSelected = { viewModel.departureNow.value = true; viewModel.byEarliestDeparture.value = true }
+                byEarliestDeparture = byEarliestDeparture,
+                onArrDepChange = {viewModel.updateByEarliestDeparture(it)},
+                onDateChanged = {viewModel.updateSelectedDate(it); viewModel.updateDepartureNow(false)},
+                onTimeChanged = {viewModel.updateSelectedTime(it); viewModel.updateDepartureNow(false)},
+                onNowSelected = {viewModel.updateDepartureNow(true); viewModel.updateByEarliestDeparture(true)}
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            LabelWithToggleSwitch(label = stringResource(R.string.use_shared_bikes), checked = viewModel.useSharedBikes.value) {
-                viewModel.useSharedBikes.value = it
-                scope.launch{
-                    viewModel.saveBoolSetting("useSharedBikes", it)
-                }
+            LabelWithToggleSwitch(
+                label = stringResource(R.string.use_shared_bikes),
+                checked = useSharedBikes
+            ) {
+                viewModel.saveUseSharedBikes(it)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             SlidersBox(
                 labels = sliderLabels,
-                values = listOf(viewModel.transferBuffer.value, viewModel.transferLength.value, viewModel.comfortPreference.value, viewModel.bikeTripBuffer.value),
+                values = listOf(transferBuffer, transferLength, comfortPreference, bikeTripBuffer),//viewModel.transferBuffer.value, viewModel.transferLength.value, viewModel.comfortPreference.value, viewModel.bikeTripBuffer.value),
                 onValueChanges = listOf(
                     {
-                        viewModel.transferBuffer.value = it
-                        scope.launch{
-                            viewModel.saveFloatSetting("transferBuffer", it)
-                        }
-
+                        viewModel.saveTransferBuffer(it)
                     },
                     {
-                        viewModel.transferLength.value = it
-                        scope.launch{
-                            viewModel.saveFloatSetting("transferLength", it)
-                        }
+                        viewModel.saveTransferLength(it)
                     },
                     {
-                        viewModel.comfortPreference.value = it
-                        scope.launch{
-                            viewModel.saveFloatSetting("comfortPreference", it)
-                        }
+                        viewModel.saveComfortPreference(it)
                     },
                     {
-                        viewModel.bikeTripBuffer.value = it
-                        scope.launch {
-                            viewModel.saveFloatSetting("bikeTripBuffer", it)
-                        }
+                        viewModel.saveBikeTripBuffer(it)
                     }
                 ),
                 maxValues = sliderMaxValues,
                 labelLists = labelLists,
-                useSharedBikes = viewModel.useSharedBikes.value
+                useSharedBikes = useSharedBikes
             )
 
 
@@ -232,12 +235,14 @@ fun Body(){
             Button(
                 onClick = {
                     Log.i("DEBUG", "Search button clicked")
-                    viewModel.startSearch(
-                        context = context,
-                        navController = navController,
-                        showDialog = { showDialog = it },
-                        setErrorMessage = { errorMessage = it }
-                    )
+
+                    scope.launch {
+                        viewModel.startSearch(
+                            context = context,
+                            showDialog = { showDialog = it },
+                            setErrorMessage = { errorMessage = it }
+                        )
+                    }
                 },
                 modifier = Modifier
                     .width(256.dp)

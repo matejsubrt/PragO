@@ -1,4 +1,5 @@
 package com.example.prago.composables.resultScreen
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
@@ -8,19 +9,30 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.prago.dataClasses.ConnectionSearchResult
-import com.example.prago.viewModels.SharedViewModel
+import com.example.prago.model.dataClasses.ConnectionSearchResult
+import com.example.prago.viewModel.AppViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
 @Composable
-fun ResultCard(result: ConnectionSearchResult?, viewModel: SharedViewModel){
+fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+
+    val firstTripCurrAltIndex = viewModel.getCurrIndexFlow(result, 0).collectAsState()
+
+    var currFirstIndex = remember { mutableStateOf(0) }
+    var currLastIndex = remember { mutableStateOf(0) }
 
 
     if(result != null)
@@ -41,10 +53,10 @@ fun ResultCard(result: ConnectionSearchResult?, viewModel: SharedViewModel){
                     .background(
                         color = MaterialTheme.colorScheme.surface,
                         shape = RoundedCornerShape(16.dp)
-                    ) // Apply rounded corner shape here
+                    )
             ){
-                ResultHeader(result)
-
+                //ResultHeader(result.usedTripAlternatives.first(), result.usedTripAlternatives.last())
+                ResultHeader(result, currFirstIndex.value, currLastIndex.value)
 
                 if(result.usedSegmentTypes[0] == 0){
                     UsedFirstLastStopCard(result.usedTransfers[0].srcStopInfo.name, result.departureDateTime)
@@ -63,16 +75,21 @@ fun ResultCard(result: ConnectionSearchResult?, viewModel: SharedViewModel){
                                 tripAlternatives = result.usedTripAlternatives[currTripIndex],
                                 onExpand = { toPast ->
                                     coroutineScope.launch(Dispatchers.IO) {
-                                        viewModel.getAlternatives(result, currTripIndex, toPast)
+                                        viewModel.fetchAlternatives(result, currTripIndex, toPast, context)
                                     }
                                 },
                                 onIndexChanged = { newIndex ->
                                     viewModel.updateCurrIndex(result, currTripIndex, newIndex)
+                                    if(currTripIndex == 0){
+                                        currFirstIndex.value = newIndex
+                                    }
+                                    if(currTripIndex == result.usedTripAlternatives.size - 1){
+                                        currLastIndex.value = newIndex
+                                    }
                                 }
                             )
-                                //currIndex = result.usedTripsIndices[currTripIndex])
                             tripIndex++
-                        }//UsedTripCard(result.usedTripsWithAlternatives[tripIndex][result.usedTripsIndices[tripIndex++]])//result.usedTrips[tripIndex++])
+                        }
                         2 -> UsedBikeTripCard(result.usedBikeTrips[bikeTripIndex++])
                     }
                 }

@@ -1,4 +1,4 @@
-package com.example.prago.dataClasses
+package com.example.prago.model.dataClasses
 
 import org.json.JSONObject
 
