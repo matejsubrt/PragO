@@ -135,30 +135,12 @@ fun UsedTripAlternativesRow(
     val expanding = remember { mutableStateOf(false) }
 
     LaunchedEffect(pagerState.currentPage) {
-//        if (pagerState.currentPage == tripAlternatives.count + 1 || pagerState.currentPage == 0) {
-//            expanding.value = false
-//        }
-//        else{
-//            onIndexChanged(pagerState.currentPage - 1)
-//        }
-        if(!expanding.value){
-            if(pagerState.currentPage == 0){
-                onExpand(true)
-            }
-            else if(pagerState.currentPage == tripAlternatives.alternatives.size + 1){
-                val currIndex = pagerState.currentPage - 3
-                Log.i("DEBUG", "CURRENT index: $currIndex")
-                expanding.value = true
-                onExpand(false)
-                onIndexChanged(currIndex + 1)
-                Log.i("DEBUG", "SETTING index to ${currIndex + 1}")
-                expanding.value = false
-            }
-            else {
-                onIndexChanged(pagerState.currentPage - 1)
-            }
+        if (pagerState.currentPage == tripAlternatives.count + 1 || pagerState.currentPage == 0) {
+            expanding.value = false
         }
-
+        else{
+            onIndexChanged(pagerState.currentPage - 1)
+        }
     }
 
     Box(
@@ -187,11 +169,11 @@ fun UsedTripAlternativesRow(
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator()
-//                        if(!expanding.value){
-//                            expanding.value = true
-//                            onExpand(true)
-//                            Log.i("DEBUG", "Expanding")
-//                        }
+                        if(!expanding.value){
+                            expanding.value = true
+                            onExpand(true)
+                            Log.i("DEBUG", "Expanding")
+                        }
                     }
                 }
                 tripAlternatives.alternatives.size + 1 -> {
@@ -203,11 +185,11 @@ fun UsedTripAlternativesRow(
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator()
-//                        if(!expanding.value){
-//                            expanding.value = true
-//                            onExpand(false)
-//                            Log.i("DEBUG", "Expanding")
-//                        }
+                        if(!expanding.value){
+                            expanding.value = true
+                            onExpand(false)
+                            Log.i("DEBUG", "Expanding")
+                        }
                     }
                 }
                 else -> {
