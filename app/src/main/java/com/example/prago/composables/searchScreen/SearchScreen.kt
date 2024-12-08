@@ -38,6 +38,9 @@ import com.example.prago.composables.MainTopBar
 import com.example.prago.ui.theme.PragOTheme
 import kotlinx.coroutines.launch
 import kotlinx.serialization.ExperimentalSerializationApi
+import java.time.LocalDate
+import java.time.LocalTime
+import kotlin.math.ceil
 
 
 @Composable
@@ -193,7 +196,22 @@ fun Body(){
                 onArrDepChange = {viewModel.updateByEarliestDeparture(it)},
                 onDateChanged = {viewModel.updateSelectedDate(it); viewModel.updateDepartureNow(false)},
                 onTimeChanged = {viewModel.updateSelectedTime(it); viewModel.updateDepartureNow(false)},
-                onNowSelected = {viewModel.updateDepartureNow(true); viewModel.updateByEarliestDeparture(true)}
+                onNowSelected = {
+                    viewModel.updateDepartureNow(true)
+                    viewModel.updateByEarliestDeparture(true)
+                    viewModel.updateSelectedDate(LocalDate.now())
+
+                    val now = LocalTime.now()
+                    val minutes = now.minute
+                    val roundedMinutes = (ceil(minutes / 5.0) * 5).toInt() % 60
+                    val additionalHours = if (roundedMinutes == 0 && minutes != 0) 1 else 0
+                    val roundedTime = now
+                        .withSecond(0)
+                        .withMinute(roundedMinutes)
+                        .plusHours(additionalHours.toLong())
+
+                    viewModel.updateSelectedTime(roundedTime)
+                }
             )
 
             Spacer(modifier = Modifier.height(8.dp))

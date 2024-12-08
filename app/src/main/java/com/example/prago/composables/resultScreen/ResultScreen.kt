@@ -22,9 +22,6 @@ fun ResultScreen(){
     val viewModel = LocalAppViewModel.current
     val searchResultList by viewModel.searchResultList.collectAsState()
 
-    val isExpandingToPast by viewModel.expandingSearchToPast.collectAsState()
-    val isExpandingToFuture by viewModel.expandingSearchToFuture.collectAsState()
-
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -40,14 +37,13 @@ fun ResultScreen(){
                 content = { searchResult ->
                     ResultCard(searchResult, viewModel)
                 },
-                isExpandingToPast = isExpandingToPast,
-                isExpandingToFuture = isExpandingToFuture,
                 onRefresh = {toPast ->
                     scope.launch{
                         Log.i("DEBUG", "Refreshing")
                         viewModel.expandSearch(toPast, context)
                     }
-                }
+                },
+                viewModel = viewModel
             )
         }
     }

@@ -29,7 +29,7 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
     val context = LocalContext.current
 
 
-    val firstTripCurrAltIndex = viewModel.getCurrIndexFlow(result, 0).collectAsState()
+    //val firstTripCurrAltIndex = viewModel.getCurrIndexFlow(result, 0).collectAsState()
 
     var currFirstIndex = remember { mutableStateOf(0) }
     var currLastIndex = remember { mutableStateOf(0) }
@@ -58,8 +58,13 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
                 //ResultHeader(result.usedTripAlternatives.first(), result.usedTripAlternatives.last())
                 ResultHeader(result, currFirstIndex.value, currLastIndex.value)
 
-                if(result.usedSegmentTypes[0] == 0){
-                    UsedFirstLastStopCard(result.usedTransfers[0].srcStopInfo.name, result.departureDateTime)
+                if(result.usedSegmentTypes[0] == 0 && result.usedTripAlternatives.isNotEmpty() && (result.usedTripAlternatives[0].alternatives.size > currFirstIndex.value) && currFirstIndex.value >= 0){
+                    val firstTrip = result.usedTripAlternatives[0].alternatives[currFirstIndex.value]
+                    Log.i("DEBUG", "First Trip: $firstTrip")
+                    val firstTripBoardingTime = firstTrip.stopPasses[firstTrip.getOnStopIndex].departureTime
+                    val startTime = firstTripBoardingTime.minusSeconds(result.secondsBeforeFirstTrip.toLong())
+                    UsedFirstLastStopCard(result.usedTransfers[0].srcStopInfo.name, startTime)
+                    Log.i("DEBUG", "FIRST TRANSFER UPDATED. NEW TIME: $startTime, curr first index: ${currFirstIndex.value}, alt size: ${result.usedTripAlternatives[0].alternatives.size}")
                 }
 
 

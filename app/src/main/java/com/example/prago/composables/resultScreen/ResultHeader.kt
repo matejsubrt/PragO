@@ -38,6 +38,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import java.time.Duration
 import java.time.LocalDateTime
+import kotlin.math.max
+import kotlin.math.min
 
 
 @Composable
@@ -142,10 +144,12 @@ fun ResultHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         if(result.usedSegmentTypes.contains(1)){
-            val firstTrip = result.usedTripAlternatives.first().alternatives[firstTripAltIndex]
+            val firstIndex = min(firstTripAltIndex, result.usedTripAlternatives.first().alternatives.size - 1)
+            val firstTrip = result.usedTripAlternatives.first().alternatives[firstIndex]
             val firstTripDepartureTime = firstTrip.stopPasses[firstTrip.getOnStopIndex].departureTime
 
-            val lastTrip = result.usedTripAlternatives.last().alternatives[lastTripAltIndex]
+            val lastIndex = min(lastTripAltIndex, result.usedTripAlternatives.last().alternatives.size - 1)
+            val lastTrip = result.usedTripAlternatives.last().alternatives[lastIndex]
             val lastTripArrivalTime = lastTrip.stopPasses[lastTrip.getOffStopIndex].arrivalTime
 
             val departureTime = firstTripDepartureTime.minusSeconds(result.secondsBeforeFirstTrip.toLong())

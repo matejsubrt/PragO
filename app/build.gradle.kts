@@ -94,7 +94,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
     implementation("com.google.android.material:material:1.5.0")
     implementation("org.danilopianini:khttp:1.3.1")
-    implementation ("com.github.commandiron:WheelPickerCompose:1.1.11")
 
     implementation("androidx.compose.material3:material3")
     implementation(platform("androidx.compose:compose-bom:2024.02.01"))

@@ -56,6 +56,7 @@
     import java.time.format.DateTimeFormatter
 
 
+
     object StopListSerializer : Serializer<StopList> {
         override val defaultValue: StopList = StopList.getDefaultInstance()
         override suspend fun readFrom(input: InputStream): StopList = withContext(Dispatchers.IO) {
@@ -348,6 +349,7 @@
 //        }
 
         fun updateSelectedDate(date: LocalDate) {
+            Log.i("DEBUG", "Selected date: $date")
             _selectedDate.value = date
         }
 
@@ -527,6 +529,8 @@
                 rangeStart = searchRangeEnd.value
             }
 
+            Log.i("DEBUG", "Renga start: $rangeStart")
+
             Log.i("DEBUG", "Expanding search to ${if (toPast) "past" else "future"}")
 
 
@@ -588,6 +592,8 @@
             } else {
                 startDateTime = LocalDateTime.of(selectedDate.value, selectedTime.value)
             }
+
+            Log.i("DEBUG", "Starting search at $startDateTime")
 
 
             val searchRequest = CreateStopToStopRangeRequest(
