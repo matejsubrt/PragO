@@ -13,6 +13,7 @@ const val tripIconSize = 42
 const val transferIconSize = 32
 const val transferTextSize = 14
 const val headerTextSize = 16
+const val headerTextSizeSmaller = 10
 
 
 val stopNameStyle = TextStyle(

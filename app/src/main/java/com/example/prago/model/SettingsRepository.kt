@@ -8,9 +8,7 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlin.reflect.typeOf
 
 const val transferBufferDefault: Float = 2f
 const val transferLengthDefault: Float = 1f
@@ -81,7 +79,7 @@ class SettingsRepository(private val preferencesDataStore: DataStore<Preferences
 
     val transferBuffer : Flow<Float> = preferenceFlow(TRANSFER_BUFFER, transferBufferDefault)
     val transferLength : Flow<Float> = preferenceFlow(TRANSFER_LENGTH, transferLengthDefault)
-    val comfortPreference : Flow<Float> = preferenceFlow(COMFORT_PREFERENCE, comfortPreferenceDefault)
+    val timeComfortBalance : Flow<Float> = preferenceFlow(COMFORT_PREFERENCE, comfortPreferenceDefault)
 
     val bikeTripBuffer : Flow<Float> = preferenceFlow(BIKE_TRIP_BUFFER, bikeTripBufferDefault)
     val useSharedBikes : Flow<Boolean> = booleanPreferenceFlow(USE_SHARED_BIKES, useSharedBikesDefault)

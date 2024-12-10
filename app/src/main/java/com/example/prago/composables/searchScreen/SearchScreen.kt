@@ -53,53 +53,6 @@ fun SearchScreen(){
     }
 }
 
-/*@Composable
-fun DateTimePickerRow(
-    viewModel: SharedViewModel,
-    byEarliestDeparture: Boolean,
-    onArrDepChange: (Boolean) -> Unit,
-    onTimeChanged: (LocalTime) -> Unit,
-    onDateChanged: (LocalDate) -> Unit
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier.fillMaxWidth().height(48.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(6.dp))
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(8.dp) // Padding to ensure content is not cut off
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Date Picker
-                //DatePicker(viewModel, onDateChanged)
-
-                DateTimeBottomSheet(viewModel = viewModel, byEarliestDeparture = byEarliestDeparture, onArrDepChange = onArrDepChange, onDateChanged = onDateChanged, onTimeChanged = onTimeChanged)
-
-                //Spacer(modifier = Modifier.width(4.dp)) // Spacing between Date and Time Pickers
-
-                // Time Picker
-                //TimePicker(viewModel, onTimeChanged)
-
-                // Spacer to push the button to the far right
-                //Spacer(modifier = Modifier.weight(1f))
-
-                // Arrival/Departure Button
-//                ArrivalDepartureButton(
-//                    isDeparture = byEarliestDeparture,
-//                    onValueChanged = onArrDepChange
-//                )
-            }
-        }
-    }
-}*/
-
-
-
 @OptIn(ExperimentalSerializationApi::class)
 @Composable
 fun Body(){
@@ -116,7 +69,7 @@ fun Body(){
     val useSharedBikes by viewModel.useSharedBikes.collectAsState()
     val transferBuffer by viewModel.transferBuffer.collectAsState()
     val transferLength by viewModel.transferLength.collectAsState()
-    val comfortPreference by viewModel.comfortPreference.collectAsState()
+    val comfortPreference by viewModel.timeComfortBalance.collectAsState()
     val bikeTripBuffer by viewModel.bikeTripBuffer.collectAsState()
 
 
@@ -180,12 +133,13 @@ fun Body(){
 
         item {
             TextInput(
-                viewModel = viewModel,
-                context = context,
-                fromText = fromText,//viewModel.fromText.value,
+                fromText = fromText,
                 toText = toText,
-                onFromValueChange = {viewModel.updateFromSearchQuery(it)},//{viewModel.fromText.value = it},
-                onToValueChange = {viewModel.updateToSearchQuery(it)} //{viewModel.toText.value = it}
+                onDirectionSwitch = {
+                    val fromSearchQuery = viewModel.fromSearchQuery.value
+                    viewModel.updateFromSearchQuery(viewModel.toSearchQuery.value)
+                    viewModel.updateToSearchQuery(fromSearchQuery)
+                }
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -236,7 +190,7 @@ fun Body(){
                         viewModel.saveTransferLength(it)
                     },
                     {
-                        viewModel.saveComfortPreference(it)
+                        viewModel.saveTimeComfortBalance(it)
                     },
                     {
                         viewModel.saveBikeTripBuffer(it)

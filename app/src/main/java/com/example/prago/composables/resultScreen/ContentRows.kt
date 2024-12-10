@@ -44,7 +44,7 @@ fun TripNameRow(text: String, color: Color, hasDelayData: Boolean, currentTripDe
         Text(
             text = text,
             style = TextStyle(
-                color = color, // Apply the color here
+                color = color,
                 fontWeight = FontWeight.Bold,
                 fontSize = lineNameSize.sp
             )
@@ -75,8 +75,8 @@ fun LineRow(lineName: String, colorStruct: ColorStruct, hasDelayData: Boolean, c
 
 @Composable
 fun StopRow(stopName: String, time: LocalDateTime){
-    val formatter = DateTimeFormatter.ofPattern("HH:mm:ss") // Define the desired format
-    val formattedTime = time.format(formatter) // Format the LocalDateTime using the formatter
+    val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+    val formattedTime = time.format(formatter)
 
     Row(
         modifier = Modifier.fillMaxWidth(),

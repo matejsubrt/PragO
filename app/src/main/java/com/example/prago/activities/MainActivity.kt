@@ -30,9 +30,6 @@ import com.example.prago.model.SettingsRepository
 import com.example.prago.model.StopListRepository
 import com.example.prago.ui.theme.PragOTheme
 import com.example.prago.viewModel.AppViewModel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.take
 import com.example.prago.viewModel.preferencesDataStore
 import com.example.prago.viewModel.stopListDataStore
 import java.time.LocalDateTime
@@ -93,7 +90,7 @@ fun PragOApp(appViewModel: AppViewModel, isConnectedToWifi: Boolean) {
     LaunchedEffect(navigateToResults) {
         if (navigateToResults) {
             navController.navigate("resultPage")
-            appViewModel.resetNavigateToResults()
+            appViewModel.updateNavigateToResults(false)
         }
     }
 
@@ -106,7 +103,7 @@ fun PragOApp(appViewModel: AppViewModel, isConnectedToWifi: Boolean) {
 
             if(lastUpdateTime.plusDays(7).isBefore(LocalDateTime.now())){
                 //TODO: Change the URL implementation
-                appViewModel.downloadAndStoreStopList("https://data.pid.cz/stops/json/stops.json")
+                appViewModel.downloadAndStoreStopNameList("https://data.pid.cz/stops/json/stops.json")
                 Log.i("DEBUG", "Data is outdated, downloading new data")
             }
             else{

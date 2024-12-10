@@ -126,7 +126,7 @@ import java.util.UUID
 @Composable
 fun UsedTripAlternativesRow(
     tripAlternatives: TripAlternatives,
-    onExpand: (Boolean) -> Unit,
+    onExpand: (Boolean, Int) -> Unit,
     onIndexChanged: (Int) -> Unit,  // New callback for updating index
     modifier: Modifier = Modifier
 ) {
@@ -171,12 +171,13 @@ fun UsedTripAlternativesRow(
                         CircularProgressIndicator()
                         if(!expanding.value){
                             expanding.value = true
-                            onExpand(true)
+                            onExpand(true, tripAlternatives.alternatives.size)
                             Log.i("DEBUG", "Expanding")
                         }
                     }
                 }
                 tripAlternatives.alternatives.size + 1 -> {
+                    //Log.i("DEBUG1", "End placeholder")
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -187,7 +188,8 @@ fun UsedTripAlternativesRow(
                         CircularProgressIndicator()
                         if(!expanding.value){
                             expanding.value = true
-                            onExpand(false)
+                            onExpand(false, tripAlternatives.alternatives.size)
+                            //onIndexChanged(tripAlternatives.alternatives.size)
                             Log.i("DEBUG", "Expanding")
                         }
                     }
@@ -232,6 +234,29 @@ fun UsedTripCard(trip: UsedTrip, modifier: Modifier = Modifier) {
             12 -> R.drawable.train
             else -> R.drawable.bus
         }
+
+        val lineColor = when(trip.vehicleType){
+            0 -> ColorStruct(0x7a, 0x06, 0x03)
+            1 -> {
+                when(trip.routeName){
+                    "A" -> ColorStruct(0, 165, 98)
+                    "B" -> ColorStruct(248, 179, 34)
+                    "C" -> ColorStruct(207, 0, 61)
+                    else -> ColorStruct(0, 0, 0)
+                }
+            }
+            2 -> ColorStruct(37, 30, 98)
+            3 -> ColorStruct(0x00, 0x7d, 0xa8)
+            4 -> ColorStruct(0x00, 0xb3, 0xcb)
+            5 -> ColorStruct(122, 6, 3)
+            6 -> ColorStruct(0x00, 0x00, 0xff)
+            7 -> ColorStruct(0x00, 0x00, 0xff)
+            11 -> ColorStruct(0x00, 0x7d, 0xa8)
+            12 -> ColorStruct(37, 30, 98)
+            else -> ColorStruct(0x00, 0x7d, 0xa8)
+        }
+
+
         Icon(
             painter = painterResource(id = icon),
             contentDescription = null,
@@ -243,7 +268,7 @@ fun UsedTripCard(trip: UsedTrip, modifier: Modifier = Modifier) {
         Column(
             modifier = Modifier.padding(start = 4.dp, top = 2.dp, end = 8.dp, bottom = 4.dp)
         ) {
-            LineRow(trip.routeName, trip.color, trip.hasDelayInfo, trip.currentDelay)
+            LineRow(trip.routeName, lineColor, trip.hasDelayInfo.value, trip.currentDelay.value)
             StopRow(
                 stopName = trip.stopPasses[trip.getOnStopIndex].name,
                 time = trip.stopPasses[trip.getOnStopIndex].departureTime
@@ -258,34 +283,34 @@ fun UsedTripCard(trip: UsedTrip, modifier: Modifier = Modifier) {
 
 
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewUsedTripCard() {
-    val sampleTrip = UsedTrip(
-        getOnStopIndex = 0,
-        getOffStopIndex = 1,
-        routeName = "123",
-        color = ColorStruct(98, 0, 238),
-        stopPasses = listOf(
-            StopPass(
-                name = "Stop A",
-                id = "1",
-                arrivalTime = LocalDateTime.of(2024, 10, 23, 8, 0),
-                departureTime = LocalDateTime.of(2024, 10, 23, 8, 5)
-            ),
-            StopPass(
-                name = "Stop B",
-                id = "2",
-                arrivalTime = LocalDateTime.of(2024, 10, 23, 8, 30),
-                departureTime = LocalDateTime.of(2024, 10, 23, 8, 35)
-            )
-        ),
-        vehicleType = 3,
-        hasDelayInfo = true,
-        delayWhenBoarded = 0,
-        currentDelay = -168,
-        tripId = "trip123"
-    )
-
-    UsedTripCard(trip = sampleTrip)
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewUsedTripCard() {
+//    val sampleTrip = UsedTrip(
+//        getOnStopIndex = 0,
+//        getOffStopIndex = 1,
+//        routeName = "123",
+//        color = ColorStruct(98, 0, 238),
+//        stopPasses = listOf(
+//            StopPass(
+//                name = "Stop A",
+//                id = "1",
+//                arrivalTime = LocalDateTime.of(2024, 10, 23, 8, 0),
+//                departureTime = LocalDateTime.of(2024, 10, 23, 8, 5)
+//            ),
+//            StopPass(
+//                name = "Stop B",
+//                id = "2",
+//                arrivalTime = LocalDateTime.of(2024, 10, 23, 8, 30),
+//                departureTime = LocalDateTime.of(2024, 10, 23, 8, 35)
+//            )
+//        ),
+//        vehicleType = 3,
+//        hasDelayInfo = true,
+//        delayWhenBoarded = 0,
+//        currentDelay = -168,
+//        tripId = "trip123"
+//    )
+//
+//    UsedTripCard(trip = sampleTrip)
+//}

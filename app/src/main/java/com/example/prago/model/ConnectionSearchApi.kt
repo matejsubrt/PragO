@@ -1,6 +1,7 @@
 package com.example.prago.model
 
 import android.content.Context
+import android.util.Log
 import com.example.prago.R
 import com.example.prago.model.dataClasses.AlternativeTripsRequest
 import com.example.prago.model.dataClasses.AlternativeTripsResultState
@@ -15,12 +16,13 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 const val BASE_URL = "http://prago.xyz"
 const val CONNECTION_SEARCH_ENDPOINT = "/connection"
 const val ALTERNATIVE_TRIPS_ENDPOINT = "/alternative-trips"
-const val DELAY_UPDATE_ENDPOINT = "/delay-update"
+const val DELAY_UPDATE_ENDPOINT = "/update-delays"
 
 
 class ConnectionSearchApi {
@@ -38,12 +40,15 @@ class ConnectionSearchApi {
         )
     }
 
-    private suspend fun sendDelayUpdateRequest(request: List<ConnectionSearchResult>): Response{
+    @OptIn(ExperimentalSerializationApi::class)
+    private suspend fun sendDelayUpdateRequest(request: List<ConnectionSearchResult>): Response {
         return khttp.post(
-            url = BASE_URL + DELAY_UPDATE_ENDPOINT,
-            json = request.toJsonObject()
+            url =  BASE_URL + DELAY_UPDATE_ENDPOINT,
+            data = Json.encodeToString(request),
+            headers = mapOf("Content-Type" to "application/json")
         )
     }
+
 
     private fun cleanUpDuplicates(searchResults: List<ConnectionSearchResult>): List<ConnectionSearchResult> {
         val orderedSearchResults = searchResults.sortedBy { it.departureDateTime }
@@ -130,21 +135,32 @@ class ConnectionSearchApi {
 
 
     suspend fun updateDelayData(results: List<ConnectionSearchResult>, context: Context): Flow<ConnectionSearchResultState> = flow {
+        Log.i("DEBUG", "Result: ${results[0].usedTripAlternatives[0].alternatives[0].currentDelay}")
+        Log.i("DEBUG", "Result: ${results[1].usedTripAlternatives[0].alternatives[0].currentDelay}")
+        Log.i("DEBUG", "Result: ${results[2].usedTripAlternatives[0].alternatives[0].currentDelay}")
+        Log.i("DEBUG", "Color: ${results[0].usedTripAlternatives[0].alternatives[0].color}")
         val response = sendDelayUpdateRequest(results)
 
         when (response.statusCode) {
             200 -> {
                 val updatedResults = Json.decodeFromString<List<ConnectionSearchResult>>(response.text)
+                Log.i("DEBUG", "Result: ${updatedResults[0].usedTripAlternatives[0].alternatives[0].currentDelay}")
+                Log.i("DEBUG", "Result: ${updatedResults[1].usedTripAlternatives[0].alternatives[0].currentDelay}")
+                Log.i("DEBUG", "Result: ${updatedResults[2].usedTripAlternatives[0].alternatives[0].currentDelay}")
+                Log.i("DEBUG", "Color: ${results[0].usedTripAlternatives[0].alternatives[0].color}")
+                Log.i("DEBUG", "Result Color -----------------------------------------------------------------------------------------")
                 emit(ConnectionSearchResultState.Success(updatedResults))
             }
             else -> {
+                Log.i("DEBUG", "ERROR: ${response.statusCode} - ${response.text}")
                 val errorMessage = "Error: ${response.statusCode} - ${response.text}"
                 emit(ConnectionSearchResultState.Failure(response.statusCode, errorMessage))
             }
         }
-    }.catch { e ->
-        val errorMessage = "An error occurred: ${e.message}"
-        emit(ConnectionSearchResultState.Failure(-1, errorMessage))
-    }
+    }//.catch { e ->
+//        Log.i("DEBUG", "ERROR: ${e.message}")
+//        val errorMessage = "An error occurred: ${e.message}"
+//        emit(ConnectionSearchResultState.Failure(-1, errorMessage))
+//    }
 }
 

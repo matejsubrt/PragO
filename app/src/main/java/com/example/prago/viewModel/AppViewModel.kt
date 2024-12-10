@@ -1,18 +1,15 @@
     package com.example.prago.viewModel
 
     import android.content.Context
+    import android.location.Location
     import android.util.Log
     import androidx.datastore.core.CorruptionException
     import androidx.datastore.core.DataStore
     import androidx.datastore.core.Serializer
     import androidx.datastore.dataStore
-    import androidx.datastore.preferences.core.Preferences
     import androidx.datastore.preferences.preferencesDataStore
-    import androidx.lifecycle.LiveData
-    import androidx.lifecycle.MutableLiveData
     import androidx.lifecycle.ViewModel
     import androidx.lifecycle.viewModelScope
-    import com.example.prago.R
     import com.example.prago.StopList
     import com.example.prago.model.ConnectionSearchApi
     import com.example.prago.model.SettingsRepository
@@ -43,13 +40,11 @@
     import kotlinx.coroutines.flow.StateFlow
     import kotlinx.coroutines.flow.combine
     import kotlinx.coroutines.flow.debounce
-    import kotlinx.coroutines.flow.map
     import kotlinx.coroutines.flow.stateIn
     import kotlinx.coroutines.launch
     import kotlinx.coroutines.withContext
     import java.io.InputStream
     import java.io.OutputStream
-    import java.lang.Thread.State
     import java.time.LocalDate
     import java.time.LocalDateTime
     import java.time.LocalTime
@@ -83,167 +78,262 @@
         val stopListRepository: StopListRepository,
         val connectionSearchApi: ConnectionSearchApi
     ) : ViewModel() {
-        private val _navigateToResults = MutableStateFlow(false)
-        val navigateToResults: StateFlow<Boolean> = _navigateToResults
 
-        suspend fun resetNavigateToResults(){
-            _navigateToResults.value = false
+// =================================================================================================
+        // Initiates the search
+        suspend fun startSearch(
+            showDialog: (Boolean) -> Unit,
+            setErrorMessage: (String) -> Unit, // TODO: combine these
+            context: Context
+        ){
+            var startDateTime: LocalDateTime
+            if(departureNow.value){
+                startDateTime = LocalDateTime.now()
+                updateSelectedDate(LocalDate.now())
+                updateSelectedTime(LocalTime.now())
+            } else {
+                startDateTime = LocalDateTime.of(selectedDate.value, selectedTime.value)
+            }
+
+
+            val searchRequest = CreateStopToStopRangeRequest(
+                srcStopName = fromSearchQuery.value,
+                destStopName = toSearchQuery.value,
+                dateTime = startDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
+                byEarliestDeparture = byEarliestDeparture.value,
+                settings = getSearchSettings(),
+                rangeLength = 15
+            )
+
+            viewModelScope.launch(Dispatchers.IO) {
+                connectionSearchApi.searchForConnection(searchRequest, context).collect{ result ->
+                    when(result){
+                        is ConnectionSearchResultState.Success -> {
+                            val results = result.results
+
+                            updateSearchResultList(results, false)
+                            updateSearchRangeStart(startDateTime)
+                            updateSearchRangeEnd(startDateTime.plusMinutes(15))
+
+                            updateNavigateToResults(true)
+                        }
+                        is ConnectionSearchResultState.Failure -> {
+                            Log.e("AppViewModel", "Error fetching search results: ${result.errorMessage}")
+                            setErrorMessage(result.errorMessage)
+                            showDialog(true)
+                        }
+                    }
+                }
+            }
         }
 
-        /*private val _stopNameList = MutableLiveData<List<StopEntry>>()
-        val stopNameList : LiveData<List<StopEntry>> = _stopNameList
 
 
-        private val _currSearchResults = MutableLiveData<List<ConnectionSearchResult>>()
-        val currSearchResults : LiveData<List<ConnectionSearchResult>> = _currSearchResults
+        // Expands the search (either to the past or to the future)
+        suspend fun expandSearch(toPast: Boolean, context: Context){
+            val rangeStart: LocalDateTime
+
+            if(toPast){
+                updateExpandingSearchToPast(true)
+                rangeStart = searchRangeStart.value.minusMinutes(15)
+            }else{
+                updateExpandingSearchToFuture(true)
+                rangeStart = searchRangeEnd.value
+            }
+
+
+            val searchRequest = CreateStopToStopRangeRequest(
+                srcStopName = fromSearchQuery.value,
+                destStopName = toSearchQuery.value,
+                dateTime = rangeStart.toString(),
+                byEarliestDeparture = byEarliestDeparture.value,
+                settings = getSearchSettings(),
+                rangeLength = 15
+            )
+
+            viewModelScope.launch(Dispatchers.IO) {
+                connectionSearchApi.searchForConnection(searchRequest, context).collect{ result ->
+                    when(result){
+                        is ConnectionSearchResultState.Success -> {
+                            val results = result.results
+
+                            val currentResults = searchResultList.value
+                            var combinedResults = combineResultLists(currentResults, results, toPast)
+
+                            updateSearchResultList(combinedResults, false)
+
+                            if(toPast){
+                                updateSearchRangeStart(searchRangeStart.value.minusMinutes(15))
+                            } else {
+                                updateSearchRangeEnd(searchRangeEnd.value.plusMinutes(15))
+                            }
+                        }
+                        is ConnectionSearchResultState.Failure -> {
+                            Log.e("AppViewModel", "Error expanding search: ${result.errorMessage}")
+                        }
+                    }
+                }
+                updateExpandingSearchToPast(false)
+                updateExpandingSearchToFuture(false)
+            }
+        }
 
 
 
-        private val _useSharedBikes = MutableLiveData<Boolean>()
-        val useSharedBikes : LiveData<Boolean> = _useSharedBikes
+        // For the given trip, finds past ofr future alternative trips
+        suspend fun fetchAlternatives(
+            searchResult: ConnectionSearchResult,
+            tripIndex: Int,
+            earlier: Boolean,
+            context: Context
+        ){
+            val usedTripAlternativesObject = searchResult.usedTripAlternatives[tripIndex]
+            val existingAlternatives = usedTripAlternativesObject.alternatives
+            val usedTrip = if (earlier) existingAlternatives.first() else existingAlternatives.last()
 
-        private val _transferBuffer = MutableLiveData<Float>()
-        val transferBuffer : LiveData<Float> = _transferBuffer
+            val srcStopId = usedTrip.stopPasses[usedTrip.getOnStopIndex].id
+            val destStopId = usedTrip.stopPasses[usedTrip.getOffStopIndex].id
 
-        private val _transferLength = MutableLiveData<Float>()
-        val transferLength : LiveData<Float> = _transferLength
+            val dateTimeWithDelay = usedTrip.stopPasses[usedTrip.getOnStopIndex].departureTime.plusSeconds(usedTrip.delayWhenBoarded.value.toLong())
+            val dateTime = if (earlier) dateTimeWithDelay else dateTimeWithDelay.plusSeconds(1)
+            val dateTimeString = dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))
 
-        private val _comfortPreference = MutableLiveData<Float>()
-        val comfortPreference : LiveData<Float> = _comfortPreference
+            val count = 5
 
-        private val _bikeTripBuffer = MutableLiveData<Float>()
-        val bikeTripBuffer : LiveData<Float> = _bikeTripBuffer
+            val tripId = usedTrip.tripId
+
+            val request = AlternativeTripsRequest(
+                srcStopId = srcStopId,
+                destStopId = destStopId,
+                dateTime = dateTimeString,
+                previous = earlier,
+                count = count,
+                tripId = tripId
+            )
+
+            viewModelScope.launch(Dispatchers.IO) {
+                try{
+                    connectionSearchApi.getAlternativeTrips(request, context).collect { result ->
+                        when(result){
+                            is AlternativeTripsResultState.Success -> {
+                                val newAlternatives = result.results
+                                val allAlternatives: List<UsedTrip> = combineAlternativesLists(existingAlternatives, newAlternatives, earlier)//if (earlier) usedTrips + alternatives else alternatives + usedTrips
+                                val newIndex = if (earlier) newAlternatives.size - 1 else existingAlternatives.size
+
+                                searchResult.usedTripAlternatives[tripIndex] = TripAlternatives(
+                                    currIndex = newIndex,
+                                    alternatives = allAlternatives,
+                                    count = allAlternatives.size
+                                )
+                            }
+                            is AlternativeTripsResultState.Failure -> {
+                                Log.e("AppViewModel", "Error fetching alternatives: ${result.errorMessage}")
+                            }
+                        }
+                    }
+                } catch(e: Exception){
+                    Log.e("AppViewModel", "Error fetching alternatives: ${e.message}")
+                }
+
+            }
+        }
 
 
-        private val _walkingPace = MutableLiveData<Int>()
-        val walkingPace : LiveData<Int> = _walkingPace
 
-        private val _cyclingPace = MutableLiveData<Int>()
-        val cyclingPace : LiveData<Int> = _cyclingPace
+        // Updates the delay data for all trips in the search results
+        fun updateDelays(
+            context: Context
+        ){
+            val searchResults = searchResultList.value
 
-        private val _bikeUnlockTime = MutableLiveData<Int>()
-        val bikeUnlockTime : LiveData<Int> = _bikeUnlockTime
+            viewModelScope.launch(Dispatchers.IO) {
+                //try{
+                connectionSearchApi.updateDelayData(searchResults, context).collect{ result ->
+                    when(result){
+                        is ConnectionSearchResultState.Success -> {
+                            updateSearchResultList(result.results, true)
+                        }
+                        is ConnectionSearchResultState.Failure -> {
+                            Log.e("AppViewModel", "Error updating delay data: ${result.errorMessage}")
+                        }
+                    }
+                }
+            }
+        }
 
-        private val _bikeLockTime = MutableLiveData<Int>()
-        val bikeLockTime : LiveData<Int> = _bikeLockTime
-
-
-
-        private val _expandingToPast = MutableLiveData<Boolean>(false)
-        val expandingToPast : LiveData<Boolean> = _expandingToPast
-
-        private val _expandingToFuture = MutableLiveData<Boolean>(false)
-        val expandingToFuture : LiveData<Boolean> = _expandingToFuture
-
-
-
-        private val _fromSearchQuery = MutableLiveData<String>()
-        val fromSearchQuery : LiveData<String> = _fromSearchQuery
-
-        private val _toSearchQuery = MutableLiveData<String>()
-        val toSearchQuery : LiveData<String> = _toSearchQuery*/
-
-
+// =================================================================================================
+// SETTINGS VALUES MANAGEMENT
+        // The transfer time buffer to be used for searches
         val transferBuffer: StateFlow<Float> = settingsRepository.transferBuffer.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = transferBufferDefault
         )
-
-        val transferLength: StateFlow<Float> = settingsRepository.transferLength.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = transferLengthDefault
-        )
-
-        val comfortPreference: StateFlow<Float> = settingsRepository.comfortPreference.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = comfortPreferenceDefault
-        )
-
-        val bikeTripBuffer: StateFlow<Float> = settingsRepository.bikeTripBuffer.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = bikeTripBufferDefault
-        )
-
-        val useSharedBikes: StateFlow<Boolean> = settingsRepository.useSharedBikes.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = useSharedBikesDefault
-        )
-        val bikeMax15Minutes: StateFlow<Boolean> = settingsRepository.bikeMax15Minutes.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = false
-        )
-
-
-
-        val walkingPace: StateFlow<Int> = settingsRepository.walkingPace.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = walkingPaceDefault
-        )
-
-        val cyclingPace: StateFlow<Int> = settingsRepository.cyclingPace.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = cyclingPaceDefault
-        )
-
-        val bikeUnlockTime: StateFlow<Int> = settingsRepository.bikeUnlockTime.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = bikeUnlockTimeDefault
-        )
-
-        val bikeLockTime: StateFlow<Int> = settingsRepository.bikeLockTime.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = bikeLockTimeDefault
-        )
-
-        fun getIntSettingValue(preferencesKey: String, defaultValue: Int): StateFlow<Int> {
-            //return settingsRepository.retrieveIntSetting(preferencesKey, defaultValue)
-            return settingsRepository.getIntSettingValue(preferencesKey, defaultValue).stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = defaultValue
-            )
-        }
-
-
         fun saveTransferBuffer(value: Float) {
             viewModelScope.launch {
                 settingsRepository.saveTransferBuffer(value)
             }
         }
 
+
+        // The maximum transfer length preference to be used for searches
+        val transferLength: StateFlow<Float> = settingsRepository.transferLength.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = transferLengthDefault
+        )
         fun saveTransferLength(value: Float) {
             viewModelScope.launch {
                 settingsRepository.saveTransferLength(value)
             }
         }
 
-        fun saveComfortPreference(value: Float) {
+
+        // The time/comfort balance value to be used for searches
+        val timeComfortBalance: StateFlow<Float> = settingsRepository.timeComfortBalance.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = comfortPreferenceDefault
+        )
+        fun saveTimeComfortBalance(value: Float) {
             viewModelScope.launch {
                 settingsRepository.saveComfortPreference(value)
             }
         }
 
+
+        // The bike trip time buffer to be used for searches
+        val bikeTripBuffer: StateFlow<Float> = settingsRepository.bikeTripBuffer.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = bikeTripBufferDefault
+        )
         fun saveBikeTripBuffer(value: Float) {
             viewModelScope.launch {
                 settingsRepository.saveBikeTripBuffer(value)
             }
         }
 
+
+        // Whether shared bikes should be used as part of the search
+        val useSharedBikes: StateFlow<Boolean> = settingsRepository.useSharedBikes.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = useSharedBikesDefault
+        )
         fun saveUseSharedBikes(value: Boolean) {
             viewModelScope.launch {
                 settingsRepository.saveUseSharedBikes(value)
             }
         }
+
+
+        // Whether only bike rides under 15 minutes should be considered (only relevant if useSharedBikes is true)
+        val bikeMax15Minutes: StateFlow<Boolean> = settingsRepository.bikeMax15Minutes.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
         fun saveBikeMax15Minutes(value: Boolean) {
             viewModelScope.launch {
                 settingsRepository.saveBikeMax15Minutes(value)
@@ -251,24 +341,51 @@
         }
 
 
+        // The walking pace to be used for searches (in min/km)
+        val walkingPace: StateFlow<Int> = settingsRepository.walkingPace.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = walkingPaceDefault
+        )
         fun saveWalkingPace(value: Int) {
             viewModelScope.launch {
                 settingsRepository.saveWalkingPace(value)
             }
         }
 
+
+        // The cycling pace to be used for searches (in min/km)
+        val cyclingPace: StateFlow<Int> = settingsRepository.cyclingPace.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = cyclingPaceDefault
+        )
         fun saveCyclingPace(value: Int) {
             viewModelScope.launch {
                 settingsRepository.saveCyclingPace(value)
             }
         }
 
+
+        // The time it takes to unlock a bike (in seconds)
+        val bikeUnlockTime: StateFlow<Int> = settingsRepository.bikeUnlockTime.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = bikeUnlockTimeDefault
+        )
         fun saveBikeUnlockTime(value: Int) {
             viewModelScope.launch {
                 settingsRepository.saveBikeUnlockTime(value)
             }
         }
 
+
+        // The time it takes to lock a bike (in seconds)
+        val bikeLockTime: StateFlow<Int> = settingsRepository.bikeLockTime.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = bikeLockTimeDefault
+        )
         fun saveBikeLockTime(value: Int) {
             viewModelScope.launch {
                 settingsRepository.saveBikeLockTime(value)
@@ -276,138 +393,151 @@
         }
 
 
+
+// =================================================================================================
+// SEARCH QUERY STATE
+        // The name of the source stop
+        private val _fromSearchQuery = MutableStateFlow("")
+        val fromSearchQuery: StateFlow<String> = _fromSearchQuery
+        fun updateFromSearchQuery(query: String) { _fromSearchQuery.value = query }
+
+        // The name of the destination stop
+        private val _toSearchQuery = MutableStateFlow("")
+        val toSearchQuery: StateFlow<String> = _toSearchQuery
+        fun updateToSearchQuery(query: String) { _toSearchQuery.value = query }
+
+        // Whether the start of the search should be specified by coordinates
+        private val _startByCoordinates = MutableStateFlow(false)
+        val startByCoordinates: StateFlow<Boolean> = _startByCoordinates
+        fun updateStartByCoordinates(byCoordinates: Boolean) { _startByCoordinates.value = byCoordinates }
+
+        // The coordinates of the start location (valid only if startByCoordinates is true)
+        private val _startCoordinates = MutableStateFlow(Location("default"))
+        val startCoordinates: StateFlow<Location> = _startCoordinates
+        fun updateStartCoordinates(coordinates: Location) { _startCoordinates.value = coordinates }
+
+
+        // The date selected by the user
+        private val _selectedDate = MutableStateFlow(LocalDate.now())
+        val selectedDate: StateFlow<LocalDate> = _selectedDate
+        fun updateSelectedDate(date: LocalDate) { _selectedDate.value = date }
+
+        // The time selected by the user
+        private val _selectedTime = MutableStateFlow(LocalTime.now())
+        val selectedTime: StateFlow<LocalTime> = _selectedTime
+        fun updateSelectedTime(time: LocalTime) { _selectedTime.value = time }
+
+        // Whether the selected date and time (false) or the current date and time (true) should be used for the search
+        private val _departureNow = MutableStateFlow(true)
+        val departureNow: StateFlow<Boolean> = _departureNow
+        fun updateDepartureNow(isNow: Boolean) { _departureNow.value = isNow }
+
+        // Whether the date and time specified means the earliest possible departure (true) or the latest possible arrival (false)
+        // This implies the direction in which the search needs to be performed
+        private val _byEarliestDeparture = MutableStateFlow(true)
+        val byEarliestDeparture: StateFlow<Boolean> = _byEarliestDeparture
+        fun updateByEarliestDeparture(isEarliest: Boolean) { _byEarliestDeparture.value = isEarliest }
+
+
+
+// =================================================================================================
+// SEARCH RESULTS STATE
+        // The start of the search range for which we currently have results
+        private val _searchRangeStart = MutableStateFlow(LocalDateTime.now())
+        val searchRangeStart: StateFlow<LocalDateTime> = _searchRangeStart
+        fun updateSearchRangeStart(dateTime: LocalDateTime) { _searchRangeStart.value = dateTime }
+
+        // The end of the search range for which we currently have results
+        private val _searchRangeEnd = MutableStateFlow(LocalDateTime.now())
+        val searchRangeEnd: StateFlow<LocalDateTime> = _searchRangeEnd
+        fun updateSearchRangeEnd(dateTime: LocalDateTime) { _searchRangeEnd.value = dateTime }
+
+        // The list of search results to display
+        private val _searchResultList = MutableStateFlow<List<ConnectionSearchResult>>(emptyList())
+        val searchResultList: StateFlow<List<ConnectionSearchResult>> = _searchResultList
+        fun updateSearchResultList(newResults: List<ConnectionSearchResult>, updatingDelays: Boolean) {
+            if(updatingDelays){
+                if(_searchResultList.value.size != newResults.size){
+                    Log.i("ERROR", "Different number of results")
+                } else {
+                    for(i in 0.. _searchResultList.value.size - 1){
+                        if(_searchResultList.value[i].usedTripAlternatives.size != newResults[i].usedTripAlternatives.size){
+                            Log.i("ERROR", "Different number of trips")
+                        } else {
+                            for(j in 0.. _searchResultList.value[i].usedTripAlternatives.size - 1){
+                                if(_searchResultList.value[i].usedTripAlternatives[j].alternatives.size != newResults[i].usedTripAlternatives[j].alternatives.size){
+                                    Log.i("ERROR", "Different number of alternatives")
+                                } else {
+                                    for(k in 0.. _searchResultList.value[i].usedTripAlternatives[j].alternatives.size - 1){
+                                        Log.i("DEBUG", "i: $i, j: $j, k: $k")
+                                        Log.i("DEBUG", "Delay before: ${_searchResultList.value[i].usedTripAlternatives[j].alternatives[k].delayWhenBoarded}")
+                                        _searchResultList.value[i].usedTripAlternatives[j].alternatives[k].currentDelay.value = 0
+                                        _searchResultList.value[i].usedTripAlternatives[j].alternatives[k].delayWhenBoarded.value = 0
+                                        _searchResultList.value[i].usedTripAlternatives[j].alternatives[k].delayWhenBoarded = newResults[i].usedTripAlternatives[j].alternatives[k].delayWhenBoarded
+                                        _searchResultList.value[i].usedTripAlternatives[j].alternatives[k].currentDelay = newResults[i].usedTripAlternatives[j].alternatives[k].currentDelay
+                                        Log.i("DEBUG", "Delay after: ${_searchResultList.value[i].usedTripAlternatives[j].alternatives[k].delayWhenBoarded}")
+                                    }
+                                }
+
+                            }
+                        }
+
+                    }
+                }
+
+            }
+            else{
+                _searchResultList.value = emptyList()
+                _searchResultList.value = newResults
+            }
+        }
+
+
+// =================================================================================================
+// STOP NAME LIST MANAGEMENT
+        // The list of stop names to be used for stop suggestions
         val stopNameList: StateFlow<List<StopEntry>> = stopListRepository.stopNameList.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
 
-        // Function to trigger JSON download and store operation
-        fun downloadAndStoreStopList(url: String) {
+        // Downloads and stores the current stop name list from the given URL
+        fun downloadAndStoreStopNameList(url: String) {
             viewModelScope.launch {
                 stopListRepository.downloadAndStoreJson(url)
             }
         }
 
-        private val _fromSearchQuery = MutableStateFlow("")
-        val fromSearchQuery: StateFlow<String> = _fromSearchQuery
-
-        private val _toSearchQuery = MutableStateFlow("")
-        val toSearchQuery: StateFlow<String> = _toSearchQuery
-
-        private val _expandingSearchToPast = MutableStateFlow(false)
-        val expandingSearchToPast: StateFlow<Boolean> = _expandingSearchToPast
-
-        private val _expandingSearchToFuture = MutableStateFlow(false)
-        val expandingSearchToFuture: StateFlow<Boolean> = _expandingSearchToFuture
-
-//        private val _expansionToPastItems = MutableStateFlow(0)
-//        val expansionToPastItems: StateFlow<Int> = _expansionToPastItems
-
-        private val _selectedDate = MutableStateFlow(LocalDate.now())
-        val selectedDate: StateFlow<LocalDate> = _selectedDate
-
-        private val _selectedTime = MutableStateFlow(LocalTime.now())
-        val selectedTime: StateFlow<LocalTime> = _selectedTime
-
-        private val _departureNow = MutableStateFlow(true)
-        val departureNow: StateFlow<Boolean> = _departureNow
-
-        private val _byEarliestDeparture = MutableStateFlow(true)
-        val byEarliestDeparture: StateFlow<Boolean> = _byEarliestDeparture
-
-        private val _searchRangeStart = MutableStateFlow(LocalDateTime.now())
-        val searchRangeStart: StateFlow<LocalDateTime> = _searchRangeStart
-
-        private val _searchRangeEnd = MutableStateFlow(LocalDateTime.now())
-        val searchRangeEnd: StateFlow<LocalDateTime> = _searchRangeEnd
-
-
+        // The time of the last update of the stop name list
         val stopListLastUpdateTime: StateFlow<LocalDateTime> = stopListRepository.generatedAt
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), LocalDateTime.MIN)
 
 
-        // Methods to update the state
-        fun updateFromSearchQuery(query: String) {
-            _fromSearchQuery.value = query
+// =================================================================================================
+// APPLICATION STATE MANAGEMENT
+        private val _navigateToResults = MutableStateFlow(false)
+        val navigateToResults: StateFlow<Boolean> = _navigateToResults
+        fun updateNavigateToResults(navigateToResults: Boolean){
+            _navigateToResults.value = navigateToResults
         }
 
-        fun updateToSearchQuery(query: String) {
-            _toSearchQuery.value = query
-        }
 
+
+        private val _expandingSearchToPast = MutableStateFlow(false)
+        val expandingSearchToPast: StateFlow<Boolean> = _expandingSearchToPast
         fun updateExpandingSearchToPast(expanding: Boolean) {
             _expandingSearchToPast.value = expanding
         }
 
+
+        private val _expandingSearchToFuture = MutableStateFlow(false)
+        val expandingSearchToFuture: StateFlow<Boolean> = _expandingSearchToFuture
         fun updateExpandingSearchToFuture(expanding: Boolean) {
             _expandingSearchToFuture.value = expanding
         }
 
-//        fun updateExpansionToPastItems(count: Int) {
-//            _expansionToPastItems.value = count
-//        }
 
-        fun updateSelectedDate(date: LocalDate) {
-            Log.i("DEBUG", "Selected date: $date")
-            _selectedDate.value = date
-        }
-
-        fun updateSelectedTime(time: LocalTime) {
-            _selectedTime.value = time
-        }
-
-        fun updateDepartureNow(isNow: Boolean) {
-            _departureNow.value = isNow
-        }
-
-        fun updateByEarliestDeparture(isEarliest: Boolean) {
-            _byEarliestDeparture.value = isEarliest
-        }
-
-        fun updateSearchRangeStart(dateTime: LocalDateTime) {
-            _searchRangeStart.value = dateTime
-        }
-
-        fun updateSearchRangeEnd(dateTime: LocalDateTime) {
-            _searchRangeEnd.value = dateTime
-        }
-
-
-        private val _searchResultList = MutableStateFlow<List<ConnectionSearchResult>>(emptyList())
-        val searchResultList: StateFlow<List<ConnectionSearchResult>> = _searchResultList
-
-        fun updateSearchResults(newResults: List<ConnectionSearchResult>) {
-            _searchResultList.value = newResults
-        }
-
-        fun getCurrIndexFlow(resultIndex: Int, tripIndex: Int): StateFlow<Int?> {
-            return searchResultList.map { resultList ->
-                // Safely retrieve currIndex for the given resultIndex and tripIndex
-                resultList.getOrNull(resultIndex)?.usedTripAlternatives?.getOrNull(tripIndex)?.currIndex
-            }.stateIn(viewModelScope, SharingStarted.Lazily, null) // Default value: null or any appropriate default
-        }
-
-        fun getCurrIndexFlow(result: ConnectionSearchResult, tripIndex: Int): StateFlow<Int> {
-            return searchResultList.map { resultList ->
-                // Find the specific result in the list and get the currIndex for the given tripIndex
-                resultList.find { it == result }
-                    ?.usedTripAlternatives
-                    ?.getOrNull(tripIndex)
-                    ?.currIndex ?: -1
-            }.stateIn(viewModelScope, SharingStarted.Lazily, -1) // Default value: null or any appropriate default
-        }
-
-//        fun updateCurrIndexForTrip(result: ConnectionSearchResult, tripIndex: Int, newIndex: Int){
-//            val resultIndex = searchResultList.value.indexOf(result)
-//            if(resultIndex != -1){
-//                Log.i("DEBUG", "Updating curr index to $newIndex")
-//                _searchResultList.value[resultIndex].usedTripAlternatives[tripIndex].currIndex = newIndex
-//            }
-//            else{
-//                Log.i("ERROR", "Result not found")
-//            }
-//        }
 
         //----------------------------------------------------------------------------------
 
@@ -420,7 +550,7 @@
                 useSharedBikes = useSharedBikes.value,
                 bikeMax15Minutes = bikeMax15Minutes.value,
                 transferTime = transferBuffer.value.toInt(),
-                comfortBalance = comfortPreference.value.toInt(),
+                comfortBalance = timeComfortBalance.value.toInt(),
                 walkingPreference = transferLength.value.toInt(),
                 bikeTripBuffer = bikeTripBuffer.value.toInt()
             )
@@ -431,23 +561,33 @@
         fun splitNormalizedWords(normalizedInput: String): List<String> {
             return normalizedInput.split("[\\s,-]+".toRegex()).map { it.trim() }
         }
+        fun getStopSuggestions(query: String, stopNames: List<StopEntry>): List<StopEntry> {
+            val queryParts = query.trim().split("\\s+".toRegex()).map { it.trim() }
+            val matchedStops = stopNames.filter { stopName ->
+                val nameParts = splitNormalizedWords(stopName.normalizedName)
+                nameParts.windowed(queryParts.size).any { window ->
+                    queryParts.indices.all { index ->
+                        window[index].startsWith(queryParts[index], ignoreCase = true)
+                    }
+                }
+            }
+            val firstWordMatches = matchedStops.filter { stopName ->
+                val nameParts = splitNormalizedWords(stopName.normalizedName)
+                nameParts.firstOrNull()?.startsWith(queryParts.first(), ignoreCase = true) == true
+            }
+            val otherMatches = matchedStops.filterNot { stopName ->
+                val nameParts = splitNormalizedWords(stopName.normalizedName)
+                nameParts.firstOrNull()?.startsWith(queryParts.first(), ignoreCase = true) == true
+            }
+            return (firstWordMatches + otherMatches).take(16)
+        }
 
         @OptIn(FlowPreview::class)
         val fromStopSuggestions: StateFlow<List<StopEntry>> =
             fromSearchQuery
-                .debounce(300) // Apply debounce here
+                .debounce(200)
                 .combine(stopNameList) { fromSearchQuery, stopNames ->
-                    val queryParts = fromSearchQuery.trim().split("\\s+".toRegex()).map { it.trim() }
-                    stopNames.filter { stopName ->
-                        val nameParts = splitNormalizedWords(stopName.normalizedName)
-
-                        // Ensure that each part of the query matches the beginning of corresponding words in the stop name
-                        queryParts.all { queryPart ->
-                            nameParts.any { namePart ->
-                                namePart.startsWith(queryPart, ignoreCase = true)
-                            }
-                        }
-                    }.take(16)
+                    getStopSuggestions(fromSearchQuery, stopNames)
                 }
                 .stateIn(
                     scope = viewModelScope,
@@ -458,25 +598,16 @@
         @OptIn(FlowPreview::class)
         val toStopSuggestions: StateFlow<List<StopEntry>> =
             toSearchQuery
-                .debounce(300) // Apply debounce here
+                .debounce(200)
                 .combine(stopNameList) { toSearchQuery, stopNames ->
-                    val queryParts = toSearchQuery.trim().split("\\s+".toRegex()).map { it.trim() }
-                    stopNames.filter { stopName ->
-                        val nameParts = splitNormalizedWords(stopName.normalizedName)
-
-                        // Ensure that each part of the query matches the beginning of corresponding words in the stop name
-                        queryParts.all { queryPart ->
-                            nameParts.any { namePart ->
-                                namePart.startsWith(queryPart, ignoreCase = true)
-                            }
-                        }
-                    }.take(16)
+                    getStopSuggestions(toSearchQuery, stopNames)
                 }
                 .stateIn(
                     scope = viewModelScope,
                     initialValue = emptyList(),
                     started = SharingStarted.WhileSubscribed(5_000)
                 )
+
 
         private fun cleanUpDuplicates(searchResults: List<ConnectionSearchResult>): List<ConnectionSearchResult> {
             val orderedSearchResults = searchResults.sortedBy { it.departureDateTime }
@@ -518,184 +649,28 @@
 
         }
 
-        suspend fun expandSearch(toPast: Boolean, context: Context){
-            val rangeStart: LocalDateTime
-
-            if(toPast){
-                updateExpandingSearchToPast(true)
-                rangeStart = searchRangeStart.value.minusMinutes(15)
-            }else{
-                updateExpandingSearchToFuture(true)
-                rangeStart = searchRangeEnd.value
-            }
-
-            Log.i("DEBUG", "Renga start: $rangeStart")
-
-            Log.i("DEBUG", "Expanding search to ${if (toPast) "past" else "future"}")
 
 
-            Log.i("DEBUG", "Expanding with range start: $rangeStart")
 
 
-            val searchRequest = CreateStopToStopRangeRequest(
-                srcStopName = fromSearchQuery.value,
-                destStopName = toSearchQuery.value,
-                dateTime = rangeStart.toString(),
-                byEarliestDeparture = byEarliestDeparture.value,
-                settings = getSearchSettings(),
-                rangeLength = 15
-            )
+        fun combineAlternativesLists(currResults: List<UsedTrip>, newResults: List<UsedTrip>, newAreEarlier: Boolean) : List<UsedTrip>{
+            var nonIdenticalNewResults : List<UsedTrip> = newResults
 
-            viewModelScope.launch(Dispatchers.IO) {
-                connectionSearchApi.searchForConnection(searchRequest, context).collect{ result ->
-                    when(result){
-                        is ConnectionSearchResultState.Success -> {
-                            val results = result.results
-                            Log.i("AppViewModel", "Fetched search results to expand: ${results.size}")
-
-                            val currentResults = searchResultList.value
-                            var combinedResults = combineResultLists(currentResults, results, toPast)
-
-
-                            Log.i("AppViewModel", "Combined results: ${combinedResults.size}")
-                            updateSearchResults(combinedResults)
-                            //updateExpansionToPastItems()
-
-
-                            if(toPast){
-                                updateSearchRangeStart(searchRangeStart.value.minusMinutes(15))
-                            } else {
-                                updateSearchRangeEnd(searchRangeEnd.value.plusMinutes(15))
-                            }
-                        }
-                        is ConnectionSearchResultState.Failure -> {
-                            Log.e("AppViewModel", "Error expanding search: ${result.errorMessage}")
-                        }
-                    }
+            if(newAreEarlier){
+                while(nonIdenticalNewResults.isNotEmpty() && currResults.any { it.tripId == nonIdenticalNewResults.last().tripId }){
+                    nonIdenticalNewResults = nonIdenticalNewResults.dropLast(1)
                 }
-            }
-
-            updateExpandingSearchToPast(false)
-            updateExpandingSearchToFuture(false)
-        }
-
-        suspend fun startSearch(
-            showDialog: (Boolean) -> Unit,
-            setErrorMessage: (String) -> Unit, // TODO: combine these
-            context: Context
-        ){
-            var startDateTime: LocalDateTime
-            if(departureNow.value){
-                startDateTime = LocalDateTime.now()
-                updateSelectedDate(LocalDate.now())
-                updateSelectedTime(LocalTime.now())
+                return nonIdenticalNewResults + currResults
             } else {
-                startDateTime = LocalDateTime.of(selectedDate.value, selectedTime.value)
-            }
-
-            Log.i("DEBUG", "Starting search at $startDateTime")
-
-
-            val searchRequest = CreateStopToStopRangeRequest(
-                srcStopName = fromSearchQuery.value,
-                destStopName = toSearchQuery.value,
-                dateTime = startDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
-                byEarliestDeparture = byEarliestDeparture.value,
-                settings = getSearchSettings(),
-                rangeLength = 15
-            )
-
-            viewModelScope.launch(Dispatchers.IO) {
-                //try{
-                    connectionSearchApi.searchForConnection(searchRequest, context).collect{ result ->
-                        when(result){
-                            is ConnectionSearchResultState.Success -> {
-                                val results = result.results
-
-                                updateSearchResults(results)
-                                updateSearchRangeStart(startDateTime)
-                                updateSearchRangeEnd(startDateTime.plusMinutes(15))
-
-                                _navigateToResults.value = true
-                            }
-                            is ConnectionSearchResultState.Failure -> {
-                                Log.e("AppViewModel", "Error fetching search results: ${result.errorMessage}")
-                                setErrorMessage(result.errorMessage)
-                                showDialog(true)
-                            }
-                        }
-                    }
-//                } catch(e: Exception){
-//                    Log.e("AppViewModel", "Error starting search: ${e.message}")
-//                    setErrorMessage(context.getString(R.string.an_error_occurred) + ":" + e.message)
-//                    showDialog(true)
-//                }
-            }
-        }
-
-        suspend fun fetchAlternatives(
-            searchResult: ConnectionSearchResult,
-            tripIndex: Int,
-            earlier: Boolean,
-            context: Context
-        ){
-            val usedTripAlternativesObject = searchResult.usedTripAlternatives[tripIndex]
-            val alternatives = usedTripAlternativesObject.alternatives
-            val usedTrip = if (earlier) alternatives.first() else alternatives.last()
-
-            val srcStopId = usedTrip.stopPasses[usedTrip.getOnStopIndex].id
-            val destStopId = usedTrip.stopPasses[usedTrip.getOffStopIndex].id
-
-            val dateTimeWithDelay = usedTrip.stopPasses[usedTrip.getOnStopIndex].departureTime.plusSeconds(usedTrip.delayWhenBoarded.toLong())
-            val dateTime = if (earlier) dateTimeWithDelay else dateTimeWithDelay.plusSeconds(1)
-            val dateTimeString = dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))
-
-            val count = 5
-
-            val tripId = usedTrip.tripId
-
-            val request = AlternativeTripsRequest(
-                srcStopId = srcStopId,
-                destStopId = destStopId,
-                dateTime = dateTimeString,
-                previous = earlier,
-                count = count,
-                tripId = tripId
-            )
-
-            viewModelScope.launch(Dispatchers.IO) {
-                try{
-                    connectionSearchApi.getAlternativeTrips(request, context).collect { result ->
-                        when(result){
-                            is AlternativeTripsResultState.Success -> {
-                                val usedTrips = result.results
-                                val allAlternatives: List<UsedTrip> = if (earlier) usedTrips + alternatives else alternatives + usedTrips
-                                val newIndex = if (earlier) usedTrips.size - 1 else alternatives.size
-
-                                searchResult.usedTripAlternatives[tripIndex] = TripAlternatives(
-                                    currIndex = newIndex,
-                                    alternatives = allAlternatives,
-                                    count = allAlternatives.size
-                                )
-
-                                var searchResultsListFFFUUU = searchResultList.value.toMutableList()
-                                searchResultsListFFFUUU[0] = searchResult
-
-                                //updateSearchResults(searchResultsListFFFUUU) //TODO: check if necessary
-
-                                Log.i("AppViewModel", "Fetched alternatives: ${allAlternatives.size}")
-                            }
-                            is AlternativeTripsResultState.Failure -> {
-                                Log.e("AppViewModel", "Error fetching alternatives: ${result.errorMessage}")
-                            }
-                        }
-                    }
-                } catch(e: Exception){
-                    Log.e("AppViewModel", "Error fetching alternatives: ${e.message}")
+                while(nonIdenticalNewResults.isNotEmpty() && currResults.any { it.tripId == nonIdenticalNewResults.first().tripId }){
+                    nonIdenticalNewResults = nonIdenticalNewResults.drop(1)
                 }
-
+                return currResults + nonIdenticalNewResults
             }
         }
+
+
+
 
         fun updateCurrIndex(result: ConnectionSearchResult, tripIndex: Int, newIndex: Int){
             val resultIndex = searchResultList.value.indexOf(result)

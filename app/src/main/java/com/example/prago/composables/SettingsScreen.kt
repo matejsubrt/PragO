@@ -51,7 +51,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun EditableIntSettingRow(
-    viewModel: AppViewModel,
+    //viewModel: AppViewModel,
+    currentValue: Int,
     label: String,
     preferencesKey: String,
     defaultValue: Int,
@@ -59,7 +60,7 @@ fun EditableIntSettingRow(
     onValueChange: (Int) -> Unit
 ) {
     //var currentValue by remember { mutableStateOf(defaultValue) }
-    val currentValue by viewModel.getIntSettingValue(preferencesKey, defaultValue).collectAsState()
+
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val scope = rememberCoroutineScope()
@@ -171,7 +172,8 @@ fun SettingsScreen() {
             }
 
             EditableIntSettingRow(
-                viewModel = viewModel,
+                //viewModel = viewModel,
+                currentValue = walkingPace,
                 label = stringResource(R.string.walking_pace),
                 preferencesKey = "walkingPace",
                 defaultValue = walkingPace,
@@ -180,7 +182,8 @@ fun SettingsScreen() {
             )
 
             EditableIntSettingRow(
-                viewModel = viewModel,
+                //viewModel = viewModel,
+                currentValue = cyclingPace,
                 label = stringResource(R.string.cycling_pace),
                 preferencesKey = "cyclingPace",
                 defaultValue = cyclingPace,
@@ -189,7 +192,8 @@ fun SettingsScreen() {
             )
 
             EditableIntSettingRow(
-                viewModel = viewModel,
+                //viewModel = viewModel,
+                currentValue = bikeUnlockTime,
                 label = stringResource(R.string.bike_unlock_time),
                 preferencesKey = "bikeUnlockTime",
                 defaultValue = bikeUnlockTime,
@@ -198,7 +202,8 @@ fun SettingsScreen() {
             )
 
             EditableIntSettingRow(
-                viewModel = viewModel,
+                //viewModel = viewModel,
+                currentValue = bikeLockTime,
                 label = stringResource(R.string.bike_lock_time),
                 preferencesKey = "bikeLockTime",
                 defaultValue = bikeLockTime,

@@ -21,6 +21,8 @@ import com.example.prago.model.dataClasses.ConnectionSearchResult
 import com.example.prago.viewModel.AppViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.time.LocalDateTime
 
 
 @Composable
@@ -58,16 +60,37 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
                 //ResultHeader(result.usedTripAlternatives.first(), result.usedTripAlternatives.last())
                 ResultHeader(result, currFirstIndex.value, currLastIndex.value)
 
-                if(result.usedSegmentTypes[0] == 0 && result.usedTripAlternatives.isNotEmpty() && (result.usedTripAlternatives[0].alternatives.size > currFirstIndex.value) && currFirstIndex.value >= 0){
-                    val firstTrip = result.usedTripAlternatives[0].alternatives[currFirstIndex.value]
-                    Log.i("DEBUG", "First Trip: $firstTrip")
-                    val firstTripBoardingTime = firstTrip.stopPasses[firstTrip.getOnStopIndex].departureTime
-                    val startTime = firstTripBoardingTime.minusSeconds(result.secondsBeforeFirstTrip.toLong())
+                if(result.usedSegmentTypes[0] == 0 && result.usedTripAlternatives.isNotEmpty()){
+                    val startTime: LocalDateTime
+                    if(result.usedTripAlternatives[0].alternatives.size > currFirstIndex.value && currFirstIndex.value >= 0) {
+                        val firstTrip =
+                            result.usedTripAlternatives[0].alternatives[currFirstIndex.value]
+                        val firstTripBoardingTime =
+                            firstTrip.stopPasses[firstTrip.getOnStopIndex].departureTime
+                        startTime =
+                            firstTripBoardingTime.minusSeconds(result.secondsBeforeFirstTrip.toLong())
+                    } else if(result.usedTripAlternatives[0].alternatives.isNotEmpty()){
+                        val firstTrip = result.usedTripAlternatives[0].alternatives.last()
+                        val firstTripBoardingTime = firstTrip.stopPasses[firstTrip.getOnStopIndex].departureTime
+                        startTime = firstTripBoardingTime.minusSeconds(result.secondsBeforeFirstTrip.toLong())
+                    } else{
+                        throw Exception("First trip has no alternatives")
+                    }
+
                     UsedFirstLastStopCard(result.usedTransfers[0].srcStopInfo.name, startTime)
-                    Log.i("DEBUG", "FIRST TRANSFER UPDATED. NEW TIME: $startTime, curr first index: ${currFirstIndex.value}, alt size: ${result.usedTripAlternatives[0].alternatives.size}")
                 }
 
 
+//                if(result.usedSegmentTypes[0] == 0 && result.usedTripAlternatives.isNotEmpty() && (result.usedTripAlternatives[0].alternatives.size > currFirstIndex.value) && currFirstIndex.value >= 0){
+//                    val firstTrip = result.usedTripAlternatives[0].alternatives[currFirstIndex.value]
+//                    Log.i("DEBUG", "First Trip: $firstTrip")
+//                    val firstTripBoardingTime = firstTrip.stopPasses[firstTrip.getOnStopIndex].departureTime
+//                    val startTime = firstTripBoardingTime.minusSeconds(result.secondsBeforeFirstTrip.toLong())
+//                    UsedFirstLastStopCard(result.usedTransfers[0].srcStopInfo.name, startTime)
+//                    Log.i("DEBUG", "FIRST TRANSFER UPDATED. NEW TIME: $startTime, curr first index: ${currFirstIndex.value}, alt size: ${result.usedTripAlternatives[0].alternatives.size}")
+//                }
+
+                val usedTripCount = result.usedTripAlternatives.size
                 var transferIndex = 0
                 var tripIndex = 0
                 var bikeTripIndex = 0
@@ -78,12 +101,22 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
                             val currTripIndex = tripIndex
                             UsedTripAlternativesRow(
                                 tripAlternatives = result.usedTripAlternatives[currTripIndex],
-                                onExpand = { toPast ->
-                                    coroutineScope.launch(Dispatchers.IO) {
-                                        viewModel.fetchAlternatives(result, currTripIndex, toPast, context)
+                                onExpand = { toPast, altCountBeforeFetch ->
+                                    coroutineScope.launch(Dispatchers.Main) {
+                                        val throwaway = withContext(Dispatchers.IO) {
+                                            viewModel.fetchAlternatives(result, currTripIndex, toPast, context)
+                                        }
+                                        if(currTripIndex == 0){
+                                            currFirstIndex.value = altCountBeforeFetch
+                                        }
+                                        if(currTripIndex == usedTripCount - 1){
+                                            currLastIndex.value = altCountBeforeFetch
+                                        }
+                                        //viewModel.updateCurrIndex(result, currTripIndex, altCountBeforeFetch)
                                     }
                                 },
                                 onIndexChanged = { newIndex ->
+                                    //Log.i("DEBUG1", "Index changed to $newIndex")
                                     viewModel.updateCurrIndex(result, currTripIndex, newIndex)
                                     if(currTripIndex == 0){
                                         currFirstIndex.value = newIndex

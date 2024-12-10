@@ -33,15 +33,12 @@ import com.example.prago.R
 import com.example.prago.activities.LocalNavController
 import com.example.prago.ui.theme.Gray33
 import com.example.prago.viewModel.AppViewModel
-//import com.example.prago.viewModel.SharedViewModel
-
 
 @Composable
 fun LabelWithTextInput(
     label: String,
     placeholder: String,
     text: String,
-    onTextChange: (String) -> Unit,
     onClick: () -> Unit
 ) {
     Column(modifier = Modifier.padding(vertical = 4.dp)) {
@@ -84,15 +81,11 @@ fun LabelWithTextInput(
 
 @Composable
 fun TextInput(
-    //viewModel: SharedViewModel,
-    viewModel: AppViewModel,
-    context: Context,
     fromText: String,
     toText: String,
-    onFromValueChange: (String) -> Unit,
-    onToValueChange: (String) -> Unit
+    onDirectionSwitch: () -> Unit
 ) {
-    val navControler = LocalNavController.current
+    val navController = LocalNavController.current
 
     Box(
         modifier = Modifier
@@ -101,9 +94,9 @@ fun TextInput(
             .padding(start = 8.dp, top = 0.dp, end = 8.dp, bottom = 4.dp)
     ) {
         Column() {
-            LabelWithTextInput(label = stringResource(R.string.from) + ":", placeholder = stringResource(R.string.source_stop), text = fromText, onTextChange = onFromValueChange, onClick = {navControler.navigate("fromStopSelect")})
+            LabelWithTextInput(label = stringResource(R.string.from) + ":", placeholder = stringResource(R.string.source_stop), text = fromText, onClick = {navController.navigate("fromStopSelect")})
             Spacer(modifier = Modifier.height(8.dp))
-            LabelWithTextInput(label = stringResource(R.string.to) + ":", placeholder = stringResource(R.string.destination_stop), text = toText, onTextChange = onToValueChange, onClick = {navControler.navigate("toStopSelect")})
+            LabelWithTextInput(label = stringResource(R.string.to) + ":", placeholder = stringResource(R.string.destination_stop), text = toText, onClick = {navController.navigate("toStopSelect")})
         }
         Row(
             modifier = Modifier.fillMaxWidth().padding(end = 10.dp),
@@ -116,13 +109,7 @@ fun TextInput(
                 modifier = Modifier
                     .offset(x = 0.dp, y = 92.dp)
                     .size(32.dp)
-                    .clickable(
-                        onClick = {
-                            val fromSearchQuery = viewModel.fromSearchQuery.value
-                            viewModel.updateFromSearchQuery(viewModel.toSearchQuery.value)
-                            viewModel.updateToSearchQuery(fromSearchQuery)
-                        }
-                    )
+                    .clickable(onClick = onDirectionSwitch)
             )
         }
 
