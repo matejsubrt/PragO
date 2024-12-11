@@ -1,4 +1,4 @@
-package com.example.prago.composables.searchScreen
+package com.example.prago.view.searchScreen
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background

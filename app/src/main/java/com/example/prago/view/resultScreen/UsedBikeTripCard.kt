@@ -1,4 +1,4 @@
-package com.example.prago.composables.resultScreen
+package com.example.prago.view.resultScreen
 
 import android.content.Intent
 import android.net.Uri
@@ -29,19 +29,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.prago.R
 import com.example.prago.model.dataClasses.UsedBikeTrip
 import com.example.prago.formatters.formatDistance
 import com.example.prago.formatters.formatTime
 
-fun GetMapyCzUrl(bikeTrip: UsedBikeTrip): String{
+fun getMapyCzUrl(bikeTrip: UsedBikeTrip): String{
     return "https:://mapy.cz/fnc/v1/route?mapset=outdoor&start=${bikeTrip.srcStopInfo.lon},${bikeTrip.srcStopInfo.lat}&end=${bikeTrip.destStopInfo.lon},${bikeTrip.destStopInfo.lat}&routeType=bike_road"
 }
 @Composable
 fun UsedBikeTripCard(bikeTrip: UsedBikeTrip) {
     val context = LocalContext.current
-    val mapyCzUrl = GetMapyCzUrl(bikeTrip)
+    val mapyCzUrl = getMapyCzUrl(bikeTrip)
 
     val intent = remember { Intent(Intent.ACTION_VIEW, Uri.parse(mapyCzUrl)) }
 
@@ -68,40 +67,6 @@ fun UsedBikeTripCard(bikeTrip: UsedBikeTrip) {
             modifier = Modifier.padding(start = 4.dp, top = 2.dp, end = 8.dp, bottom = 4.dp)
         ) {
             TripNameRow(stringResource(R.string.nextbike), colorNextbike, false, 0, hasBikeCountData = true, bikeCount = bikeTrip.remainingBikes)
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//                horizontalArrangement = Arrangement.SpaceBetween,
-//                verticalAlignment = Alignment.CenterVertically
-//            ){
-//                TripNameRow(stringResource(R.string.nextbike), colorNextbike, false, 0, hasBikeCountData = true, bikeCount = bikeTrip.remainingBikes)
-                //Text(text = "BAF", fontSize = 15.sp)
-//                Box(
-//                    modifier = Modifier
-//                        .background(Color(0xFF888888), RoundedCornerShape(16.dp))
-//                        .padding(horizontal = 2.dp),
-//                    contentAlignment = Alignment.Center
-//                ){
-//                    Row(
-//                        horizontalArrangement = Arrangement.End, // Align items to the end (right) of the row
-//                        verticalAlignment = Alignment.CenterVertically
-//                    ){
-//                        Icon(
-//                            painter = painterResource(id = R.drawable.bike),
-//                            contentDescription = null,
-//                            tint = colorNextbike,
-//                            modifier = Modifier
-//                                .size(24.dp)
-//                                .padding(all = 4.dp)
-//                        )
-//                        Text(
-//                            text = "${bikeTrip.remainingBikes}",
-//                            color = colorNextbike,
-//                            fontSize = 15.sp
-//                        )
-//                        Log.i("DEBUG", "Remaining bikes: ${bikeTrip.remainingBikes}")
-//                    }
-//                }
-//            }
 
 
             Row(

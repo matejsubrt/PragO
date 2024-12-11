@@ -1,11 +1,6 @@
-package com.example.prago.activities
+package com.example.prago.view
 
-//import com.example.prago.viewModel.SharedViewModel
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
@@ -22,10 +17,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.prago.StopList
-import com.example.prago.composables.resultScreen.ResultScreen
-import com.example.prago.composables.SettingsScreen
-import com.example.prago.composables.StopSearchScreen
-import com.example.prago.composables.searchScreen.SearchScreen
+import com.example.prago.view.resultScreen.ResultScreen
+import com.example.prago.view.searchScreen.SearchScreen
 import com.example.prago.model.ConnectionSearchApi
 import com.example.prago.model.SettingsRepository
 import com.example.prago.model.StopListRepository
@@ -35,14 +28,6 @@ import com.example.prago.viewModel.preferencesDataStore
 import com.example.prago.viewModel.stopListDataStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-
-
-
-
-
-
-
 
 val LocalNavController = compositionLocalOf<NavController> { error("No NavController provided") }
 val LocalAppViewModel = compositionLocalOf<AppViewModel> { error("No AppViewModel provided") }
@@ -68,11 +53,7 @@ class MainActivity : ComponentActivity() {
                 PragOApp(appViewModel)
             }
         }
-
-
     }
-
-
 }
 
 
@@ -108,8 +89,8 @@ fun PragOApp(appViewModel: AppViewModel) {
         NavHost(navController, startDestination = "searchPage") {
             composable("searchPage") { SearchScreen() }
             composable("resultPage") { ResultScreen() }
-            composable("fromStopSelect") { StopSearchScreen(appViewModel, navController, false) }
-            composable("toStopSelect") { StopSearchScreen(appViewModel, navController, true) }
+            composable("fromStopSelect") { StopSearchScreen(appViewModel, false) }
+            composable("toStopSelect") { StopSearchScreen(appViewModel, true) }
             composable("settingsScreen") { SettingsScreen() }
         }
     }

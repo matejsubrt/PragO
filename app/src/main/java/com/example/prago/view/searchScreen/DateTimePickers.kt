@@ -1,4 +1,4 @@
-package com.example.prago.composables.searchScreen
+package com.example.prago.view.searchScreen
 
 import android.content.Context
 import android.util.Log
@@ -12,12 +12,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,16 +31,11 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.chargemap.compose.numberpicker.FullHours
 import com.chargemap.compose.numberpicker.Hours
-import com.chargemap.compose.numberpicker.HoursNumberPicker
-import com.chargemap.compose.numberpicker.ListItemPicker
 import com.example.prago.R
 import com.example.prago.viewModel.AppViewModel
 //import com.example.prago.viewModel.SharedViewModel
@@ -74,7 +67,6 @@ fun getLocalTimeFromHours(hours: Hours): LocalTime {
 
 
 // The following code was taken from https://gist.github.com/slaviboy/50e8d852f3e46543aad061c4141af87a and slightly modified
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun InfiniteCircularList(
     width: Dp,
@@ -253,7 +245,6 @@ fun DatePicker(viewModel: AppViewModel, onDateChanged: (LocalDate) -> Unit){
         textColor = Color.LightGray,
         selectedTextColor = Color.White,
         onItemSelected = { index, item ->
-            //val date = LocalDate.now().plusDays((index - 1).toLong())
             val date = dateMap[item] ?: LocalDate.MIN
             Log.i("DEBUG", "Selected date: $date")
             onDateChanged(date)
@@ -284,7 +275,7 @@ fun TimePicker(viewModel: AppViewModel, onTimeChanged: (LocalTime) -> Unit){
         )
         Text(
             text = ":",
-            style = TextStyle(fontSize = 14.sp, ), //20sp bold
+            style = TextStyle(fontSize = 14.sp, ),
             color = Color.White
         )
         InfiniteCircularList(

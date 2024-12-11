@@ -1,6 +1,5 @@
-package com.example.prago.composables.resultScreen
+package com.example.prago.view.resultScreen
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,8 +12,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.example.prago.activities.LocalAppViewModel
-import com.example.prago.composables.ResultTopBar
+import com.example.prago.view.LocalAppViewModel
+import com.example.prago.view.ResultTopBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

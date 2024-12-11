@@ -1,4 +1,4 @@
-package com.example.prago.composables.resultScreen
+package com.example.prago.view.resultScreen
 
 import android.util.Log
 import androidx.compose.foundation.background
@@ -102,13 +102,9 @@ fun CountDown(
     var departedConnectionStart by remember { mutableStateOf(false) }
 
     val startsWithTrip: Boolean
-    if(firstTripDepartureTime == connectionDepartureTime){
-        startsWithTrip = true
-    } else {
-        startsWithTrip = false
-    }
+    startsWithTrip = firstTripDepartureTime == connectionDepartureTime
 
-    LaunchedEffect(firstTripDepartureTime) { // Trigger LaunchedEffect when departureTime changes
+    LaunchedEffect(firstTripDepartureTime) {
         flow {
             while (true) {
                 val currentTime = LocalDateTime.now()
@@ -164,12 +160,14 @@ fun CountDown(
             }
         } else {
             if(departedFirstTrip){
-                Log.e("CountDown", "Impossible for the first trip to be departed, but connection not")
+                Log.e("CountDown ERROR", "Impossible for the first trip to be departed, but connection not")
                 Color.Red
             } else {
                 MaterialTheme.colorScheme.onBackground
             }
         }
+
+
         val walkStartFontWeight = if (departedConnectionStart) FontWeight.Normal else FontWeight.Bold
         val tripStartFontWeight = if (departedFirstTrip || !departedConnectionStart) FontWeight.Normal else FontWeight.Bold
 
@@ -288,20 +286,3 @@ fun ResultHeader(
         }
     }
 }
-
-@Composable
-fun ResultHeaderTest(
-    index: Int
-){
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.8f))
-            .padding(vertical = 8.dp, horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(text = "Index: $index", style = TextStyle(color = Color.White))
-    }
-}
-

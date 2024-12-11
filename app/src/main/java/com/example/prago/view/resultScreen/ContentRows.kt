@@ -1,12 +1,10 @@
-package com.example.prago.composables.resultScreen
+package com.example.prago.view.resultScreen
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -54,7 +52,7 @@ fun TripNameRow(text: String, color: Color, hasDelayData: Boolean, currentTripDe
                 fontSize = lineNameSize.sp
             )
         )
-        if(hasDelayData){
+        if (hasDelayData) {
             Box(
                 modifier = Modifier
                     .background(delayBoxColor, shape = RoundedCornerShape(4.dp))
@@ -66,8 +64,7 @@ fun TripNameRow(text: String, color: Color, hasDelayData: Boolean, currentTripDe
                     style = delayTextStyle
                 )
             }
-
-        } else if (hasBikeCountData){
+        } else if (hasBikeCountData) {
             Box(
                 modifier = Modifier
                     .background(Color(0xFF888888), RoundedCornerShape(16.dp))
@@ -75,7 +72,7 @@ fun TripNameRow(text: String, color: Color, hasDelayData: Boolean, currentTripDe
                 contentAlignment = Alignment.Center
             ){
                 Row(
-                    horizontalArrangement = Arrangement.End, // Align items to the end (right) of the row
+                    horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ){
                     Icon(
@@ -91,7 +88,6 @@ fun TripNameRow(text: String, color: Color, hasDelayData: Boolean, currentTripDe
                         color = colorNextbike,
                         fontSize = 15.sp
                     )
-                    Log.i("DEBUG", "Remaining bikes: ${bikeCount}")
                 }
             }
         }

@@ -1,4 +1,4 @@
-package com.example.prago.composables.searchScreen
+package com.example.prago.view.searchScreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

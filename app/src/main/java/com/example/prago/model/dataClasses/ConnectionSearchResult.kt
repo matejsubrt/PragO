@@ -29,7 +29,7 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.*
 
 @OptIn(ExperimentalSerializationApi::class)
-@Serializer(forClass = LocalDateTime::class)
+//@Serializer(forClass = LocalDateTime::class)
 object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
     private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
@@ -132,26 +132,6 @@ data class UsedTransfer(
     val distance: Int
 )
 
-
-//@Serializable
-//data class ConnectionSearchResult(
-//    val usedTripsIndices: List<Int> = emptyList(),
-//    val usedTripsWithAlternatives: List<List<UsedTrip>> = emptyList(),
-//    val usedTrips: List<UsedTrip>,
-//    val usedTransfers: List<UsedTransfer>,
-//    val usedBikeTrips: List<UsedBikeTrip>,
-//    val usedSegmentTypes: List<Int>,
-//    val transferCount: Int,
-//    val tripCount: Int,
-//    val bikeTripCount: Int,
-//    @Serializable(with = LocalDateTimeSerializer::class)
-//    val departureDateTime: LocalDateTime,
-//    @Serializable(with = LocalDateTimeSerializer::class)
-//    val arrivalDateTime: LocalDateTime
-//)
-
-
-
 @Serializable(with = TripAlternativesSerializer::class)
 class TripAlternatives(
     var currIndex: Int = 0,
@@ -204,26 +184,6 @@ data class DelayData(
     val currentDelay: Int
 )
 
-//@Serializable
-//class ConnectionSearchResultRaw(
-//    var usedTripAlternatives: List<TripAlternatives>,
-//    val usedTrips: List<UsedTrip>,
-//    val usedTransfers: List<UsedTransfer>,
-//    val usedBikeTrips: List<UsedBikeTrip>,
-//    val usedSegmentTypes: List<Int>,
-//    val transferCount: Int,
-//    val tripCount: Int,
-//    val bikeTripCount: Int,
-//    @Serializable(with = LocalDateTimeSerializer::class)
-//    val departureDateTime: LocalDateTime,
-//    @Serializable(with = LocalDateTimeSerializer::class)
-//    val arrivalDateTime: LocalDateTime,
-//
-//    val secondsAfterLastTrip: Int,
-//    val secondsBeforeFirstTrip: Int
-//)
-
-
 @Serializable
 data class ConnectionSearchResult(
     @Serializable(with = SnapshotStateListSerializer::class)
@@ -246,9 +206,6 @@ data class ConnectionSearchResult(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is ConnectionSearchResult) return false
-
-        val onlyBikesAndTransfers = usedSegmentTypes.all { it == 0 || it == 2}
-        val bothOnlyBikesAndTransfers = usedSegmentTypes == other.usedSegmentTypes && onlyBikesAndTransfers
 
 
         return departureDateTime == other.departureDateTime &&
@@ -278,17 +235,11 @@ object SnapshotStateListSerializer : KSerializer<SnapshotStateList<TripAlternati
         ListSerializer(TripAlternatives.serializer()).descriptor
 
     override fun serialize(encoder: Encoder, value: SnapshotStateList<TripAlternatives>) {
-        Log.i("SnapshotStateListSerializer", "serialize")
         val actualList = value.toList()
         encoder.encodeSerializableValue(ListSerializer(TripAlternatives.serializer()), actualList)
-
-
-
-    //encoder.encodeSerializableValue(ListSerializer(TripAlternatives.serializer()), value.toList())
     }
 
     override fun deserialize(decoder: Decoder): SnapshotStateList<TripAlternatives> {
-        Log.i("SnapshotStateListSerializer", "deserialize")
         val list = decoder.decodeSerializableValue(ListSerializer(TripAlternatives.serializer()))
         return list.toMutableStateList()
     }
@@ -310,9 +261,3 @@ sealed class DelayUpdateResultState {
     data class Success(val updatedDelays: Map<String, DelayData>) : DelayUpdateResultState()
     data class Failure(val statusCode: Int, val errorMessage: String) : DelayUpdateResultState()
 }
-
-//fun main() {
-//    val jsonString = """/* Your JSON String here */"""
-//    val connectionSearchResult = Json.decodeFromString<ConnectionSearchResult>(jsonString)
-//    println(connectionSearchResult)
-//}

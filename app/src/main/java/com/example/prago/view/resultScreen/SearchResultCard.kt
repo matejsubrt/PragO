@@ -1,5 +1,4 @@
-package com.example.prago.composables.resultScreen
-import android.util.Log
+package com.example.prago.view.resultScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
@@ -33,8 +32,6 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
     val context = LocalContext.current
 
 
-    //val firstTripCurrAltIndex = viewModel.getCurrIndexFlow(result, 0).collectAsState()
-
     var currFirstIndex = remember { mutableStateOf(0) }
     var currLastIndex = remember { mutableStateOf(0) }
 
@@ -61,7 +58,6 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
                         shape = RoundedCornerShape(16.dp)
                     )
             ){
-                //ResultHeader(result.usedTripAlternatives.first(), result.usedTripAlternatives.last())
                 ResultHeader(result, currFirstIndex.value, currLastIndex.value)
 
                 if(result.usedSegmentTypes[0] == 0 && result.usedTripAlternatives.isNotEmpty()){
@@ -87,15 +83,6 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
                 }
 
 
-//                if(result.usedSegmentTypes[0] == 0 && result.usedTripAlternatives.isNotEmpty() && (result.usedTripAlternatives[0].alternatives.size > currFirstIndex.value) && currFirstIndex.value >= 0){
-//                    val firstTrip = result.usedTripAlternatives[0].alternatives[currFirstIndex.value]
-//                    Log.i("DEBUG", "First Trip: $firstTrip")
-//                    val firstTripBoardingTime = firstTrip.stopPasses[firstTrip.getOnStopIndex].departureTime
-//                    val startTime = firstTripBoardingTime.minusSeconds(result.secondsBeforeFirstTrip.toLong())
-//                    UsedFirstLastStopCard(result.usedTransfers[0].srcStopInfo.name, startTime)
-//                    Log.i("DEBUG", "FIRST TRANSFER UPDATED. NEW TIME: $startTime, curr first index: ${currFirstIndex.value}, alt size: ${result.usedTripAlternatives[0].alternatives.size}")
-//                }
-
                 val usedTripCount = result.usedTripAlternatives.size
                 var transferIndex = 0
                 var tripIndex = 0
@@ -109,7 +96,7 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
                                 tripAlternatives = result.usedTripAlternatives[currTripIndex],
                                 onExpand = { toPast, altCountBeforeFetch ->
                                     coroutineScope.launch(Dispatchers.Main) {
-                                        val throwaway = withContext(Dispatchers.IO) {
+                                        withContext(Dispatchers.IO) {
                                             viewModel.fetchAlternatives(result, currTripIndex, toPast, context)
                                         }
                                         if(currTripIndex == 0){
@@ -118,11 +105,9 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
                                         if(currTripIndex == usedTripCount - 1){
                                             currLastIndex.value = altCountBeforeFetch
                                         }
-                                        //viewModel.updateCurrIndex(result, currTripIndex, altCountBeforeFetch)
                                     }
                                 },
                                 onIndexChanged = { newIndex ->
-                                    //Log.i("DEBUG1", "Index changed to $newIndex")
                                     viewModel.updateCurrIndex(result, currTripIndex, newIndex)
                                     if(currTripIndex == 0){
                                         currFirstIndex.value = newIndex
@@ -159,10 +144,6 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
                     val endPointName = result.usedTransfers.last().destStopInfo.name
 
                     UsedFirstLastStopCard(endPointName, endTime)
-
-
-
-                    //UsedFirstLastStopCard(result.usedTransfers[result.usedTransfers.size - 1].destStopInfo.name, result.arrivalDateTime)
                 }
             }
         }

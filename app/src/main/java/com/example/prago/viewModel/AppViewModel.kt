@@ -5,8 +5,6 @@
     import android.net.ConnectivityManager
     import android.net.NetworkCapabilities
     import android.util.Log
-    import androidx.compose.runtime.LaunchedEffect
-    import androidx.core.content.ContextCompat.getSystemService
     import androidx.datastore.core.CorruptionException
     import androidx.datastore.core.DataStore
     import androidx.datastore.core.Serializer
@@ -29,8 +27,8 @@
     import com.example.prago.model.dataClasses.ConnectionRequest
     import com.example.prago.model.dataClasses.ConnectionSearchResult
     import com.example.prago.model.dataClasses.ConnectionSearchResultState
-    import com.example.prago.model.dataClasses.CreateCoordsToStopRangeRequest
-    import com.example.prago.model.dataClasses.CreateStopToStopRangeRequest
+    import com.example.prago.model.dataClasses.createCoordsToStopRangeRequest
+    import com.example.prago.model.dataClasses.createStopToStopRangeRequest
     import com.example.prago.model.dataClasses.SearchSettings
     import com.example.prago.model.dataClasses.TripAlternatives
     import com.example.prago.model.dataClasses.UsedTrip
@@ -95,7 +93,7 @@
             updateStartingSearch(true)
 
 
-            var startDateTime: LocalDateTime
+            val startDateTime: LocalDateTime
             if(departureNow.value){
                 startDateTime = LocalDateTime.now()
                 updateSelectedDate(LocalDate.now())
@@ -107,7 +105,7 @@
 
             val searchRequest: ConnectionRequest
             if(startByCoordinates.value){
-                searchRequest = CreateCoordsToStopRangeRequest(
+                searchRequest = createCoordsToStopRangeRequest(
                     srcLat = startCoordinates.value.latitude,
                     srcLon = startCoordinates.value.longitude,
                     destStopName = toSearchQuery.value,
@@ -117,7 +115,7 @@
                     rangeLength = 15
                 )
             } else {
-                searchRequest = CreateStopToStopRangeRequest(
+                searchRequest = createStopToStopRangeRequest(
                     srcStopName = fromSearchQuery.value,
                     destStopName = toSearchQuery.value,
                     dateTime = startDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
@@ -167,7 +165,7 @@
 
             val searchRequest: ConnectionRequest
             if(startByCoordinates.value){
-                searchRequest = CreateCoordsToStopRangeRequest(
+                searchRequest = createCoordsToStopRangeRequest(
                     srcLat = startCoordinates.value.latitude,
                     srcLon = startCoordinates.value.longitude,
                     destStopName = toSearchQuery.value,
@@ -177,7 +175,7 @@
                     rangeLength = 15
                 )
             } else {
-                searchRequest = CreateStopToStopRangeRequest(
+                searchRequest = createStopToStopRangeRequest(
                     srcStopName = fromSearchQuery.value,
                     destStopName = toSearchQuery.value,
                     dateTime = rangeStart.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
@@ -194,7 +192,7 @@
                             val results = result.results
 
                             val currentResults = searchResultList.value
-                            var combinedResults = combineResultLists(currentResults, results, toPast)
+                            val combinedResults = combineResultLists(currentResults, results, toPast)
 
                             updateSearchResultList(combinedResults, false)
 
@@ -251,9 +249,12 @@
                     connectionSearchApi.getAlternativeTrips(request, context).collect { result ->
                         when(result){
                             is AlternativeTripsResultState.Success -> {
+                                val oldAltSize = existingAlternatives.size
                                 val newAlternatives = result.results
                                 val allAlternatives: List<UsedTrip> = combineAlternativesLists(existingAlternatives, newAlternatives, earlier)//if (earlier) usedTrips + alternatives else alternatives + usedTrips
-                                val newIndex = if (earlier) newAlternatives.size - 1 else existingAlternatives.size
+                                val newAltSize = allAlternatives.size
+                                val addedAltCount = newAltSize - oldAltSize
+                                val newIndex = if (earlier) addedAltCount - 1 else oldAltSize
 
                                 searchResult.usedTripAlternatives[tripIndex] = TripAlternatives(
                                     currIndex = newIndex,
@@ -281,7 +282,6 @@
             val searchResults = searchResultList.value
 
             viewModelScope.launch(Dispatchers.IO) {
-                //try{
                 connectionSearchApi.updateDelayData(searchResults, context).collect{ result ->
                     when(result){
                         is ConnectionSearchResultState.Success -> {
@@ -565,11 +565,6 @@
         }
 
 
-        fun setStartByCoordinates(){
-
-        }
-
-
 // =================================================================================================
 // SEARCH RESULTS STATE
         // The start of the search range for which we currently have results
@@ -588,24 +583,21 @@
         fun updateSearchResultList(newResults: List<ConnectionSearchResult>, updatingDelays: Boolean) {
             if(updatingDelays){
                 if(_searchResultList.value.size != newResults.size){
-                    Log.i("ERROR", "Different number of results")
+                    Log.e("ERROR", "Different number of results")
                 } else {
                     for(i in 0.. _searchResultList.value.size - 1){
                         if(_searchResultList.value[i].usedTripAlternatives.size != newResults[i].usedTripAlternatives.size){
-                            Log.i("ERROR", "Different number of trips")
+                            Log.e("ERROR", "Different number of trips")
                         } else {
                             for(j in 0.. _searchResultList.value[i].usedTripAlternatives.size - 1){
                                 if(_searchResultList.value[i].usedTripAlternatives[j].alternatives.size != newResults[i].usedTripAlternatives[j].alternatives.size){
-                                    Log.i("ERROR", "Different number of alternatives")
+                                    Log.e("ERROR", "Different number of alternatives")
                                 } else {
                                     for(k in 0.. _searchResultList.value[i].usedTripAlternatives[j].alternatives.size - 1){
-                                        Log.i("DEBUG", "i: $i, j: $j, k: $k")
-                                        Log.i("DEBUG", "Delay before: ${_searchResultList.value[i].usedTripAlternatives[j].alternatives[k].delayWhenBoarded}")
                                         _searchResultList.value[i].usedTripAlternatives[j].alternatives[k].currentDelay.value = 0
                                         _searchResultList.value[i].usedTripAlternatives[j].alternatives[k].delayWhenBoarded.value = 0
                                         _searchResultList.value[i].usedTripAlternatives[j].alternatives[k].delayWhenBoarded = newResults[i].usedTripAlternatives[j].alternatives[k].delayWhenBoarded
                                         _searchResultList.value[i].usedTripAlternatives[j].alternatives[k].currentDelay = newResults[i].usedTripAlternatives[j].alternatives[k].currentDelay
-                                        Log.i("DEBUG", "Delay after: ${_searchResultList.value[i].usedTripAlternatives[j].alternatives[k].delayWhenBoarded}")
                                     }
                                 }
 
@@ -627,11 +619,10 @@
         fun updateCurrIndex(result: ConnectionSearchResult, tripIndex: Int, newIndex: Int){
             val resultIndex = searchResultList.value.indexOf(result)
             if(resultIndex != -1){
-                Log.i("DEBUG", "Updating curr index to $newIndex")
                 _searchResultList.value[resultIndex].usedTripAlternatives[tripIndex].currIndex = newIndex
             }
             else{
-                Log.i("ERROR", "Result not found")
+                Log.e("ERROR", "Result not found")
             }
         }
 
@@ -667,7 +658,6 @@
             } else {
                 Log.i("DEBUG", "Not connected to wifi")
             }
-            Log.i("APP", "After LaunchedEffect")
         }
 
 
@@ -727,18 +717,8 @@
             return (firstWordMatches + otherMatches).take(16)
         }
 
-//        @OptIn(FlowPreview::class)
-//        val fromStopSuggestions: StateFlow<List<StopEntry>> =
-//            fromSearchQuery
-//                .debounce(200)
-//                .combine(_stopNameList) { fromSearchQuery, stopNames ->
-//                    getStopSuggestions(fromSearchQuery, stopNames)
-//                }
-//                .stateIn(
-//                    scope = viewModelScope,
-//                    initialValue = emptyList(),
-//                    started = SharingStarted.WhileSubscribed(5_000)
-//                )
+
+        @OptIn(FlowPreview::class)
         val fromStopSuggestions: StateFlow<List<StopEntry>> =
             fromSearchQuery
                 .debounce(200)

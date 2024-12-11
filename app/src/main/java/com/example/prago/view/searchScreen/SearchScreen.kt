@@ -1,4 +1,4 @@
-package com.example.prago.composables.searchScreen
+package com.example.prago.view.searchScreen
 
 import android.util.Log
 import androidx.compose.foundation.layout.Column
@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.AlertDialog
@@ -33,13 +32,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.prago.R
-import com.example.prago.activities.LocalAppViewModel
-import com.example.prago.activities.LocalNavController
+import com.example.prago.view.LocalAppViewModel
 //import com.example.prago.activities.LocalSharedViewModel
-import com.example.prago.composables.MainTopBar
+import com.example.prago.view.MainTopBar
 import com.example.prago.ui.theme.PragOTheme
 import kotlinx.coroutines.launch
-import kotlinx.serialization.ExperimentalSerializationApi
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.math.ceil
@@ -55,10 +52,8 @@ fun SearchScreen(){
     }
 }
 
-@OptIn(ExperimentalSerializationApi::class)
 @Composable
 fun Body(){
-    val navController = LocalNavController.current
     val viewModel = LocalAppViewModel.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -69,9 +64,8 @@ fun Body(){
 
 
     Log.i("DEBUG", "Start by coords: $srcByLocation")
-    //val fromText by viewModel.fromSearchQuery.collectAsState()
     val fromText = if (srcByLocation) stringResource(R.string.current_location) else srcStopName
-    val toText by viewModel.toSearchQuery.collectAsState()
+    val toText = destStopName
     val byEarliestDeparture by viewModel.byEarliestDeparture.collectAsState()
 
     val useSharedBikes by viewModel.useSharedBikes.collectAsState()
@@ -190,7 +184,7 @@ fun Body(){
 
             SlidersBox(
                 labels = sliderLabels,
-                values = listOf(transferBuffer, transferLength, comfortPreference, bikeTripBuffer),//viewModel.transferBuffer.value, viewModel.transferLength.value, viewModel.comfortPreference.value, viewModel.bikeTripBuffer.value),
+                values = listOf(transferBuffer, transferLength, comfortPreference, bikeTripBuffer),
                 onValueChanges = listOf(
                     {
                         viewModel.saveTransferBuffer(it)
@@ -257,15 +251,6 @@ fun Body(){
         }
     }
 }
-
-/*@Preview
-@Composable
-fun HeaderPreview(){
-    PragOTheme(darkTheme = false){
-        MainTopBar()
-    }
-
-}*/
 
 @Preview(showBackground = true)
 @Composable

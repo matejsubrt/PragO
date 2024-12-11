@@ -1,4 +1,4 @@
-package com.example.prago.composables.resultScreen
+package com.example.prago.view.resultScreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

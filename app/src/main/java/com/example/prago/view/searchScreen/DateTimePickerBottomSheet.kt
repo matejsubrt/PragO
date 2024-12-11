@@ -1,4 +1,4 @@
-package com.example.prago.composables.searchScreen
+package com.example.prago.view.searchScreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -59,45 +59,6 @@ fun getLabelFromTime(time: LocalTime): String {
     return time.format(formatter)
 }
 
-
-
-/*@Composable
-fun ArrivalDepartureButton(
-    isDeparture: Boolean,
-    onValueChanged: (Boolean) -> Unit
-) {
-    val icon = if (isDeparture) {
-        R.drawable.departure // Icon for departure
-    } else {
-        R.drawable.arrival // Icon for arrival
-    }
-
-    Box(
-        modifier = Modifier
-            .size(48.dp)
-            .padding(all = 4.dp)
-            .clickable { onValueChanged(!isDeparture) }
-            .background(
-                color = MaterialTheme.colorScheme.surface,
-                shape = RoundedCornerShape(10.dp)
-            )
-            .border(
-                width = 2.dp,
-                color = MaterialTheme.colorScheme.primary,
-                shape = RoundedCornerShape(10.dp)
-            )
-    ) {
-        Icon(
-            painter = painterResource(id = icon),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(4.dp),
-            tint = MaterialTheme.colorScheme.secondary
-        )
-    }
-}*/
-
 @Composable
 fun ArrivalDepartureButton(
     modifier: Modifier,
@@ -132,18 +93,7 @@ fun ArrivalDepartureButtonPair(
             .fillMaxWidth()
             .height(48.dp)
     ) {
-/*         Departure Button
-        Button(
-            onClick = { if (!isDeparture) onValueChanged(true) },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isDeparture) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiaryContainer,
-                contentColor = if (isDeparture) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-            ),
-            modifier = Modifier.weight(1f).fillMaxHeight(),
-            shape = RoundedCornerShape(6.dp)
-        ) {
-            Text(text = "Departure")
-        }*/
+
         ArrivalDepartureButton(
             modifier = Modifier
                 .weight(1f)
@@ -155,20 +105,7 @@ fun ArrivalDepartureButtonPair(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-/*         Arrival Button
-        Button(
-            onClick = { if (isDeparture) onValueChanged(false) },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (!isDeparture) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiaryContainer,
-                contentColor = if (!isDeparture) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-            ),
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
-            shape = RoundedCornerShape(6.dp)
-        ) {
-            Text(text = "Arrival")
-        }*/
+
         ArrivalDepartureButton(
             modifier = Modifier
                 .weight(1f)
@@ -192,7 +129,7 @@ fun DateTimeBottomSheet(
     onNowSelected: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true // Prevent partial expansion
+        skipPartiallyExpanded = true
     )
     val scope = rememberCoroutineScope()
 
@@ -212,7 +149,6 @@ fun DateTimeBottomSheet(
             .clickable(
                 onClick = {
                     scope.launch {
-                        // Move sheetState.show() inside coroutine to prevent UI thread blocking
                         sheetState.show()
                     }
                 }
@@ -223,9 +159,9 @@ fun DateTimeBottomSheet(
             verticalAlignment = Alignment.CenterVertically
         ) {
             val icon = if (byEarliestDeparture) {
-                R.drawable.departure // Icon for departure
+                R.drawable.departure
             } else {
-                R.drawable.arrival // Icon for arrival
+                R.drawable.arrival
             }
 
             Icon(

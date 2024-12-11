@@ -1,4 +1,4 @@
-package com.example.prago.composables
+package com.example.prago.view
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -36,7 +36,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -53,7 +52,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import com.example.prago.R
 import com.example.prago.model.StopEntry
 import com.example.prago.viewModel.AppViewModel
@@ -62,7 +60,6 @@ import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 
 
 @Composable
@@ -132,143 +129,21 @@ fun OnSearchQueryChange(it: String, viewModel: AppViewModel, to: Boolean){
 
 
 @Composable
-fun StopSearchScreen(viewModel: AppViewModel, navController: NavController, to: Boolean) {
-    Log.i("DEBUG", "Search Screen start")
-
+fun StopSearchScreen(viewModel: AppViewModel, to: Boolean) {
     val searchSuggestions by if(to) viewModel.toStopSuggestions.collectAsStateWithLifecycle() else viewModel.fromStopSuggestions.collectAsStateWithLifecycle()
     val searchQuery by if(to) viewModel.toSearchQuery.collectAsStateWithLifecycle() else viewModel.fromSearchQuery.collectAsStateWithLifecycle()
 
-    //val searchResults = listOf(StopEntry("Chodov", "Chodov", "1"), StopEntry("Biskupcova", "Biskupcova", "2"), StopEntry("ABC", "ABC", "3"),StopEntry("ABC", "ABC", "4"))
-    Log.i("DEBUG", "Recomposition triggered - Search Query: $searchQuery, Results size: ${searchSuggestions.size}")
 
-
-//    StopSearchScreen(
-//        searchQuery = searchQuery,
-//        searchResults = searchSuggestions,
-//        onSearchQueryChange = { OnSearchQueryChange(it, viewModel, to) },
-//        navController = navController,
-//        srcStop = !to
-//    )
     StopSearchScreen(
         searchQuery = searchQuery,
         searchResults = searchSuggestions,
         onSearchQueryChange = { OnSearchQueryChange(it, viewModel, to) },
-        navController = navController,
         srcStop = !to,
         onCurrentLocationSelect = { viewModel.updateStartCoordinates(it); viewModel.updateStartByCoordinates(true) }
     )
     Log.i("DEBUG", "Search Screen end")
 }
 
-//@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
-//@Composable
-//fun StopSearchScreen(
-//    searchQuery: String,
-//    searchResults: List<StopEntry>,
-//    onSearchQueryChange: (String) -> Unit,
-//    onCurrentLocationSelect: (Location) -> Unit,
-//    navController: NavController,
-//    srcStop: Boolean
-//) {
-//    val keyboardController = LocalSoftwareKeyboardController.current
-//    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-//        Column(
-//            modifier = Modifier
-//                .background(MaterialTheme.colorScheme.background),
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//            ResultTopBar(navController)
-//            SearchBar(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .background(Color.Red),
-//                query = searchQuery,
-//                onQueryChange = onSearchQueryChange,
-//                onSearch = { keyboardController?.hide() },
-//                placeholder = {
-//                    val text = if (srcStop) stringResource(R.string.source_stop) else stringResource(R.string.destination_stop)
-//                    Text(text = text)
-//                },
-//                leadingIcon = {
-//                    Icon(
-//                        imageVector = Icons.Default.Search,
-//                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-//                        contentDescription = null
-//                    )
-//                },
-//                trailingIcon = {
-//                    if (searchQuery.isNotEmpty()) {
-//                        IconButton(onClick = { onSearchQueryChange("") }) {
-//                            Icon(
-//                                imageVector = Icons.Default.Close,
-//                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-//                                contentDescription = stringResource(R.string.clear_search)
-//                            )
-//                        }
-//                    }
-//                },
-//                content = {
-//                    if (searchResults.isEmpty()) {
-//                        StopListEmptyState()
-//                    } else {
-//                        LazyColumn(
-//                            verticalArrangement = Arrangement.spacedBy(8.dp),
-//                            contentPadding = PaddingValues(12.dp),
-//                            modifier = Modifier.fillMaxSize()
-//                        ) {
-//                            if(srcStop && searchQuery.isEmpty()){
-//                                item {
-//                                    Card(
-//                                        modifier = Modifier
-//                                            .fillMaxWidth()
-//                                            .background(MaterialTheme.colorScheme.surface)
-//                                            .clickable {  }
-//                                            .height(56.dp),
-//                                        colors = CardDefaults.cardColors(
-//                                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-//                                        ),
-//
-//
-//                                        ){
-//                                        Box(
-//                                            modifier = Modifier.fillMaxSize(),
-//                                            contentAlignment = Alignment.CenterStart,
-//
-//                                            ){
-//                                            Text(text = "Current location", modifier = Modifier.padding(start = 16.dp))
-//                                        }
-//                                    }
-//                                }
-//                            }
-//
-//                            val itemsCount = if (searchResults.size > 16) 16 else searchResults.size
-//                            items(
-//                                count = itemsCount,
-//                                key = { index -> searchResults[index].id },
-//                                itemContent = { index ->
-//                                    StopNameSuggestion(stopName = searchResults[index].czechName) {
-//                                        keyboardController?.hide()
-//                                        Log.i("DEBUG", "Stop selected")
-//                                        onSearchQueryChange(it)
-//                                        navController.navigate("searchPage")
-//                                        Log.i("DEBUG", "Navigated back to search screen")
-//                                    }
-//                                }
-//                            )
-//                        }
-//                    }
-//                },
-//                active = true,
-//                onActiveChange = {},
-//                tonalElevation = 0.dp,
-//                colors = SearchBarDefaults.colors(
-//                    containerColor = MaterialTheme.colorScheme.surface,
-//                )
-//            )
-//        }
-//    }
-//
-//}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class,
     ExperimentalPermissionsApi::class
@@ -279,11 +154,12 @@ fun StopSearchScreen(
     searchResults: List<StopEntry>,
     onSearchQueryChange: (String) -> Unit,
     onCurrentLocationSelect: (Location) -> Unit,
-    navController: NavController,
     srcStop: Boolean
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    val navController = LocalNavController.current
     val context = LocalContext.current
+
     val locationPermissionState = rememberMultiplePermissionsState(
         permissions = listOf(
             android.Manifest.permission.ACCESS_FINE_LOCATION,
@@ -302,7 +178,7 @@ fun StopSearchScreen(
             modifier = Modifier.background(MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            ResultTopBar(navController)
+            ResultTopBar()
             SearchBar(
                 modifier = Modifier
                     .fillMaxSize()
@@ -428,7 +304,7 @@ fun handleLocationRequest(
     if (locationPermissionState.allPermissionsGranted) {
         retrieveCurrentLocation(context) { location ->
             onLocationRetrieved(location)
-            onNavigation() // Navigate after location is retrieved
+            onNavigation()
         }
     } else {
         locationPermissionState.launchMultiplePermissionRequest()

@@ -1,4 +1,4 @@
-package com.example.prago.composables.resultScreen
+package com.example.prago.view.resultScreen
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle

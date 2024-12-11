@@ -157,10 +157,10 @@ class ConnectionSearchApi {
                 emit(ConnectionSearchResultState.Failure(response.statusCode, errorMessage))
             }
         }
-    }//.catch { e ->
-//        Log.i("DEBUG", "ERROR: ${e.message}")
-//        val errorMessage = "An error occurred: ${e.message}"
-//        emit(ConnectionSearchResultState.Failure(-1, errorMessage))
-//    }
+    }.catch { e ->
+        Log.i("DEBUG", "ERROR: ${e.message}")
+        val errorMessage = "An error occurred: ${e.message}"
+        emit(ConnectionSearchResultState.Failure(-1, errorMessage))
+    }
 }
 

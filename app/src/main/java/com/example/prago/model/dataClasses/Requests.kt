@@ -18,23 +18,6 @@ data class SearchSettings(
     @JsonName("BikeTripBuffer") val bikeTripBuffer: Int
 )
 
-//data class StopToStopRequest(
-//    @JsonName("srcStopName") val srcStopName: String,
-//    @JsonName("destStopName") val destStopName: String,
-//    @JsonName("dateTime") val dateTime: String,
-//    @JsonName("byEarliestDeparture") val byEarliestDeparture: Boolean,
-//    @JsonName("settings") val settings: SearchSettings
-//)
-//
-//data class CoordToCoordRequest(
-//    @JsonName("srcLon") val srcLon: Double,
-//    @JsonName("srcLat") val srcLat: Double,
-//    @JsonName("destLon") val destLon: Double,
-//    @JsonName("destLat") val destLat: Double,
-//    @JsonName("dateTime") val dateTime: String,
-//    @JsonName("byEarliestDeparture") val byEarliestDeparture: Boolean,
-//    @JsonName("settings") val settings: SearchSettings
-//)
 
 data class ConnectionRequest(
     @JsonName("srcStopName") val srcStopName: String,
@@ -65,7 +48,7 @@ data class AlternativeTripsRequest(
     @JsonName("tripId") val tripId: String
 )
 
-fun CreateStopToStopRangeRequest(
+fun createStopToStopRangeRequest(
     srcStopName: String,
     destStopName: String,
     dateTime: String,
@@ -90,7 +73,7 @@ fun CreateStopToStopRangeRequest(
     )
 }
 
-fun CreateCoordsToStopRangeRequest(
+fun createCoordsToStopRangeRequest(
     srcLat: Double,
     srcLon: Double,
     destStopName: String,
