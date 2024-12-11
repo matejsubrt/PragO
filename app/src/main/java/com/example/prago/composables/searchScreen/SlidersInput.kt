@@ -107,7 +107,8 @@ fun SlidersInput(
     onValueChanges: List<(Float) -> Unit>,
     maxValues: List<Float>,
     labelLists: List<List<String>>,
-    useSharedBikes: Boolean
+    useSharedBikes: Boolean,
+    bikeMax15MinSwitch: @Composable () -> Unit
 ) {
 
     Column(
@@ -144,6 +145,10 @@ fun SlidersInput(
                 )
             }
         }
+
+        if(useSharedBikes){
+            bikeMax15MinSwitch()
+        }
     }
 
 }
@@ -155,7 +160,8 @@ fun SlidersBox(
     onValueChanges: List<(Float) -> Unit>,
     maxValues: List<Float>,
     labelLists: List<List<String>>,
-    useSharedBikes: Boolean
+    useSharedBikes: Boolean,
+    bikeMax15MinSwitch: @Composable () -> Unit
 ){
     var slidersInputVisible by remember { mutableStateOf(false) }
 
@@ -206,7 +212,8 @@ fun SlidersBox(
                     onValueChanges = onValueChanges,
                     maxValues = maxValues,
                     labelLists = labelLists,
-                    useSharedBikes = useSharedBikes
+                    useSharedBikes = useSharedBikes,
+                    bikeMax15MinSwitch = bikeMax15MinSwitch
                 )
             }
         }

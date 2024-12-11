@@ -14,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.datastore.core.DataStore
 import androidx.navigation.NavController
@@ -32,6 +33,8 @@ import com.example.prago.ui.theme.PragOTheme
 import com.example.prago.viewModel.AppViewModel
 import com.example.prago.viewModel.preferencesDataStore
 import com.example.prago.viewModel.stopListDataStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
 
@@ -58,30 +61,26 @@ class MainActivity : ComponentActivity() {
         val stoplistRepository = StopListRepository(applicationContext.stopListDataStore)
         val connectionSearchApi = ConnectionSearchApi()
 
-        val isConnectedToWifi = isWifiConnected()
 
         appViewModel = AppViewModel(settingsRepository, stoplistRepository, connectionSearchApi)
         setContent {
             PragOTheme {
-                PragOApp(appViewModel, isConnectedToWifi)
+                PragOApp(appViewModel)
             }
         }
 
 
     }
 
-    private fun isWifiConnected(): Boolean {
-        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-        return networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ?: false
-    }
+
 }
 
 
 
 @Composable
-fun PragOApp(appViewModel: AppViewModel, isConnectedToWifi: Boolean) {
+fun PragOApp(appViewModel: AppViewModel) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val navController = rememberNavController()
 
     val navigateToResults by appViewModel.navigateToResults.collectAsState()
@@ -95,22 +94,10 @@ fun PragOApp(appViewModel: AppViewModel, isConnectedToWifi: Boolean) {
     }
 
 
-    if(isConnectedToWifi){
-        Log.i("DEBUG", "Before LaunchedEffect")
-        LaunchedEffect(Unit) {
-
-            val lastUpdateTime = appViewModel.stopListLastUpdateTime.value
-
-            if(lastUpdateTime.plusDays(7).isBefore(LocalDateTime.now())){
-                //TODO: Change the URL implementation
-                appViewModel.downloadAndStoreStopNameList("https://data.pid.cz/stops/json/stops.json")
-                Log.i("DEBUG", "Data is outdated, downloading new data")
-            }
-            else{
-                Log.i("DEBUG", "Data is up to date")
-            }
+    LaunchedEffect(Unit){
+        scope.launch(Dispatchers.IO) {
+            appViewModel.tryUpdateStopNameList(context)
         }
-        Log.i("APP", "After LaunchedEffect")
     }
 
 

@@ -16,7 +16,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.prago.R
 import com.example.prago.model.dataClasses.ConnectionSearchResult
 import com.example.prago.viewModel.AppViewModel
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +37,8 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
 
     var currFirstIndex = remember { mutableStateOf(0) }
     var currLastIndex = remember { mutableStateOf(0) }
+
+    val startByCoordinates by viewModel.startByCoordinates.collectAsState()
 
 
     if(result != null)
@@ -77,7 +81,9 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
                         throw Exception("First trip has no alternatives")
                     }
 
-                    UsedFirstLastStopCard(result.usedTransfers[0].srcStopInfo.name, startTime)
+                    val startPointName = if (startByCoordinates) stringResource(id = R.string.current_location) else result.usedTransfers[0].srcStopInfo.name
+
+                    UsedFirstLastStopCard(startPointName, startTime)
                 }
 
 
@@ -133,8 +139,30 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
                 }
 
 
-                if(result.usedSegmentTypes[result.usedSegmentTypes.size - 1] == 0){
-                    UsedFirstLastStopCard(result.usedTransfers[result.usedTransfers.size - 1].destStopInfo.name, result.arrivalDateTime)
+                if(result.usedSegmentTypes.last() == 0 && result.usedTripAlternatives.isNotEmpty()){
+                    val endTime: LocalDateTime
+                    if(result.usedTripAlternatives.last().alternatives.size > currLastIndex.value && currLastIndex.value >= 0) {
+                        val lastTrip =
+                            result.usedTripAlternatives.last().alternatives[currLastIndex.value]
+                        val lastTripDisembarkTime =
+                            lastTrip.stopPasses[lastTrip.getOffStopIndex].arrivalTime
+                        endTime =
+                            lastTripDisembarkTime.plusSeconds(result.secondsAfterLastTrip.toLong())
+                    } else if(result.usedTripAlternatives[0].alternatives.isNotEmpty()){
+                        val lastTrip = result.usedTripAlternatives.last().alternatives.first()
+                        val lastTripDisembarkTime = lastTrip.stopPasses[lastTrip.getOnStopIndex].departureTime
+                        endTime = lastTripDisembarkTime.minusSeconds(result.secondsBeforeFirstTrip.toLong())
+                    } else{
+                        throw Exception("First trip has no alternatives")
+                    }
+
+                    val endPointName = result.usedTransfers.last().destStopInfo.name
+
+                    UsedFirstLastStopCard(endPointName, endTime)
+
+
+
+                    //UsedFirstLastStopCard(result.usedTransfers[result.usedTransfers.size - 1].destStopInfo.name, result.arrivalDateTime)
                 }
             }
         }

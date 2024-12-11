@@ -247,6 +247,10 @@ data class ConnectionSearchResult(
         if (this === other) return true
         if (other !is ConnectionSearchResult) return false
 
+        val onlyBikesAndTransfers = usedSegmentTypes.all { it == 0 || it == 2}
+        val bothOnlyBikesAndTransfers = usedSegmentTypes == other.usedSegmentTypes && onlyBikesAndTransfers
+
+
         return departureDateTime == other.departureDateTime &&
                 arrivalDateTime == other.arrivalDateTime &&
                 usedSegmentTypes == other.usedSegmentTypes // not ideal, but should be enough for our use case (can theoretically lead to false positives if 2 connections have same departure and arrival time, but use different trips)

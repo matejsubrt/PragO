@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -61,8 +63,14 @@ fun Body(){
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    val srcStopName by viewModel.fromSearchQuery.collectAsState()
+    val destStopName by viewModel.toSearchQuery.collectAsState()
+    val srcByLocation by viewModel.startByCoordinates.collectAsState()
 
-    val fromText by viewModel.fromSearchQuery.collectAsState()
+
+    Log.i("DEBUG", "Start by coords: $srcByLocation")
+    //val fromText by viewModel.fromSearchQuery.collectAsState()
+    val fromText = if (srcByLocation) stringResource(R.string.current_location) else srcStopName
     val toText by viewModel.toSearchQuery.collectAsState()
     val byEarliestDeparture by viewModel.byEarliestDeparture.collectAsState()
 
@@ -71,8 +79,9 @@ fun Body(){
     val transferLength by viewModel.transferLength.collectAsState()
     val comfortPreference by viewModel.timeComfortBalance.collectAsState()
     val bikeTripBuffer by viewModel.bikeTripBuffer.collectAsState()
+    val bikeMax15Min by viewModel.bikeMax15Minutes.collectAsState()
 
-
+    val startingSearch by viewModel.startingSearch.collectAsState()
 
 
     var showDialog by remember { mutableStateOf(false) }
@@ -198,7 +207,15 @@ fun Body(){
                 ),
                 maxValues = sliderMaxValues,
                 labelLists = labelLists,
-                useSharedBikes = useSharedBikes
+                useSharedBikes = useSharedBikes,
+                bikeMax15MinSwitch = {
+                    LabelWithToggleSwitch(
+                        label = stringResource(R.string.bike_max_15_min),
+                        checked = bikeMax15Min
+                    ) {
+                        viewModel.saveBikeMax15Minutes(it)
+                    }
+                }
             )
 
 
@@ -223,12 +240,19 @@ fun Body(){
                     containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                Text(
-                    text = stringResource(R.string.search),
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                if(startingSearch){
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.search),
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
             }
         }
     }

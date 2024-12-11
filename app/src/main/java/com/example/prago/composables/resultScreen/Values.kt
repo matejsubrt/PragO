@@ -31,8 +31,9 @@ val delayTextStyle = TextStyle(
 
 val colorNextbike = Color(0, 0, 128)
 
-val distanceBoxWidth = 46.dp
+val distanceBoxWidth = 52.dp
 val timeBoxWidth = 60.dp
+val distanceTimeBoxSpacerWidth = 8.dp
 val boxHeight = 24.dp
 val boxTextSize = 12.sp
 

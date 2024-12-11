@@ -67,38 +67,41 @@ fun UsedBikeTripCard(bikeTrip: UsedBikeTrip) {
         Column(
             modifier = Modifier.padding(start = 4.dp, top = 2.dp, end = 8.dp, bottom = 4.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ){
-                TripNameRow(stringResource(R.string.nextbike), colorNextbike, false, 0)
-                Box(
-                    modifier = Modifier
-                        .background(Color(0xFF888888), RoundedCornerShape(16.dp))
-                        .padding(horizontal = 2.dp),
-                    contentAlignment = Alignment.Center
-                ){
-                    Row(
-                        horizontalArrangement = Arrangement.End, // Align items to the end (right) of the row
-                        verticalAlignment = Alignment.CenterVertically
-                    ){
-                        Icon(
-                            painter = painterResource(id = R.drawable.bike),
-                            contentDescription = null,
-                            tint = colorNextbike,
-                            modifier = Modifier
-                                .size(24.dp)
-                                .padding(all = 4.dp)
-                        )
-                        Text(
-                            text = "${bikeTrip.remainingBikes}",
-                            color = colorNextbike,
-                            fontSize = 15.sp
-                        )
-                    }
-                }
-            }
+            TripNameRow(stringResource(R.string.nextbike), colorNextbike, false, 0, hasBikeCountData = true, bikeCount = bikeTrip.remainingBikes)
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                horizontalArrangement = Arrangement.SpaceBetween,
+//                verticalAlignment = Alignment.CenterVertically
+//            ){
+//                TripNameRow(stringResource(R.string.nextbike), colorNextbike, false, 0, hasBikeCountData = true, bikeCount = bikeTrip.remainingBikes)
+                //Text(text = "BAF", fontSize = 15.sp)
+//                Box(
+//                    modifier = Modifier
+//                        .background(Color(0xFF888888), RoundedCornerShape(16.dp))
+//                        .padding(horizontal = 2.dp),
+//                    contentAlignment = Alignment.Center
+//                ){
+//                    Row(
+//                        horizontalArrangement = Arrangement.End, // Align items to the end (right) of the row
+//                        verticalAlignment = Alignment.CenterVertically
+//                    ){
+//                        Icon(
+//                            painter = painterResource(id = R.drawable.bike),
+//                            contentDescription = null,
+//                            tint = colorNextbike,
+//                            modifier = Modifier
+//                                .size(24.dp)
+//                                .padding(all = 4.dp)
+//                        )
+//                        Text(
+//                            text = "${bikeTrip.remainingBikes}",
+//                            color = colorNextbike,
+//                            fontSize = 15.sp
+//                        )
+//                        Log.i("DEBUG", "Remaining bikes: ${bikeTrip.remainingBikes}")
+//                    }
+//                }
+//            }
 
 
             Row(
@@ -142,7 +145,7 @@ fun UsedBikeTripCard(bikeTrip: UsedBikeTrip) {
                         fontSize = boxTextSize
                     )
                 }
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(distanceTimeBoxSpacerWidth))
                 Box(
                     modifier = Modifier
                         .background(Color(0xFF888888), RoundedCornerShape(4.dp))

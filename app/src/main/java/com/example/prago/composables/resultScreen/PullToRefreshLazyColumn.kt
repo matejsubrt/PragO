@@ -233,18 +233,18 @@ fun  PullToRefreshLazyColumn(
             items(items){
                 content(it)
             }
-            if (isExpandingToFuture) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-            }
+//            if (isExpandingToFuture) {
+//                item {
+//                    Box(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(16.dp),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        CircularProgressIndicator()
+//                    }
+//                }
+//            }
             item{
                 Row(
                     modifier = Modifier.fillMaxWidth(),

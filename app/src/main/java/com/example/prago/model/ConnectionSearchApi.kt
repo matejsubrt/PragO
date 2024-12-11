@@ -54,13 +54,23 @@ class ConnectionSearchApi {
         val orderedSearchResults = searchResults.sortedBy { it.departureDateTime }
         val cleanedResults = mutableListOf<ConnectionSearchResult>()
 
+        // Only add the first occurrence of each unique connection (consecutive)
         for (result in orderedSearchResults) {
-            if (cleanedResults.isEmpty() ||
-                result.departureDateTime != cleanedResults.last().departureDateTime ||
-                result.arrivalDateTime != cleanedResults.last().arrivalDateTime ||
-                result.usedSegmentTypes != cleanedResults.last().usedSegmentTypes
-            ) {
+            if(cleanedResults.isEmpty()){
                 cleanedResults.add(result)
+                continue
+            } else {
+                val lastResult = cleanedResults.last()
+                val sameDepartureTime = result.departureDateTime == lastResult.departureDateTime
+                val sameArrivalTime = result.arrivalDateTime == lastResult.arrivalDateTime
+                val sameSegmentTypes = result.usedSegmentTypes == lastResult.usedSegmentTypes
+                val onlyBikeAndTransfers = result.usedSegmentTypes.all { it == 0 || it == 2 }
+                val bothOnlyBikeAndTransfers = sameSegmentTypes && onlyBikeAndTransfers
+
+                if(!bothOnlyBikeAndTransfers && (!sameArrivalTime || !sameDepartureTime)){
+                    cleanedResults.add(result)
+                    continue
+                }
             }
         }
 
@@ -135,24 +145,14 @@ class ConnectionSearchApi {
 
 
     suspend fun updateDelayData(results: List<ConnectionSearchResult>, context: Context): Flow<ConnectionSearchResultState> = flow {
-        Log.i("DEBUG", "Result: ${results[0].usedTripAlternatives[0].alternatives[0].currentDelay}")
-        Log.i("DEBUG", "Result: ${results[1].usedTripAlternatives[0].alternatives[0].currentDelay}")
-        Log.i("DEBUG", "Result: ${results[2].usedTripAlternatives[0].alternatives[0].currentDelay}")
-        Log.i("DEBUG", "Color: ${results[0].usedTripAlternatives[0].alternatives[0].color}")
         val response = sendDelayUpdateRequest(results)
 
         when (response.statusCode) {
             200 -> {
                 val updatedResults = Json.decodeFromString<List<ConnectionSearchResult>>(response.text)
-                Log.i("DEBUG", "Result: ${updatedResults[0].usedTripAlternatives[0].alternatives[0].currentDelay}")
-                Log.i("DEBUG", "Result: ${updatedResults[1].usedTripAlternatives[0].alternatives[0].currentDelay}")
-                Log.i("DEBUG", "Result: ${updatedResults[2].usedTripAlternatives[0].alternatives[0].currentDelay}")
-                Log.i("DEBUG", "Color: ${results[0].usedTripAlternatives[0].alternatives[0].color}")
-                Log.i("DEBUG", "Result Color -----------------------------------------------------------------------------------------")
                 emit(ConnectionSearchResultState.Success(updatedResults))
             }
             else -> {
-                Log.i("DEBUG", "ERROR: ${response.statusCode} - ${response.text}")
                 val errorMessage = "Error: ${response.statusCode} - ${response.text}"
                 emit(ConnectionSearchResultState.Failure(response.statusCode, errorMessage))
             }

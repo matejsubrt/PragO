@@ -1,18 +1,23 @@
 package com.example.prago.composables.resultScreen
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -28,7 +33,7 @@ import kotlin.math.abs
 
 
 @Composable
-fun TripNameRow(text: String, color: Color, hasDelayData: Boolean, currentTripDelay: Int){
+fun TripNameRow(text: String, color: Color, hasDelayData: Boolean, currentTripDelay: Int, hasBikeCountData: Boolean, bikeCount: Int){
     val delayPositive = currentTripDelay >= 0
     val delayTextFormatted = formatTime(abs(currentTripDelay).toLong())
     val sign = if (delayPositive) "+" else "-"
@@ -62,6 +67,33 @@ fun TripNameRow(text: String, color: Color, hasDelayData: Boolean, currentTripDe
                 )
             }
 
+        } else if (hasBikeCountData){
+            Box(
+                modifier = Modifier
+                    .background(Color(0xFF888888), RoundedCornerShape(16.dp))
+                    .padding(horizontal = 4.dp),
+                contentAlignment = Alignment.Center
+            ){
+                Row(
+                    horizontalArrangement = Arrangement.End, // Align items to the end (right) of the row
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Icon(
+                        painter = painterResource(id = R.drawable.bike),
+                        contentDescription = null,
+                        tint = colorNextbike,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .padding(all = 4.dp)
+                    )
+                    Text(
+                        text = "${bikeCount}",
+                        color = colorNextbike,
+                        fontSize = 15.sp
+                    )
+                    Log.i("DEBUG", "Remaining bikes: ${bikeCount}")
+                }
+            }
         }
     }
 }
@@ -70,7 +102,7 @@ fun TripNameRow(text: String, color: Color, hasDelayData: Boolean, currentTripDe
 fun LineRow(lineName: String, colorStruct: ColorStruct, hasDelayData: Boolean, currentTripDelay: Int) {
     val text = stringResource(R.string.line) + " " + lineName
     val color = Color(colorStruct.r, colorStruct.g, colorStruct.b)
-    TripNameRow(text = text, color = color, hasDelayData = hasDelayData, currentTripDelay = currentTripDelay)
+    TripNameRow(text = text, color = color, hasDelayData = hasDelayData, currentTripDelay = currentTripDelay, hasBikeCountData = false, bikeCount = 0)
 }
 
 @Composable

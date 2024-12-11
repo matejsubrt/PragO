@@ -48,4 +48,6 @@
     <string name="error_msg_404_alternatives">No alternative trips could be found.</string>
     <string name="error_msg_502_alternatives">The server is currently down</string>
     <string name="departure_anytime">Anytime</string>
+    <string name="current_location">My location</string>
+    <string name="bike_max_15_min">Bike max 15 min</string>
 </resources>

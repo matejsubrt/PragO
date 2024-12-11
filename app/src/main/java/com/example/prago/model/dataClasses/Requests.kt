@@ -90,6 +90,32 @@ fun CreateStopToStopRangeRequest(
     )
 }
 
+fun CreateCoordsToStopRangeRequest(
+    srcLat: Double,
+    srcLon: Double,
+    destStopName: String,
+    dateTime: String,
+    byEarliestDeparture: Boolean,
+    settings: SearchSettings,
+    rangeLength: Int
+): ConnectionRequest {
+    return ConnectionRequest(
+        srcStopName = "",
+        srcLat = srcLat,
+        srcLon = srcLon,
+        destStopName = destStopName,
+        destLat = 0.0,
+        destLon = 0.0,
+        dateTime = dateTime,
+        rangeLength = rangeLength,
+        byEarliestDeparture = byEarliestDeparture,
+        range = true,
+        srcByCoords = true,
+        destByCoords = false,
+        settings = settings
+    )
+}
+
 fun Any.toJsonObject(): JSONObject {
     val jsonObject = JSONObject()
     this::class.java.declaredFields.forEach { field ->

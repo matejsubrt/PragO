@@ -2,7 +2,11 @@
 
     import android.content.Context
     import android.location.Location
+    import android.net.ConnectivityManager
+    import android.net.NetworkCapabilities
     import android.util.Log
+    import androidx.compose.runtime.LaunchedEffect
+    import androidx.core.content.ContextCompat.getSystemService
     import androidx.datastore.core.CorruptionException
     import androidx.datastore.core.DataStore
     import androidx.datastore.core.Serializer
@@ -22,8 +26,10 @@
     import com.example.prago.model.cyclingPaceDefault
     import com.example.prago.model.dataClasses.AlternativeTripsRequest
     import com.example.prago.model.dataClasses.AlternativeTripsResultState
+    import com.example.prago.model.dataClasses.ConnectionRequest
     import com.example.prago.model.dataClasses.ConnectionSearchResult
     import com.example.prago.model.dataClasses.ConnectionSearchResultState
+    import com.example.prago.model.dataClasses.CreateCoordsToStopRangeRequest
     import com.example.prago.model.dataClasses.CreateStopToStopRangeRequest
     import com.example.prago.model.dataClasses.SearchSettings
     import com.example.prago.model.dataClasses.TripAlternatives
@@ -78,14 +84,17 @@
         val stopListRepository: StopListRepository,
         val connectionSearchApi: ConnectionSearchApi
     ) : ViewModel() {
-
 // =================================================================================================
+// PUBLIC SEARCH FUNCTIONS
         // Initiates the search
         suspend fun startSearch(
             showDialog: (Boolean) -> Unit,
             setErrorMessage: (String) -> Unit, // TODO: combine these
             context: Context
         ){
+            updateStartingSearch(true)
+
+
             var startDateTime: LocalDateTime
             if(departureNow.value){
                 startDateTime = LocalDateTime.now()
@@ -96,14 +105,27 @@
             }
 
 
-            val searchRequest = CreateStopToStopRangeRequest(
-                srcStopName = fromSearchQuery.value,
-                destStopName = toSearchQuery.value,
-                dateTime = startDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
-                byEarliestDeparture = byEarliestDeparture.value,
-                settings = getSearchSettings(),
-                rangeLength = 15
-            )
+            val searchRequest: ConnectionRequest
+            if(startByCoordinates.value){
+                searchRequest = CreateCoordsToStopRangeRequest(
+                    srcLat = startCoordinates.value.latitude,
+                    srcLon = startCoordinates.value.longitude,
+                    destStopName = toSearchQuery.value,
+                    dateTime = startDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
+                    byEarliestDeparture = byEarliestDeparture.value,
+                    settings = getSearchSettings(),
+                    rangeLength = 15
+                )
+            } else {
+                searchRequest = CreateStopToStopRangeRequest(
+                    srcStopName = fromSearchQuery.value,
+                    destStopName = toSearchQuery.value,
+                    dateTime = startDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
+                    byEarliestDeparture = byEarliestDeparture.value,
+                    settings = getSearchSettings(),
+                    rangeLength = 15
+                )
+            }
 
             viewModelScope.launch(Dispatchers.IO) {
                 connectionSearchApi.searchForConnection(searchRequest, context).collect{ result ->
@@ -123,10 +145,11 @@
                             showDialog(true)
                         }
                     }
+
+                    updateStartingSearch(false)
                 }
             }
         }
-
 
 
         // Expands the search (either to the past or to the future)
@@ -142,14 +165,27 @@
             }
 
 
-            val searchRequest = CreateStopToStopRangeRequest(
-                srcStopName = fromSearchQuery.value,
-                destStopName = toSearchQuery.value,
-                dateTime = rangeStart.toString(),
-                byEarliestDeparture = byEarliestDeparture.value,
-                settings = getSearchSettings(),
-                rangeLength = 15
-            )
+            val searchRequest: ConnectionRequest
+            if(startByCoordinates.value){
+                searchRequest = CreateCoordsToStopRangeRequest(
+                    srcLat = startCoordinates.value.latitude,
+                    srcLon = startCoordinates.value.longitude,
+                    destStopName = toSearchQuery.value,
+                    dateTime = rangeStart.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
+                    byEarliestDeparture = byEarliestDeparture.value,
+                    settings = getSearchSettings(),
+                    rangeLength = 15
+                )
+            } else {
+                searchRequest = CreateStopToStopRangeRequest(
+                    srcStopName = fromSearchQuery.value,
+                    destStopName = toSearchQuery.value,
+                    dateTime = rangeStart.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
+                    byEarliestDeparture = byEarliestDeparture.value,
+                    settings = getSearchSettings(),
+                    rangeLength = 15
+                )
+            }
 
             viewModelScope.launch(Dispatchers.IO) {
                 connectionSearchApi.searchForConnection(searchRequest, context).collect{ result ->
@@ -177,7 +213,6 @@
                 updateExpandingSearchToFuture(false)
             }
         }
-
 
 
         // For the given trip, finds past ofr future alternative trips
@@ -239,7 +274,6 @@
         }
 
 
-
         // Updates the delay data for all trips in the search results
         fun updateDelays(
             context: Context
@@ -261,6 +295,79 @@
             }
         }
 
+
+// =================================================================================================
+// HELPER FUNCTIONS FOR COMBINING LISTS
+        private fun combineResultLists(
+            currentResults: List<ConnectionSearchResult>,
+            newResults: List<ConnectionSearchResult>,
+            toPast: Boolean
+        ) : List<ConnectionSearchResult>{
+            var nonIdenticalNewResults : List<ConnectionSearchResult> = newResults
+            if(toPast){
+                // Filter out completely identical connections
+                while(currentResults.contains(nonIdenticalNewResults.last())){
+                    nonIdenticalNewResults = nonIdenticalNewResults.dropLast(1)
+                }
+
+                // Filter out consecutive appearances of bike+transfer only connections
+                while(nonIdenticalNewResults.isNotEmpty()){
+                    val lastNewResult = nonIdenticalNewResults.last()
+                    val firstOldResult = currentResults.first()
+                    val lastNewResultOnlyBikesAndTransfers = lastNewResult.usedSegmentTypes.all { it == 0 || it == 2 }
+                    val firstOldResultOnlyBikesAndTransfers = firstOldResult.usedSegmentTypes.all { it == 0 || it == 2 }
+                    val sameSegmentTypes = lastNewResult.usedSegmentTypes == firstOldResult.usedSegmentTypes
+
+                    if(lastNewResultOnlyBikesAndTransfers && firstOldResultOnlyBikesAndTransfers && sameSegmentTypes){
+                        nonIdenticalNewResults = nonIdenticalNewResults.dropLast(1)
+                    } else {
+                        break
+                    }
+                }
+
+                return nonIdenticalNewResults + currentResults
+            } else {
+                while(nonIdenticalNewResults.size != 0 && currentResults.contains(nonIdenticalNewResults[0])){
+                    nonIdenticalNewResults = nonIdenticalNewResults.drop(1)
+                }
+
+                while(nonIdenticalNewResults.isNotEmpty()){
+                    val firstNewResult = nonIdenticalNewResults.first()
+                    val lastOldResult = currentResults.last()
+                    val firstNewResultOnlyBikesAndTransfers = firstNewResult.usedSegmentTypes.all { it == 0 || it == 2 }
+                    val lastOldResultOnlyBikesAndTransfers = lastOldResult.usedSegmentTypes.all { it == 0 || it == 2 }
+                    val sameSegmentTypes = firstNewResult.usedSegmentTypes == lastOldResult.usedSegmentTypes
+
+                    if(firstNewResultOnlyBikesAndTransfers && lastOldResultOnlyBikesAndTransfers && sameSegmentTypes){
+                        nonIdenticalNewResults = nonIdenticalNewResults.drop(1)
+                    } else {
+                        break
+                    }
+                }
+
+                return currentResults + nonIdenticalNewResults
+            }
+        }
+
+
+        private fun combineAlternativesLists(currResults: List<UsedTrip>, newResults: List<UsedTrip>, newAreEarlier: Boolean) : List<UsedTrip>{
+            var nonIdenticalNewResults : List<UsedTrip> = newResults
+
+            if(newAreEarlier){
+                while(nonIdenticalNewResults.isNotEmpty() && currResults.any { it.tripId == nonIdenticalNewResults.last().tripId }){
+                    nonIdenticalNewResults = nonIdenticalNewResults.dropLast(1)
+                }
+                return nonIdenticalNewResults + currResults
+            } else {
+                while(nonIdenticalNewResults.isNotEmpty() && currResults.any { it.tripId == nonIdenticalNewResults.first().tripId }){
+                    nonIdenticalNewResults = nonIdenticalNewResults.drop(1)
+                }
+                return currResults + nonIdenticalNewResults
+            }
+        }
+
+
+// =================================================================================================
 // =================================================================================================
 // SETTINGS VALUES MANAGEMENT
         // The transfer time buffer to be used for searches
@@ -393,7 +500,6 @@
         }
 
 
-
 // =================================================================================================
 // SEARCH QUERY STATE
         // The name of the source stop
@@ -414,7 +520,10 @@
         // The coordinates of the start location (valid only if startByCoordinates is true)
         private val _startCoordinates = MutableStateFlow(Location("default"))
         val startCoordinates: StateFlow<Location> = _startCoordinates
-        fun updateStartCoordinates(coordinates: Location) { _startCoordinates.value = coordinates }
+        fun updateStartCoordinates(coordinates: Location) {
+            _startCoordinates.value = coordinates
+            _startByCoordinates.value = true
+        }
 
 
         // The date selected by the user
@@ -438,6 +547,27 @@
         val byEarliestDeparture: StateFlow<Boolean> = _byEarliestDeparture
         fun updateByEarliestDeparture(isEarliest: Boolean) { _byEarliestDeparture.value = isEarliest }
 
+
+
+        fun getSearchSettings(): SearchSettings {
+            return SearchSettings(
+                walkingPace = walkingPace.value,
+                cyclingPace = cyclingPace.value,
+                bikeUnlockTime = bikeUnlockTime.value,
+                bikeLockTime = bikeLockTime.value,
+                useSharedBikes = useSharedBikes.value,
+                bikeMax15Minutes = bikeMax15Minutes.value,
+                transferTime = transferBuffer.value.toInt(),
+                comfortBalance = timeComfortBalance.value.toInt(),
+                walkingPreference = transferLength.value.toInt(),
+                bikeTripBuffer = bikeTripBuffer.value.toInt()
+            )
+        }
+
+
+        fun setStartByCoordinates(){
+
+        }
 
 
 // =================================================================================================
@@ -493,25 +623,52 @@
         }
 
 
+        // For the given result and trip, updates the current index of the selected trip alternative
+        fun updateCurrIndex(result: ConnectionSearchResult, tripIndex: Int, newIndex: Int){
+            val resultIndex = searchResultList.value.indexOf(result)
+            if(resultIndex != -1){
+                Log.i("DEBUG", "Updating curr index to $newIndex")
+                _searchResultList.value[resultIndex].usedTripAlternatives[tripIndex].currIndex = newIndex
+            }
+            else{
+                Log.i("ERROR", "Result not found")
+            }
+        }
+
+
 // =================================================================================================
 // STOP NAME LIST MANAGEMENT
         // The list of stop names to be used for stop suggestions
-        val stopNameList: StateFlow<List<StopEntry>> = stopListRepository.stopNameList.stateIn(
+        private val _stopNameList: StateFlow<List<StopEntry>> = stopListRepository.stopNameList.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
 
-        // Downloads and stores the current stop name list from the given URL
-        fun downloadAndStoreStopNameList(url: String) {
-            viewModelScope.launch {
-                stopListRepository.downloadAndStoreJson(url)
-            }
-        }
+        // Updates the stop name list if the data is outdated and the device is connected to wifi
+        suspend fun tryUpdateStopNameList(context: Context){
+            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+            val connectedToWifi = networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ?: false
 
-        // The time of the last update of the stop name list
-        val stopListLastUpdateTime: StateFlow<LocalDateTime> = stopListRepository.generatedAt
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), LocalDateTime.MIN)
+            if(connectedToWifi){
+                stopListRepository.generatedAt.collect{
+                    if(it.plusDays(7).isBefore(LocalDateTime.now())){
+                        //TODO: Change the URL implementation
+                        stopListRepository.downloadAndStoreJson("https://data.pid.cz/stops/json/stops.json")
+                        Log.i("DEBUG", "Data is outdated, downloading new data")
+                    }
+                    else{
+                        Log.i("DEBUG", "Data is up to date")
+                    }
+                }
+
+
+            } else {
+                Log.i("DEBUG", "Not connected to wifi")
+            }
+            Log.i("APP", "After LaunchedEffect")
+        }
 
 
 // =================================================================================================
@@ -520,6 +677,12 @@
         val navigateToResults: StateFlow<Boolean> = _navigateToResults
         fun updateNavigateToResults(navigateToResults: Boolean){
             _navigateToResults.value = navigateToResults
+        }
+
+        private val _startingSearch = MutableStateFlow(false)
+        val startingSearch: StateFlow<Boolean> = _startingSearch
+        fun updateStartingSearch(startingSearch: Boolean){
+            _startingSearch.value = startingSearch
         }
 
 
@@ -538,30 +701,12 @@
         }
 
 
-
-        //----------------------------------------------------------------------------------
-
-        fun getSearchSettings(): SearchSettings {
-            return SearchSettings(
-                walkingPace = walkingPace.value,
-                cyclingPace = cyclingPace.value,
-                bikeUnlockTime = bikeUnlockTime.value,
-                bikeLockTime = bikeLockTime.value,
-                useSharedBikes = useSharedBikes.value,
-                bikeMax15Minutes = bikeMax15Minutes.value,
-                transferTime = transferBuffer.value.toInt(),
-                comfortBalance = timeComfortBalance.value.toInt(),
-                walkingPreference = transferLength.value.toInt(),
-                bikeTripBuffer = bikeTripBuffer.value.toInt()
-            )
-        }
-
-
-
-        fun splitNormalizedWords(normalizedInput: String): List<String> {
+// =================================================================================================
+// STOP SUGGESTION FUNCTIONALITY
+        private fun splitNormalizedWords(normalizedInput: String): List<String> {
             return normalizedInput.split("[\\s,-]+".toRegex()).map { it.trim() }
         }
-        fun getStopSuggestions(query: String, stopNames: List<StopEntry>): List<StopEntry> {
+        private fun getStopSuggestions(query: String, stopNames: List<StopEntry>): List<StopEntry> {
             val queryParts = query.trim().split("\\s+".toRegex()).map { it.trim() }
             val matchedStops = stopNames.filter { stopName ->
                 val nameParts = splitNormalizedWords(stopName.normalizedName)
@@ -582,104 +727,45 @@
             return (firstWordMatches + otherMatches).take(16)
         }
 
-        @OptIn(FlowPreview::class)
+//        @OptIn(FlowPreview::class)
+//        val fromStopSuggestions: StateFlow<List<StopEntry>> =
+//            fromSearchQuery
+//                .debounce(200)
+//                .combine(_stopNameList) { fromSearchQuery, stopNames ->
+//                    getStopSuggestions(fromSearchQuery, stopNames)
+//                }
+//                .stateIn(
+//                    scope = viewModelScope,
+//                    initialValue = emptyList(),
+//                    started = SharingStarted.WhileSubscribed(5_000)
+//                )
         val fromStopSuggestions: StateFlow<List<StopEntry>> =
             fromSearchQuery
                 .debounce(200)
-                .combine(stopNameList) { fromSearchQuery, stopNames ->
-                    getStopSuggestions(fromSearchQuery, stopNames)
+                .combine(_stopNameList) { fromSearchQuery, stopNames ->
+                    withContext(Dispatchers.Default) {
+                        getStopSuggestions(fromSearchQuery, stopNames)
+                    }
                 }
                 .stateIn(
                     scope = viewModelScope,
                     initialValue = emptyList(),
                     started = SharingStarted.WhileSubscribed(5_000)
                 )
+
 
         @OptIn(FlowPreview::class)
         val toStopSuggestions: StateFlow<List<StopEntry>> =
             toSearchQuery
                 .debounce(200)
-                .combine(stopNameList) { toSearchQuery, stopNames ->
-                    getStopSuggestions(toSearchQuery, stopNames)
+                .combine(_stopNameList) { toSearchQuery, stopNames ->
+                    withContext(Dispatchers.Default) {
+                        getStopSuggestions(toSearchQuery, stopNames)
+                    }
                 }
                 .stateIn(
                     scope = viewModelScope,
                     initialValue = emptyList(),
                     started = SharingStarted.WhileSubscribed(5_000)
                 )
-
-
-        private fun cleanUpDuplicates(searchResults: List<ConnectionSearchResult>): List<ConnectionSearchResult> {
-            val orderedSearchResults = searchResults.sortedBy { it.departureDateTime }
-            val cleanedResults = mutableListOf<ConnectionSearchResult>()
-
-            for (result in orderedSearchResults) {
-                if (cleanedResults.isEmpty() ||
-                    result.departureDateTime != cleanedResults.last().departureDateTime ||
-                    result.arrivalDateTime != cleanedResults.last().arrivalDateTime ||
-                    result.usedSegmentTypes != cleanedResults.last().usedSegmentTypes
-                ) {
-                    cleanedResults.add(result)
-                }
-            }
-
-            return cleanedResults
-        }
-
-        fun combineResultLists(
-            currentResults: List<ConnectionSearchResult>,
-            newResults: List<ConnectionSearchResult>,
-            toPast: Boolean
-        ) : List<ConnectionSearchResult>{
-            var nonIdenticalNewResults : List<ConnectionSearchResult> = newResults
-            if(toPast){
-                while(currentResults.contains(nonIdenticalNewResults.last())){
-                    nonIdenticalNewResults = nonIdenticalNewResults.dropLast(1)
-                }
-
-                return cleanUpDuplicates(nonIdenticalNewResults + currentResults)
-            } else {
-                while(nonIdenticalNewResults.size != 0 && currentResults.contains(nonIdenticalNewResults[0])){
-                    nonIdenticalNewResults = nonIdenticalNewResults.drop(1)
-                }
-
-                //TODO: Check if necessary
-                return cleanUpDuplicates(currentResults + nonIdenticalNewResults)
-            }
-
-        }
-
-
-
-
-
-        fun combineAlternativesLists(currResults: List<UsedTrip>, newResults: List<UsedTrip>, newAreEarlier: Boolean) : List<UsedTrip>{
-            var nonIdenticalNewResults : List<UsedTrip> = newResults
-
-            if(newAreEarlier){
-                while(nonIdenticalNewResults.isNotEmpty() && currResults.any { it.tripId == nonIdenticalNewResults.last().tripId }){
-                    nonIdenticalNewResults = nonIdenticalNewResults.dropLast(1)
-                }
-                return nonIdenticalNewResults + currResults
-            } else {
-                while(nonIdenticalNewResults.isNotEmpty() && currResults.any { it.tripId == nonIdenticalNewResults.first().tripId }){
-                    nonIdenticalNewResults = nonIdenticalNewResults.drop(1)
-                }
-                return currResults + nonIdenticalNewResults
-            }
-        }
-
-
-
-
-        fun updateCurrIndex(result: ConnectionSearchResult, tripIndex: Int, newIndex: Int){
-            val resultIndex = searchResultList.value.indexOf(result)
-            if(resultIndex != -1){
-                Log.i("DEBUG", "Updating curr index to $newIndex")
-                _searchResultList.value[resultIndex].usedTripAlternatives[tripIndex].currIndex = newIndex
-            }
-            else{
-                Log.i("ERROR", "Result not found")
-            }
-        }
     }

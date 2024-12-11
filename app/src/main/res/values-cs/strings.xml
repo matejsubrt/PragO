@@ -49,4 +49,6 @@
     <string name="error_msg_404_alternatives">Nebyly nalezeny žádné alternativní spoje.</string>
     <string name="error_msg_502_alternatives">Server je momentálně nedostupný.</string>
     <string name="departure_anytime">Kdykoliv</string>
+    <string name="current_location">Moje poloha</string>
+    <string name="bike_max_15_min">Na kole max 15 min</string>
 </resources>

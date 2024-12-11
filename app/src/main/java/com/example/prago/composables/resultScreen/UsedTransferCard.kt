@@ -81,7 +81,7 @@ fun UsedTransferCard(transfer: UsedTransfer) {
                     fontSize = boxTextSize
                 )
             }
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(distanceTimeBoxSpacerWidth))
             Box(
                 modifier = Modifier
                     .background(Color(0xFF888888), RoundedCornerShape(4.dp))
