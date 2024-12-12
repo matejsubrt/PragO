@@ -5,9 +5,7 @@ import android.location.Location
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.Log
-import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
-import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModel
@@ -37,7 +35,6 @@ import com.example.prago.model.repositories.transferLengthDefault
 import com.example.prago.model.repositories.useSharedBikesDefault
 import com.example.prago.model.repositories.walkingPaceDefault
 import com.example.prago.utils.serialization.StopListSerializer
-import com.google.protobuf.InvalidProtocolBufferException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,8 +45,6 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.InputStream
-import java.io.OutputStream
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -262,13 +257,11 @@ class AppViewModel(
 
 
     // Updates the delay data for all trips in the search results
-    fun updateDelays(
-        context: Context
-    ){
+    fun updateDelays(){
         val searchResults = searchResultList.value
 
         viewModelScope.launch(Dispatchers.IO) {
-            connectionSearchApi.updateDelayData(searchResults, context).collect{ result ->
+            connectionSearchApi.updateDelayData(searchResults).collect{ result ->
                 when(result){
                     is ConnectionSearchResultState.Success -> {
                         updateSearchResultList(result.results, true)

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package com.example.prago.model.apis
 
 import android.content.Context
@@ -144,7 +146,7 @@ class ConnectionSearchApi {
 
 
 
-    suspend fun updateDelayData(results: List<ConnectionSearchResult>, context: Context): Flow<ConnectionSearchResultState> = flow {
+    suspend fun updateDelayData(results: List<ConnectionSearchResult>): Flow<ConnectionSearchResultState> = flow {
         val response = sendDelayUpdateRequest(results)
 
         when (response.statusCode) {

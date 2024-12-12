@@ -52,7 +52,7 @@ fun ResultScreen(){
             while (true) {
                 if (System.currentTimeMillis() - lastDelayUpdateTime > 20 * 1000L) {
                     lastDelayUpdateTime = System.currentTimeMillis()
-                    viewModel.updateDelays(context)
+                    viewModel.updateDelays()
                 }
                 delay(20 * 1000L)
             }

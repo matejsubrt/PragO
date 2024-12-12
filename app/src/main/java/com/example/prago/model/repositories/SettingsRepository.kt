@@ -55,7 +55,7 @@ class SettingsRepository(private val preferencesDataStore: DataStore<Preferences
     //TODO: change string to boolean
     private fun booleanPreferenceFlow(key: Preferences.Key<String>, defaultValue: Boolean): Flow<Boolean> {
         return preferencesDataStore.data.map { preferences ->
-            preferences[key].toBoolean() ?: defaultValue
+            preferences[key].toBoolean()
         }
     }
 

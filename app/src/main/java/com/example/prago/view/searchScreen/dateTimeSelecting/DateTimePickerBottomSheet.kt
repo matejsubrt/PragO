@@ -120,7 +120,6 @@ fun ArrivalDepartureButtonPair(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateTimeBottomSheet(
-    modifier: Modifier = Modifier,
     viewModel: AppViewModel,
     byEarliestDeparture: Boolean,
     onArrDepChange: (Boolean) -> Unit,

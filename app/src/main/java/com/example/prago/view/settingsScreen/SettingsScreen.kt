@@ -84,7 +84,7 @@ fun EditableIntSettingRow(
                     value = textState.value,
                     onValueChange = { newValue ->
                         textState.value = newValue.filter { it.isDigit() }
-                        var intValue = textState.value.toIntOrNull() ?: defaultValue
+                        val intValue = textState.value.toIntOrNull() ?: defaultValue
                         onValueChange(intValue)
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(
@@ -94,7 +94,7 @@ fun EditableIntSettingRow(
                     keyboardActions = KeyboardActions(onDone = {
                         focusManager.clearFocus()
                         keyboardController?.hide()
-                        var intValue = textState.value.toIntOrNull() ?: defaultValue
+                        val intValue = textState.value.toIntOrNull() ?: defaultValue
                         onValueChange(intValue)
                     }),
                     modifier = Modifier
