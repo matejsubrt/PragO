@@ -67,8 +67,7 @@ class AppViewModel(
 // PUBLIC SEARCH FUNCTIONS
     // Initiates the search
     suspend fun startSearch(
-        showDialog: (Boolean) -> Unit,
-        setErrorMessage: (String) -> Unit, // TODO: combine these
+        showErrorDialog: (String) -> Unit,
         context: Context
     ){
         updateStartingSearch(true)
@@ -120,8 +119,9 @@ class AppViewModel(
                     }
                     is ConnectionSearchResultState.Failure -> {
                         Log.e("AppViewModel", "Error fetching search results: ${result.errorMessage}")
-                        setErrorMessage(result.errorMessage)
-                        showDialog(true)
+                        //setErrorMessage(result.errorMessage)
+                        //showDialog(true)
+                        showErrorDialog(result.errorMessage)
                     }
                 }
 
@@ -624,8 +624,7 @@ class AppViewModel(
         if(connectedToWifi){
             stopListRepository.generatedAt.collect{
                 if(it.plusDays(7).isBefore(LocalDateTime.now())){
-                    //TODO: Change the URL implementation
-                    stopListRepository.downloadAndStoreJson("https://data.pid.cz/stops/json/stops.json")
+                    stopListRepository.downloadAndStoreJson()
                     Log.i("DEBUG", "Data is outdated, downloading new data")
                 }
                 else{

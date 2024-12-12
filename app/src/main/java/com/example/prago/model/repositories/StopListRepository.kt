@@ -16,6 +16,8 @@ import java.text.Normalizer
 import java.time.LocalDateTime
 
 
+const val STOP_LIST_URL = "https://data.pid.cz/stops/json/stops.json"
+
 fun convertToStopList(stopListDataClass: StopListDataClass): StopList {
     val stopListBuilder = StopList.newBuilder()
         .setGeneratedAt(stopListDataClass.generatedAt)
@@ -91,17 +93,20 @@ class StopListRepository(
         }
     }
 
-    //TODO: What will happen if the data is not present?
     val generatedAt: Flow<LocalDateTime> = stopListDataStore.data
         .take(1)
-        .map {value -> LocalDateTime.parse(value.generatedAt)}
+        .map { value ->
+            value.generatedAt?.let { LocalDateTime.parse(it) }
+                ?: LocalDateTime.MIN
+        }
+
 
 
 
     @OptIn(ExperimentalSerializationApi::class)
-    suspend fun downloadAndStoreJson(url: String) {
+    suspend fun downloadAndStoreJson() {
         try {
-            val response: Response = get(url)
+            val response: Response = get(STOP_LIST_URL)
             val stopListJson = String(response.content, Charsets.UTF_8)
             val json = Json { ignoreUnknownKeys = true }
             val stopList = json.decodeFromString<StopListDataClass>(stopListJson)

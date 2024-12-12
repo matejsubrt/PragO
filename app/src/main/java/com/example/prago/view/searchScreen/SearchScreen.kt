@@ -218,8 +218,7 @@ fun Body(){
                     scope.launch {
                         viewModel.startSearch(
                             context = context,
-                            showDialog = { showDialog = it },
-                            setErrorMessage = { errorMessage = it }
+                            showErrorDialog = { showDialog = true; errorMessage = it }
                         )
                     }
                 },
