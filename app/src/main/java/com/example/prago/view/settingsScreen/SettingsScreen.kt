@@ -1,4 +1,4 @@
-package com.example.prago.view
+package com.example.prago.view.settingsScreen
 
 //import com.example.prago.viewModel.SharedViewModel
 import androidx.compose.foundation.background
@@ -39,6 +39,10 @@ import androidx.compose.ui.unit.sp
 import com.example.prago.R
 //import com.example.prago.activities.LocalSharedViewModel
 import com.example.prago.ui.theme.PragOTheme
+import com.example.prago.view.common.AutoResizedText
+import com.example.prago.view.LocalAppViewModel
+import com.example.prago.view.LocalNavController
+import com.example.prago.view.common.GoBackTopBar
 
 @Composable
 fun EditableIntSettingRow(
@@ -133,7 +137,7 @@ fun SettingsScreen() {
                 .background(MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            ResultTopBar()
+            GoBackTopBar()
 
             Row(
                 modifier = Modifier

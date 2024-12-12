@@ -1,15 +1,15 @@
-package com.example.prago.model
+package com.example.prago.model.apis
 
 import android.content.Context
 import android.util.Log
 import com.example.prago.R
-import com.example.prago.model.dataClasses.AlternativeTripsRequest
-import com.example.prago.model.dataClasses.AlternativeTripsResultState
-import com.example.prago.model.dataClasses.ConnectionRequest
-import com.example.prago.model.dataClasses.ConnectionSearchResult
-import com.example.prago.model.dataClasses.ConnectionSearchResultState
-import com.example.prago.model.dataClasses.UsedTrip
-import com.example.prago.model.dataClasses.toJsonObject
+import com.example.prago.model.dataClasses.requests.AlternativeTripsRequest
+import com.example.prago.model.dataClasses.requests.ConnectionRequest
+import com.example.prago.model.dataClasses.resultStates.AlternativeTripsResultState
+import com.example.prago.model.dataClasses.resultStates.ConnectionSearchResultState
+import com.example.prago.model.dataClasses.searchResult.ConnectionSearchResult
+import com.example.prago.model.dataClasses.searchResult.UsedTrip
+import com.example.prago.utils.serialization.toJsonObject
 import khttp.responses.Response
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch

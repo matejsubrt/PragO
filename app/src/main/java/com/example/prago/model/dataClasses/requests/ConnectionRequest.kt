@@ -1,23 +1,6 @@
-package com.example.prago.model.dataClasses
+package com.example.prago.model.dataClasses.requests
 
-import org.json.JSONObject
-
-@Target(AnnotationTarget.PROPERTY)
-annotation class JsonName(val name: String)
-
-data class SearchSettings(
-    @JsonName("WalkingPace") val walkingPace: Int,
-    @JsonName("CyclingPace") val cyclingPace: Int,
-    @JsonName("BikeUnlockTime") val bikeUnlockTime: Int,
-    @JsonName("BikeLockTime") val bikeLockTime: Int,
-    @JsonName("UseSharedBikes") val useSharedBikes: Boolean,
-    @JsonName("BikeMax15Minutes") val bikeMax15Minutes: Boolean,
-    @JsonName("TransferTime") val transferTime: Int,
-    @JsonName("ComfortBalance") val comfortBalance: Int,
-    @JsonName("WalkingPreference") val walkingPreference: Int,
-    @JsonName("BikeTripBuffer") val bikeTripBuffer: Int
-)
-
+import com.example.prago.utils.serialization.JsonName
 
 data class ConnectionRequest(
     @JsonName("srcStopName") val srcStopName: String,
@@ -39,14 +22,7 @@ data class ConnectionRequest(
     @JsonName("settings") val settings: SearchSettings
 )
 
-data class AlternativeTripsRequest(
-    @JsonName("srcStopId") val srcStopId: String,
-    @JsonName("destStopId") val destStopId: String,
-    @JsonName("dateTime") val dateTime: String,
-    @JsonName("previous") val previous: Boolean,
-    @JsonName("count") val count: Int,
-    @JsonName("tripId") val tripId: String
-)
+
 
 fun createStopToStopRangeRequest(
     srcStopName: String,
@@ -98,28 +74,3 @@ fun createCoordsToStopRangeRequest(
         settings = settings
     )
 }
-
-fun Any.toJsonObject(): JSONObject {
-    val jsonObject = JSONObject()
-    this::class.java.declaredFields.forEach { field ->
-        field.isAccessible = true
-        val jsonName = field.getAnnotation(JsonName::class.java)?.name ?: field.name
-        val value = field.get(this)
-        if (jsonName != "\$stable") {
-            when (value) {
-                is Any -> {
-                    if (field.type.name == "java.lang.String" || field.type.isPrimitive || field.type.name.startsWith("java.")) {
-                        jsonObject.put(jsonName, value)
-                    } else {
-                        jsonObject.put(jsonName, value.toJsonObject())
-                    }
-                }
-                else -> jsonObject.put(jsonName, value)
-            }
-        }
-    }
-    return jsonObject
-}
-
-
-

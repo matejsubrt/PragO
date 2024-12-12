@@ -1,4 +1,4 @@
-package com.example.prago.model.dataClasses
+package com.example.prago.model.dataClasses.stopList
 
 import kotlinx.serialization.Serializable
 

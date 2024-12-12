@@ -34,8 +34,9 @@ import androidx.compose.ui.unit.sp
 import com.example.prago.R
 import com.example.prago.view.LocalAppViewModel
 //import com.example.prago.activities.LocalSharedViewModel
-import com.example.prago.view.MainTopBar
+import com.example.prago.view.common.SearchTopBar
 import com.example.prago.ui.theme.PragOTheme
+import com.example.prago.view.searchScreen.dateTimeSelecting.DateTimeBottomSheet
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
@@ -46,7 +47,7 @@ import kotlin.math.ceil
 fun SearchScreen(){
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column {
-            MainTopBar()
+            SearchTopBar()
             Body()
         }
     }
@@ -63,7 +64,6 @@ fun Body(){
     val srcByLocation by viewModel.startByCoordinates.collectAsState()
 
 
-    Log.i("DEBUG", "Start by coords: $srcByLocation")
     val fromText = if (srcByLocation) stringResource(R.string.current_location) else srcStopName
     val toText = destStopName
     val byEarliestDeparture by viewModel.byEarliestDeparture.collectAsState()
@@ -115,7 +115,6 @@ fun Body(){
     val labelLists = listOf(transferBufferLabels, transferLengthLabels, comfortLabels, bikeTripBufferLabels)
 
 
-    // TODO: Implement better error handling - user-friendly error messages and popups
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
@@ -217,8 +216,6 @@ fun Body(){
 
             Button(
                 onClick = {
-                    Log.i("DEBUG", "Search button clicked")
-
                     scope.launch {
                         viewModel.startSearch(
                             context = context,

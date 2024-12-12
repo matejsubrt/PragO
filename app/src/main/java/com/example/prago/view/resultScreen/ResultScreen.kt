@@ -13,7 +13,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.example.prago.view.LocalAppViewModel
-import com.example.prago.view.ResultTopBar
+import com.example.prago.view.common.GoBackTopBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -31,7 +31,8 @@ fun ResultScreen(){
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.background)
         ){
-            ResultTopBar()
+            GoBackTopBar()
+
             PullToRefreshLazyColumn(
                 content = { searchResult ->
                     key(searchResult.usedTripAlternatives.map { item -> item.alternatives.map{ item2 -> item2.tripId }}.joinToString()) {
@@ -58,51 +59,3 @@ fun ResultScreen(){
         }
     }
 }
-
-
-
-//@Preview(showBackground = true)
-//@Composable
-//fun ResultScreenPreview() {
-//    PragOTheme(darkTheme = true) {
-//        val result = ConnectionSearchResult(
-//            usedTrips = listOf(
-//                UsedTrip(
-//                    getOnStopIndex = 0,
-//                    getOffStopIndex = 1,
-//                    routeName = "Example Route",
-//                    color = ColorStruct(255, 0, 0),
-//                    vehicleType = 2,
-//                    stopPasses = listOf(
-//                        StopPass("Stop 1", "1", LocalDateTime.parse("2024-04-15T12:00:00"), LocalDateTime.parse("2024-04-15T12:05:00")),
-//                        StopPass("Stop 2", "2", LocalDateTime.parse("2024-04-15T12:10:00"), LocalDateTime.parse("2024-04-15T12:15:00"))
-//                    )
-//                )
-//            ),
-//            usedTransfers = listOf(
-//                UsedTransfer(
-//                    srcStopInfo = StopInfo("Src Stop", "src_id", 0.0, 0.0),
-//                    destStopInfo = StopInfo("Dest Stop", "dest_id", 0.0, 0.0),
-//                    time = 10,
-//                    distance = 20
-//                )
-//            ),
-//            usedBikeTrips = listOf(
-//                UsedBikeTrip(
-//                    srcStopInfo = StopInfo("Src Stop", "src_id", 0.0, 0.0),
-//                    destStopInfo = StopInfo("Dest Stop", "dest_id", 0.0, 0.0),
-//                    distance = 100,
-//                    time = 30,
-//                    remainingBikes = 3
-//                )
-//            ),
-//            usedSegmentTypes = listOf(1,0,2),
-//            transferCount = 1,
-//            tripCount = 1,
-//            bikeTripCount = 1,
-//            departureDateTime = LocalDateTime.now(),
-//            arrivalDateTime = LocalDateTime.now().plusHours(1)
-//        )
-//        ResultScreen(result)
-//    }
-//}

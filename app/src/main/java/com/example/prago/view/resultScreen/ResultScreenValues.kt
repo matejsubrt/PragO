@@ -35,7 +35,10 @@ val distanceBoxWidth = 52.dp
 val timeBoxWidth = 60.dp
 val distanceTimeBoxSpacerWidth = 8.dp
 val boxHeight = 24.dp
+
+
 val boxTextSize = 12.sp
+val bikeCountTextSize = 15.sp
 
 val boxTextStyle = TextStyle(
     fontSize = boxTextSize,

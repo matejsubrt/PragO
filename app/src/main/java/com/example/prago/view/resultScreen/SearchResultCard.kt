@@ -1,4 +1,5 @@
 package com.example.prago.view.resultScreen
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
@@ -18,7 +19,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.prago.R
-import com.example.prago.model.dataClasses.ConnectionSearchResult
+import com.example.prago.model.dataClasses.searchResult.ConnectionSearchResult
+import com.example.prago.view.resultScreen.segmentCards.UsedBikeTripCard
+import com.example.prago.view.resultScreen.segmentCards.UsedFirstLastStopCard
+import com.example.prago.view.resultScreen.segmentCards.UsedTransferCard
+import com.example.prago.view.resultScreen.segmentCards.UsedTripAlternativesRow
 import com.example.prago.viewModel.AppViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,8 +37,8 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
     val context = LocalContext.current
 
 
-    var currFirstIndex = remember { mutableStateOf(0) }
-    var currLastIndex = remember { mutableStateOf(0) }
+    val currFirstIndex = remember { mutableStateOf(0) }
+    val currLastIndex = remember { mutableStateOf(0) }
 
     val startByCoordinates by viewModel.startByCoordinates.collectAsState()
 
@@ -60,8 +65,11 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
             ){
                 ResultHeader(result, currFirstIndex.value, currLastIndex.value)
 
+                // Prevents crash when there are no trips
                 if(result.usedSegmentTypes[0] == 0 && result.usedTripAlternatives.isNotEmpty()){
                     val startTime: LocalDateTime
+
+                    // it can come to situations where the index is out of bounds - we check for that here
                     if(result.usedTripAlternatives[0].alternatives.size > currFirstIndex.value && currFirstIndex.value >= 0) {
                         val firstTrip =
                             result.usedTripAlternatives[0].alternatives[currFirstIndex.value]
@@ -69,11 +77,13 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
                             firstTrip.stopPasses[firstTrip.getOnStopIndex].departureTime
                         startTime =
                             firstTripBoardingTime.minusSeconds(result.secondsBeforeFirstTrip.toLong())
+
+                    // if the index is out of bounds, we use the last alternative
                     } else if(result.usedTripAlternatives[0].alternatives.isNotEmpty()){
                         val firstTrip = result.usedTripAlternatives[0].alternatives.last()
                         val firstTripBoardingTime = firstTrip.stopPasses[firstTrip.getOnStopIndex].departureTime
                         startTime = firstTripBoardingTime.minusSeconds(result.secondsBeforeFirstTrip.toLong())
-                    } else{
+                    } else {
                         throw Exception("First trip has no alternatives")
                     }
 
@@ -123,9 +133,11 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
                     }
                 }
 
-
+                // Prevents crash when there are no trips
                 if(result.usedSegmentTypes.last() == 0 && result.usedTripAlternatives.isNotEmpty()){
                     val endTime: LocalDateTime
+
+                    // it can come to situations where the index is out of bounds - we check for that here
                     if(result.usedTripAlternatives.last().alternatives.size > currLastIndex.value && currLastIndex.value >= 0) {
                         val lastTrip =
                             result.usedTripAlternatives.last().alternatives[currLastIndex.value]
@@ -133,11 +145,13 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
                             lastTrip.stopPasses[lastTrip.getOffStopIndex].arrivalTime
                         endTime =
                             lastTripDisembarkTime.plusSeconds(result.secondsAfterLastTrip.toLong())
+
+                    // if the index is out of bounds, we use the first alternative
                     } else if(result.usedTripAlternatives[0].alternatives.isNotEmpty()){
                         val lastTrip = result.usedTripAlternatives.last().alternatives.first()
                         val lastTripDisembarkTime = lastTrip.stopPasses[lastTrip.getOnStopIndex].departureTime
                         endTime = lastTripDisembarkTime.minusSeconds(result.secondsBeforeFirstTrip.toLong())
-                    } else{
+                    } else {
                         throw Exception("First trip has no alternatives")
                     }
 
@@ -148,50 +162,3 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
             }
         }
 }
-
-
-//@Composable
-//@Preview
-//fun ResultCardPreview() {
-//    val result = ConnectionSearchResult(
-//        usedTrips = listOf(
-//            UsedTrip(
-//                getOnStopIndex = 0,
-//                getOffStopIndex = 1,
-//                routeName = "Example Route",
-//                color = ColorStruct(255, 0, 0),
-//                vehicleType = 2,
-//                stopPasses = listOf(
-//                    StopPass("Stop 1", "1", LocalDateTime.parse("2024-04-15T12:00:00"), LocalDateTime.parse("2024-04-15T12:05:00")),
-//                    StopPass("Stop 2", "2", LocalDateTime.parse("2024-04-15T12:10:00"), LocalDateTime.parse("2024-04-15T12:15:00"))
-//                )
-//            )
-//        ),
-//        usedTransfers = listOf(
-//            UsedTransfer(
-//                srcStopInfo = StopInfo("Src Stop", "src_id", 0.0, 0.0),
-//                destStopInfo = StopInfo("Dest Stop", "dest_id", 0.0, 0.0),
-//                time = 10,
-//                distance = 20
-//            )
-//        ),
-//        usedBikeTrips = listOf(
-//            UsedBikeTrip(
-//                srcStopInfo = StopInfo("Src Stop", "src_id", 0.0, 0.0),
-//                destStopInfo = StopInfo("Dest Stop", "dest_id", 0.0, 0.0),
-//                distance = 100,
-//                time = 30,
-//                remainingBikes = 3
-//            )
-//        ),
-//        usedSegmentTypes = listOf(1,0,2),
-//        transferCount = 1,
-//        tripCount = 1,
-//        bikeTripCount = 1,
-//        departureDateTime = LocalDateTime.now(),
-//        arrivalDateTime = LocalDateTime.now().plusHours(1)
-//    )
-//    PragOTheme(darkTheme = true){
-//        ResultCard(result = result)
-//    }
-//}

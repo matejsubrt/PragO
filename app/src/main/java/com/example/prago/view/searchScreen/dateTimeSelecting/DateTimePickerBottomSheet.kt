@@ -1,4 +1,4 @@
-package com.example.prago.view.searchScreen
+package com.example.prago.view.searchScreen.dateTimeSelecting
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

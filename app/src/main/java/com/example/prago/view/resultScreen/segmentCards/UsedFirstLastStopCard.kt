@@ -1,4 +1,4 @@
-package com.example.prago.view.resultScreen
+package com.example.prago.view.resultScreen.segmentCards
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +17,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.prago.R
+import com.example.prago.view.resultScreen.transferIconSize
+import com.example.prago.view.resultScreen.tripIconSize
 import java.time.LocalDateTime
 
 @Preview

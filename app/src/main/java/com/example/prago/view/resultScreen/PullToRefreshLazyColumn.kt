@@ -30,7 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.prago.model.dataClasses.ConnectionSearchResult
+import com.example.prago.model.dataClasses.searchResult.ConnectionSearchResult
 import com.example.prago.viewModel.AppViewModel
 import kotlinx.coroutines.launch
 

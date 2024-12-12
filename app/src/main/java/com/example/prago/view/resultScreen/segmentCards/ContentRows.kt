@@ -1,4 +1,4 @@
-package com.example.prago.view.resultScreen
+package com.example.prago.view.resultScreen.segmentCards
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -19,25 +19,39 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.prago.R
-import com.example.prago.model.dataClasses.ColorStruct
-import com.example.prago.formatters.formatTime
+import com.example.prago.model.dataClasses.searchResult.UsedBikeTrip
+import com.example.prago.model.dataClasses.searchResult.UsedTrip
+import com.example.prago.utils.formatting.formatTime
+import com.example.prago.view.resultScreen.colorNextbike
+import com.example.prago.view.resultScreen.delayTextStyle
+import com.example.prago.view.resultScreen.lineNameSize
+import com.example.prago.view.resultScreen.stopNameStyle
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 
 
 @Composable
-fun TripNameRow(text: String, color: Color, hasDelayData: Boolean, currentTripDelay: Int, hasBikeCountData: Boolean, bikeCount: Int){
+fun TripNameRow(
+    text: String,
+    color: Color,
+    hasDelayData: Boolean,
+    currentTripDelay: Int,
+    hasBikeCountData: Boolean,
+    bikeCount: Int
+){
     val delayPositive = currentTripDelay >= 0
     val delayTextFormatted = formatTime(abs(currentTripDelay).toLong())
     val sign = if (delayPositive) "+" else "-"
     val delayText = sign + delayTextFormatted
 
-    val delayBoxColor = if(currentTripDelay > 30) Color.Red else if(currentTripDelay >= 0) Color.Green else Color.Yellow
+    val delayBoxColor =
+        if (currentTripDelay > 30) Color.Red
+        else if (currentTripDelay >= 0) Color.Green
+        else Color.Yellow
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -95,11 +109,65 @@ fun TripNameRow(text: String, color: Color, hasDelayData: Boolean, currentTripDe
 }
 
 @Composable
-fun LineRow(lineName: String, colorStruct: ColorStruct, hasDelayData: Boolean, currentTripDelay: Int) {
-    val text = stringResource(R.string.line) + " " + lineName
-    val color = Color(colorStruct.r, colorStruct.g, colorStruct.b)
-    TripNameRow(text = text, color = color, hasDelayData = hasDelayData, currentTripDelay = currentTripDelay, hasBikeCountData = false, bikeCount = 0)
+fun LineRow(trip: UsedTrip){
+    val lineName = trip.routeName
+    val lineNameFormatted = stringResource(R.string.line) + " " + lineName
+
+    val lineColor = when(trip.vehicleType){
+        0 -> Color(0x7a, 0x06, 0x03) // Tram
+        1 -> { // Subway
+            when(trip.routeName){
+                "A" -> Color(0, 165, 98)
+                "B" -> Color(248, 179, 34)
+                "C" -> Color(207, 0, 61)
+                else -> Color(0, 0, 0)
+            }
+        }
+        2 -> Color(37, 30, 98) // Train
+        3 -> Color(0x00, 0x7d, 0xa8) // Bus
+        4 -> Color(0x00, 0xb3, 0xcb) // Ferry
+        5 -> Color(122, 6, 3) // Cable tram
+        6 -> Color(0x00, 0x00, 0xff) // Aerial lift
+        7 -> Color(0x00, 0x00, 0xff) // Funicular
+        11 -> Color(0x00, 0x7d, 0xa8) // Trolleybus
+        12 -> Color(37, 30, 98) // Monorail
+        else -> Color(0x00, 0x7d, 0xa8) // Shouldn't happen
+    }
+
+
+    //val lineColor = Color(trip.color.r, trip.color.g, trip.color.b)
+    val hasDelayData = trip.hasDelayInfo.value
+    val currentTripDelay = trip.currentDelay.value
+
+
+
+
+    TripNameRow(
+        text = lineNameFormatted,
+        color = lineColor,
+        hasDelayData = hasDelayData,
+        currentTripDelay = currentTripDelay,
+        hasBikeCountData = false,
+        bikeCount = 0
+    )
 }
+
+@Composable
+fun BikeServiceRow(trip: UsedBikeTrip){
+    val bikeCount = trip.remainingBikes
+
+    TripNameRow(
+        text = stringResource(R.string.nextbike), // TODO: get bike service name from API
+        color = colorNextbike,
+        hasDelayData = false,
+        currentTripDelay = 0,
+        hasBikeCountData = true,
+        bikeCount = bikeCount
+    )
+
+}
+
+
 
 @Composable
 fun StopRow(stopName: String, time: LocalDateTime){
@@ -122,15 +190,4 @@ fun StopRow(stopName: String, time: LocalDateTime){
             color = MaterialTheme.colorScheme.onTertiaryContainer
         )
     }
-}
-
-@Preview
-@Composable
-fun PreviewLineRow() {
-    LineRow(
-        lineName = "123",
-        colorStruct = ColorStruct(98, 0, 238),
-        hasDelayData = true,
-        currentTripDelay = 10
-    )
 }

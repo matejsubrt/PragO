@@ -1,4 +1,4 @@
-package com.example.prago.formatters
+package com.example.prago.utils.formatting
 
 fun formatTime(time: Long): String {
     return if(time >= 60 * 60 * 24){

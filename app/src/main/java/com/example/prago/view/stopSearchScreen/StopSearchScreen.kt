@@ -1,4 +1,4 @@
-package com.example.prago.view
+package com.example.prago.view.stopSearchScreen
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -53,7 +53,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.prago.R
-import com.example.prago.model.StopEntry
+import com.example.prago.model.repositories.StopEntry
+import com.example.prago.view.LocalNavController
+import com.example.prago.view.common.GoBackTopBar
 import com.example.prago.viewModel.AppViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
@@ -178,7 +180,7 @@ fun StopSearchScreen(
             modifier = Modifier.background(MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            ResultTopBar()
+            GoBackTopBar()
             SearchBar(
                 modifier = Modifier
                     .fillMaxSize()

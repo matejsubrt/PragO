@@ -1,4 +1,4 @@
-package com.example.prago.model
+package com.example.prago.model.repositories
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences

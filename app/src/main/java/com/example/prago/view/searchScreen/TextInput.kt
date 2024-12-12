@@ -46,9 +46,7 @@ fun LabelWithTextInput(
                 .fillMaxWidth()
                 .height(56.dp)
                 .clickable {
-                    Log.i("DEBUG", "OnClick calling")
                     onClick()
-                    Log.i("DEBUG", "OnClick finished")
                 }
                 .border(
                     1.5.dp,
@@ -91,10 +89,22 @@ fun TextInput(
             .background(MaterialTheme.colorScheme.surface)
             .padding(start = 8.dp, top = 0.dp, end = 8.dp, bottom = 4.dp)
     ) {
-        Column() {
-            LabelWithTextInput(label = stringResource(R.string.from) + ":", placeholder = stringResource(R.string.source_stop), text = fromText, onClick = {navController.navigate("fromStopSelect")})
+        Column {
+            LabelWithTextInput(
+                label = stringResource(R.string.from) + ":",
+                placeholder = stringResource(R.string.source_stop),
+                text = fromText,
+                onClick = {navController.navigate("fromStopSelect")}
+            )
+
             Spacer(modifier = Modifier.height(8.dp))
-            LabelWithTextInput(label = stringResource(R.string.to) + ":", placeholder = stringResource(R.string.destination_stop), text = toText, onClick = {navController.navigate("toStopSelect")})
+
+            LabelWithTextInput(
+                label = stringResource(R.string.to) + ":",
+                placeholder = stringResource(R.string.destination_stop),
+                text = toText,
+                onClick = {navController.navigate("toStopSelect")}
+            )
         }
         Row(
             modifier = Modifier.fillMaxWidth().padding(end = 10.dp),

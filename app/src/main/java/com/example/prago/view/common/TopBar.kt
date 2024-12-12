@@ -1,4 +1,4 @@
-package com.example.prago.view
+package com.example.prago.view.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,11 +24,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.prago.R
-
+import com.example.prago.view.LocalNavController
 
 @Composable
-fun MainTopBar(){
-    val navController = LocalNavController.current
+fun TopBar(
+    iconResource: Int,
+    title: String,
+    onIconClick: () -> Unit
+){
     Row(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.primary)
@@ -41,17 +44,17 @@ fun MainTopBar(){
             modifier = Modifier
                 .size(48.dp)
                 .padding(all = 4.dp)
-                .clickable { navController.navigate("settingsScreen") }
+                .clickable { onIconClick() }
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.menu),
+                painter = painterResource(id = iconResource),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize()
             )
         }
         Spacer(modifier = Modifier.width(16.dp))
         Text(
-            text = "PragO",
+            text = title,
             style = TextStyle(
                 fontWeight = FontWeight.Bold,
                 fontSize = 32.sp,
@@ -59,40 +62,28 @@ fun MainTopBar(){
             )
         )
     }
+
+}
+
+
+
+@Composable
+fun SearchTopBar(){
+    val navController = LocalNavController.current
+    TopBar(
+        iconResource = R.drawable.menu,
+        title = "PragO",
+        onIconClick = { navController.navigate("settingsScreen") }
+    )
 }
 
 
 @Composable
-fun ResultTopBar(){
+fun GoBackTopBar(){
     val navController = LocalNavController.current
-    Row(
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.primary)
-            .fillMaxWidth()
-            .height(52.dp)
-            .padding(start = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ){
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .padding(all = 4.dp)
-                .clickable { navController.navigate("searchPage") }
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.arrow_back),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = "PragO",
-            style = TextStyle(
-                fontWeight = FontWeight.Bold,
-                fontSize = 32.sp,
-                color = Color.White
-            )
-        )
-    }
+    TopBar(
+        iconResource = R.drawable.arrow_back,
+        title = "PragO",
+        onIconClick = { navController.navigate("searchPage") }
+    )
 }

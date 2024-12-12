@@ -1,4 +1,4 @@
-package com.example.prago.view
+package com.example.prago.view.common
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text

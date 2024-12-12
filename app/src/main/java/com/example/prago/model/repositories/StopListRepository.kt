@@ -1,13 +1,12 @@
-package com.example.prago.model
+package com.example.prago.model.repositories
 
 import android.util.Log
 import androidx.datastore.core.DataStore
 import com.example.prago.StopList
-import com.example.prago.model.dataClasses.StopListDataClass
+import com.example.prago.model.dataClasses.stopList.StopListDataClass
 import khttp.get
 import khttp.responses.Response
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
 import kotlinx.serialization.ExperimentalSerializationApi

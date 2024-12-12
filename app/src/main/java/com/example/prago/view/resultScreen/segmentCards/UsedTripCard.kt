@@ -1,4 +1,4 @@
-package com.example.prago.view.resultScreen
+package com.example.prago.view.resultScreen.segmentCards
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -20,9 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.prago.R
-import com.example.prago.model.dataClasses.ColorStruct
-import com.example.prago.model.dataClasses.TripAlternatives
-import com.example.prago.model.dataClasses.UsedTrip
+import com.example.prago.model.dataClasses.searchResult.TripAlternatives
+import com.example.prago.model.dataClasses.searchResult.UsedTrip
+import com.example.prago.view.resultScreen.tripIconSize
 
 @Composable
 fun ProgressIndicatorBox(){
@@ -104,7 +104,7 @@ fun UsedTripCard(trip: UsedTrip, modifier: Modifier = Modifier) {
         modifier = modifier
             .background(MaterialTheme.colorScheme.tertiaryContainer)
             .padding(start = 2.dp, top = 0.dp, end = 2.dp, bottom = 4.dp)
-            .fillMaxWidth() // Ensure the Card fills the parent width
+            .fillMaxWidth()
     ) {
         val icon = when (trip.vehicleType) {
             0 -> R.drawable.tram
@@ -120,26 +120,7 @@ fun UsedTripCard(trip: UsedTrip, modifier: Modifier = Modifier) {
             else -> R.drawable.bus
         }
 
-        val lineColor = when(trip.vehicleType){
-            0 -> ColorStruct(0x7a, 0x06, 0x03)
-            1 -> {
-                when(trip.routeName){
-                    "A" -> ColorStruct(0, 165, 98)
-                    "B" -> ColorStruct(248, 179, 34)
-                    "C" -> ColorStruct(207, 0, 61)
-                    else -> ColorStruct(0, 0, 0)
-                }
-            }
-            2 -> ColorStruct(37, 30, 98)
-            3 -> ColorStruct(0x00, 0x7d, 0xa8)
-            4 -> ColorStruct(0x00, 0xb3, 0xcb)
-            5 -> ColorStruct(122, 6, 3)
-            6 -> ColorStruct(0x00, 0x00, 0xff)
-            7 -> ColorStruct(0x00, 0x00, 0xff)
-            11 -> ColorStruct(0x00, 0x7d, 0xa8)
-            12 -> ColorStruct(37, 30, 98)
-            else -> ColorStruct(0x00, 0x7d, 0xa8)
-        }
+
 
 
         Icon(
@@ -153,7 +134,7 @@ fun UsedTripCard(trip: UsedTrip, modifier: Modifier = Modifier) {
         Column(
             modifier = Modifier.padding(start = 4.dp, top = 2.dp, end = 8.dp, bottom = 4.dp)
         ) {
-            LineRow(trip.routeName, lineColor, trip.hasDelayInfo.value, trip.currentDelay.value)
+            LineRow(trip)
             StopRow(
                 stopName = trip.stopPasses[trip.getOnStopIndex].name,
                 time = trip.stopPasses[trip.getOnStopIndex].departureTime

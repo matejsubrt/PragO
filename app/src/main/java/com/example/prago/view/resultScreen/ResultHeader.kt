@@ -30,9 +30,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.prago.R
-import com.example.prago.model.dataClasses.ConnectionSearchResult
-import com.example.prago.formatters.formatDurationTime
-import com.example.prago.formatters.formatTime
+import com.example.prago.model.dataClasses.searchResult.ConnectionSearchResult
+import com.example.prago.utils.formatting.formatDurationTime
+import com.example.prago.utils.formatting.formatTime
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import java.time.Duration

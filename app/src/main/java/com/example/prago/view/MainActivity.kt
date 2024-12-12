@@ -19,10 +19,12 @@ import androidx.navigation.compose.rememberNavController
 import com.example.prago.StopList
 import com.example.prago.view.resultScreen.ResultScreen
 import com.example.prago.view.searchScreen.SearchScreen
-import com.example.prago.model.ConnectionSearchApi
-import com.example.prago.model.SettingsRepository
-import com.example.prago.model.StopListRepository
+import com.example.prago.model.apis.ConnectionSearchApi
+import com.example.prago.model.repositories.SettingsRepository
+import com.example.prago.model.repositories.StopListRepository
 import com.example.prago.ui.theme.PragOTheme
+import com.example.prago.view.settingsScreen.SettingsScreen
+import com.example.prago.view.stopSearchScreen.StopSearchScreen
 import com.example.prago.viewModel.AppViewModel
 import com.example.prago.viewModel.preferencesDataStore
 import com.example.prago.viewModel.stopListDataStore

@@ -1,16 +1,13 @@
-package com.example.prago.view.resultScreen
+package com.example.prago.view.resultScreen.segmentCards
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,12 +19,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.prago.R
-import com.example.prago.model.dataClasses.UsedTransfer
-import com.example.prago.formatters.formatDistance
-import com.example.prago.formatters.formatTime
+import com.example.prago.model.dataClasses.searchResult.UsedTransfer
+import com.example.prago.view.resultScreen.distanceTimeBoxSpacerWidth
+import com.example.prago.view.resultScreen.transferIconSize
+import com.example.prago.view.resultScreen.tripIconSize
 
 @Composable
 fun UsedTransferCard(transfer: UsedTransfer) {
@@ -64,42 +61,9 @@ fun UsedTransferCard(transfer: UsedTransfer) {
             modifier = Modifier.padding(end = 8.dp),
             horizontalArrangement = Arrangement.End
         ) {
-            Box(
-                modifier = Modifier
-                    .background(Color(0xFF888888), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 8.dp)
-                    .width(distanceBoxWidth)
-                    .height(boxHeight),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = formatDistance(transfer.distance),
-                    style = boxTextStyle,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(4.dp),
-                    fontSize = boxTextSize
-                )
-            }
+            LengthBox(showsTime = false, length = transfer.distance)
             Spacer(modifier = Modifier.width(distanceTimeBoxSpacerWidth))
-            Box(
-                modifier = Modifier
-                    .background(Color(0xFF888888), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 8.dp)
-                    .width(timeBoxWidth)
-                    .height(boxHeight),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = formatTime(transfer.time.toLong()),
-                    style = boxTextStyle,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(4.dp),
-                    fontSize = boxTextSize
-                )
-            }
-
+            LengthBox(showsTime = true, length = transfer.time)
         }
     }
 }
