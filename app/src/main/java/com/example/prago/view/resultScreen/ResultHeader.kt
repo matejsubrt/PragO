@@ -268,14 +268,15 @@ fun ResultHeader(
         if(result.usedSegmentTypes.contains(1)){
             val firstIndex = min(firstTripAltIndex, result.usedTripAlternatives.first().alternatives.size - 1)
             val firstTrip = result.usedTripAlternatives.first().alternatives[firstIndex]
-            val firstTripDepartureTime = firstTrip.stopPasses[firstTrip.getOnStopIndex].departureTime
+            val firstTripDepartureTime = firstTrip.stopPasses[firstTrip.getOnStopIndex].departureTime.plusSeconds(firstTrip.delayWhenBoarded.value.toLong())
 
             val lastIndex = min(lastTripAltIndex, result.usedTripAlternatives.last().alternatives.size - 1)
             val lastTrip = result.usedTripAlternatives.last().alternatives[lastIndex]
             val lastTripArrivalTime = lastTrip.stopPasses[lastTrip.getOffStopIndex].arrivalTime
+            val lastTripDelay = lastTrip.currentDelay.value
 
             val departureTime = firstTripDepartureTime.minusSeconds(result.secondsBeforeFirstTrip.toLong())
-            val arrivalTime = lastTripArrivalTime.plusSeconds(result.secondsAfterLastTrip.toLong())
+            val arrivalTime = lastTripArrivalTime.plusSeconds(result.secondsAfterLastTrip.toLong()).plusSeconds(lastTripDelay.toLong())
 
             CountDown(firstTripDepartureTime, departureTime, Modifier.weight(1f))
             TotalTime(departureTime = departureTime, arrivalTime = arrivalTime)

@@ -76,13 +76,17 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
                         val firstTripBoardingTime =
                             firstTrip.stopPasses[firstTrip.getOnStopIndex].departureTime
                         startTime =
-                            firstTripBoardingTime.minusSeconds(result.secondsBeforeFirstTrip.toLong())
+                            firstTripBoardingTime
+                                .minusSeconds(result.secondsBeforeFirstTrip.toLong())
+                                .plusSeconds(firstTrip.delayWhenBoarded.value.toLong())
 
                     // if the index is out of bounds, we use the last alternative
                     } else if(result.usedTripAlternatives[0].alternatives.isNotEmpty()){
                         val firstTrip = result.usedTripAlternatives[0].alternatives.last()
                         val firstTripBoardingTime = firstTrip.stopPasses[firstTrip.getOnStopIndex].departureTime
-                        startTime = firstTripBoardingTime.minusSeconds(result.secondsBeforeFirstTrip.toLong())
+                        startTime = firstTripBoardingTime
+                            .minusSeconds(result.secondsBeforeFirstTrip.toLong())
+                            .plusSeconds(firstTrip.delayWhenBoarded.value.toLong())
                     } else {
                         throw Exception("First trip has no alternatives")
                     }
@@ -144,13 +148,17 @@ fun ResultCard(result: ConnectionSearchResult, viewModel: AppViewModel){
                         val lastTripDisembarkTime =
                             lastTrip.stopPasses[lastTrip.getOffStopIndex].arrivalTime
                         endTime =
-                            lastTripDisembarkTime.plusSeconds(result.secondsAfterLastTrip.toLong())
+                            lastTripDisembarkTime
+                                .plusSeconds(result.secondsAfterLastTrip.toLong())
+                                .plusSeconds(lastTrip.currentDelay.value.toLong())
 
                     // if the index is out of bounds, we use the first alternative
                     } else if(result.usedTripAlternatives[0].alternatives.isNotEmpty()){
                         val lastTrip = result.usedTripAlternatives.last().alternatives.first()
                         val lastTripDisembarkTime = lastTrip.stopPasses[lastTrip.getOnStopIndex].departureTime
-                        endTime = lastTripDisembarkTime.minusSeconds(result.secondsBeforeFirstTrip.toLong())
+                        endTime = lastTripDisembarkTime
+                            .plusSeconds(result.secondsAfterLastTrip.toLong())
+                            .plusSeconds(lastTrip.currentDelay.value.toLong())
                     } else {
                         throw Exception("First trip has no alternatives")
                     }

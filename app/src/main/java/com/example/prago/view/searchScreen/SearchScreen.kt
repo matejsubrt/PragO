@@ -137,6 +137,10 @@ fun Body(){
                 fromText = fromText,
                 toText = toText,
                 onDirectionSwitch = {
+                    if(viewModel.startByCoordinates.value){
+                        viewModel.updateStartByCoordinates(false)
+                        viewModel.updateFromSearchQuery("")
+                    }
                     val fromSearchQuery = viewModel.fromSearchQuery.value
                     viewModel.updateFromSearchQuery(viewModel.toSearchQuery.value)
                     viewModel.updateToSearchQuery(fromSearchQuery)

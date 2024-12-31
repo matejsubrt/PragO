@@ -12,7 +12,6 @@ data class ConnectionRequest(
     @JsonName("destLon") val destLon: Double,
 
     @JsonName("dateTime") val dateTime: String,
-    @JsonName("rangeLength") val rangeLength: Int,
 
     @JsonName("byEarliestDeparture") val byEarliestDeparture: Boolean,
     @JsonName("range") val range: Boolean,
@@ -29,8 +28,7 @@ fun createStopToStopRangeRequest(
     destStopName: String,
     dateTime: String,
     byEarliestDeparture: Boolean,
-    settings: SearchSettings,
-    rangeLength: Int
+    settings: SearchSettings
 ): ConnectionRequest {
     return ConnectionRequest(
         srcStopName = srcStopName,
@@ -40,7 +38,6 @@ fun createStopToStopRangeRequest(
         destLat = 0.0,
         destLon = 0.0,
         dateTime = dateTime,
-        rangeLength = rangeLength,
         byEarliestDeparture = byEarliestDeparture,
         range = true,
         srcByCoords = false,
@@ -55,8 +52,7 @@ fun createCoordsToStopRangeRequest(
     destStopName: String,
     dateTime: String,
     byEarliestDeparture: Boolean,
-    settings: SearchSettings,
-    rangeLength: Int
+    settings: SearchSettings
 ): ConnectionRequest {
     return ConnectionRequest(
         srcStopName = "",
@@ -66,7 +62,6 @@ fun createCoordsToStopRangeRequest(
         destLat = 0.0,
         destLon = 0.0,
         dateTime = dateTime,
-        rangeLength = rangeLength,
         byEarliestDeparture = byEarliestDeparture,
         range = true,
         srcByCoords = true,

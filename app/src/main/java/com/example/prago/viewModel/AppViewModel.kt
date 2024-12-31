@@ -71,6 +71,7 @@ class AppViewModel(
         context: Context
     ){
         updateStartingSearch(true)
+        updateExpandingHalted(false)
 
 
         val startDateTime: LocalDateTime
@@ -91,8 +92,7 @@ class AppViewModel(
                 destStopName = toSearchQuery.value,
                 dateTime = startDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
                 byEarliestDeparture = byEarliestDeparture.value,
-                settings = getSearchSettings(),
-                rangeLength = 15
+                settings = getSearchSettings()
             )
         } else {
             searchRequest = createStopToStopRangeRequest(
@@ -100,8 +100,7 @@ class AppViewModel(
                 destStopName = toSearchQuery.value,
                 dateTime = startDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
                 byEarliestDeparture = byEarliestDeparture.value,
-                settings = getSearchSettings(),
-                rangeLength = 15
+                settings = getSearchSettings()
             )
         }
 
@@ -112,8 +111,8 @@ class AppViewModel(
                         val results = result.results
 
                         updateSearchResultList(results, false)
-                        updateSearchRangeStart(startDateTime)
-                        updateSearchRangeEnd(startDateTime.plusMinutes(15))
+                        //updateSearchRangeStart(startDateTime)
+                        //updateSearchRangeEnd(startDateTime.plusMinutes(15))
 
                         updateNavigateToResults(true)
                     }
@@ -131,17 +130,39 @@ class AppViewModel(
     }
 
 
+    private suspend fun simpleExpand(searchRequest: ConnectionRequest, context: Context, toPast: Boolean){
+        val currentResults = searchResultList.value
+        connectionSearchApi.searchForConnection(searchRequest, context).collect{ newResult ->
+            when(newResult){
+                is ConnectionSearchResultState.Success -> {
+                    val newResults = newResult.results
+                    val combinedResults = combineResultLists(currentResults, newResults, toPast)
+
+                    updateSearchResultList(combinedResults, false)
+                }
+                is ConnectionSearchResultState.Failure -> {
+                    //Log.e("AppViewModel", "Error expanding search: ${result.errorMessage}")
+                }
+            }
+        }
+    }
+
     // Expands the search (either to the past or to the future)
     suspend fun expandSearch(toPast: Boolean, context: Context){
+        if(expandingHalted.value){
+            return
+        }
+
         val rangeStart: LocalDateTime
 
         if(toPast){
             updateExpandingSearchToPast(true)
-            rangeStart = searchRangeStart.value.minusMinutes(15)
+            rangeStart = searchResultList.value.first().arrivalDateTime.minusMinutes(1)
         }else{
             updateExpandingSearchToFuture(true)
-            rangeStart = searchRangeEnd.value
+            rangeStart = searchResultList.value.last().departureDateTime.plusMinutes(1)
         }
+
 
 
         val searchRequest: ConnectionRequest
@@ -152,8 +173,7 @@ class AppViewModel(
                 destStopName = toSearchQuery.value,
                 dateTime = rangeStart.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
                 byEarliestDeparture = byEarliestDeparture.value,
-                settings = getSearchSettings(),
-                rangeLength = 15
+                settings = getSearchSettings()
             )
         } else {
             searchRequest = createStopToStopRangeRequest(
@@ -161,8 +181,7 @@ class AppViewModel(
                 destStopName = toSearchQuery.value,
                 dateTime = rangeStart.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
                 byEarliestDeparture = byEarliestDeparture.value,
-                settings = getSearchSettings(),
-                rangeLength = 15
+                settings = getSearchSettings()
             )
         }
 
@@ -172,16 +191,48 @@ class AppViewModel(
                     is ConnectionSearchResultState.Success -> {
                         val results = result.results
 
+                        val existingResultCount = searchResultList.value.size
+
                         val currentResults = searchResultList.value
                         val combinedResults = combineResultLists(currentResults, results, toPast)
 
                         updateSearchResultList(combinedResults, false)
 
-                        if(toPast){
-                            updateSearchRangeStart(searchRangeStart.value.minusMinutes(15))
-                        } else {
-                            updateSearchRangeEnd(searchRangeEnd.value.plusMinutes(15))
+                        val newResultCount = searchResultList.value.size
+
+                        var expansionTriesCount = 0
+                        var foundNew = false
+                        var currRangeStart = rangeStart
+                        if(newResultCount == existingResultCount){
+                            while(expansionTriesCount++ < 5){
+                                if(toPast){
+                                    currRangeStart = currRangeStart.minusMinutes(15)
+                                }
+                                else{
+                                    currRangeStart = rangeStart.plusMinutes(15)
+                                }
+
+                                val newTimeString = currRangeStart.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))
+
+                                val newSearchRequest = searchRequest.copy(dateTime = newTimeString)
+
+                                simpleExpand(newSearchRequest, context, toPast)
+
+                                val countAfterExpand = searchResultList.value.size
+
+                                if(countAfterExpand > newResultCount){
+                                    foundNew = true
+                                    break
+                                }
+                            }
+
+                            if(!foundNew){
+                                updateExpandingHalted(true)
+                            }
                         }
+
+
+
                     }
                     is ConnectionSearchResultState.Failure -> {
                         Log.e("AppViewModel", "Error expanding search: ${result.errorMessage}")
@@ -547,14 +598,14 @@ class AppViewModel(
 // =================================================================================================
 // SEARCH RESULTS STATE
     // The start of the search range for which we currently have results
-    private val _searchRangeStart = MutableStateFlow(LocalDateTime.now())
-    val searchRangeStart: StateFlow<LocalDateTime> = _searchRangeStart
-    fun updateSearchRangeStart(dateTime: LocalDateTime) { _searchRangeStart.value = dateTime }
+    //private val _searchRangeStart = MutableStateFlow(LocalDateTime.now())
+    //val searchRangeStart: StateFlow<LocalDateTime> = _searchRangeStart
+    //fun updateSearchRangeStart(dateTime: LocalDateTime) { _searchRangeStart.value = dateTime }
 
     // The end of the search range for which we currently have results
-    private val _searchRangeEnd = MutableStateFlow(LocalDateTime.now())
-    val searchRangeEnd: StateFlow<LocalDateTime> = _searchRangeEnd
-    fun updateSearchRangeEnd(dateTime: LocalDateTime) { _searchRangeEnd.value = dateTime }
+    //private val _searchRangeEnd = MutableStateFlow(LocalDateTime.now())
+    //val searchRangeEnd: StateFlow<LocalDateTime> = _searchRangeEnd
+    //fun updateSearchRangeEnd(dateTime: LocalDateTime) { _searchRangeEnd.value = dateTime }
 
     // The list of search results to display
     private val _searchResultList = MutableStateFlow<List<ConnectionSearchResult>>(emptyList())
@@ -593,6 +644,9 @@ class AppViewModel(
         }
     }
 
+    private val _expandingHalted = MutableStateFlow(false)
+    val expandingHalted: StateFlow<Boolean> = _expandingHalted
+    fun updateExpandingHalted(halted: Boolean) { _expandingHalted.value = halted }
 
     // For the given result and trip, updates the current index of the selected trip alternative
     fun updateCurrIndex(result: ConnectionSearchResult, tripIndex: Int, newIndex: Int){

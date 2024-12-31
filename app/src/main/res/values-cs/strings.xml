@@ -51,4 +51,5 @@
     <string name="departure_anytime">Kdykoliv</string>
     <string name="current_location">Moje poloha</string>
     <string name="bike_max_15_min">Na kole max 15 min</string>
+    <string name="no_other_results_msg">Nenalezeny žádné jiné relevantní výsledky. Zkuste změnit parametry vyhledávání.</string>
 </resources>
