@@ -11,11 +11,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Text
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,7 +35,6 @@ import com.example.prago.R
 import com.example.prago.model.dataClasses.searchResult.ConnectionSearchResult
 import com.example.prago.viewModel.AppViewModel
 import kotlinx.coroutines.launch
-import kotlin.math.exp
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -62,11 +61,11 @@ fun  PullToRefreshLazyColumn(
         }
     )
 
-    val canScrollForward by remember {
-        derivedStateOf {
-            lazyListState.canScrollForward
-        }
-    }
+//    val canScrollForward by remember {
+//        derivedStateOf {
+//            lazyListState.canScrollForward
+//        }
+//    }
 
     val firstVisibleItem by remember {
         derivedStateOf {

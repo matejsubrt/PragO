@@ -28,14 +28,14 @@ const val DELAY_UPDATE_ENDPOINT = "/update-delays"
 
 
 class ConnectionSearchApi {
-    private suspend fun sendConnectionRequest(request: ConnectionRequest): Response {
+    private fun sendConnectionRequest(request: ConnectionRequest): Response {
         return khttp.post(
             url = BASE_URL + CONNECTION_SEARCH_ENDPOINT,
             json = request.toJsonObject()
         )
     }
 
-    private suspend fun sendAlternativeTripsRequest(request: AlternativeTripsRequest): Response {
+    private fun sendAlternativeTripsRequest(request: AlternativeTripsRequest): Response {
         return khttp.post(
             url = BASE_URL + ALTERNATIVE_TRIPS_ENDPOINT,
             json = request.toJsonObject()
@@ -43,7 +43,7 @@ class ConnectionSearchApi {
     }
 
     @OptIn(ExperimentalSerializationApi::class)
-    private suspend fun sendDelayUpdateRequest(request: List<ConnectionSearchResult>): Response {
+    private fun sendDelayUpdateRequest(request: List<ConnectionSearchResult>): Response {
         return khttp.post(
             url =  BASE_URL + DELAY_UPDATE_ENDPOINT,
             data = Json.encodeToString(request),
