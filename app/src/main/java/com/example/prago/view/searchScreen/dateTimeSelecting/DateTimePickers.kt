@@ -3,6 +3,7 @@ package com.example.prago.view.searchScreen.dateTimeSelecting
 import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -13,7 +14,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.chargemap.compose.numberpicker.Hours
 import com.example.prago.R
 import com.example.prago.viewModel.AppViewModel
 import java.time.LocalDate
@@ -58,7 +58,7 @@ fun DatePicker(viewModel: AppViewModel, onDateChanged: (LocalDate) -> Unit){
         initialItem = dateMap.keys.first { dateMap[it] == selectedDate },
         textStyle = TextStyle(fontSize = 14.sp),
         textColor = Color.LightGray,
-        selectedTextColor = Color.White,
+        selectedTextColor = MaterialTheme.colorScheme.onSurface,
         onItemSelected = { index, item ->
             val date = dateMap[item] ?: LocalDate.MIN
             Log.i("DEBUG", "Selected date: $date")
@@ -84,7 +84,7 @@ fun TimePicker(viewModel: AppViewModel, onTimeChanged: (LocalTime) -> Unit){
             initialItem = selectedTime.hour,
             textStyle = TextStyle(fontSize = 14.sp),
             textColor = Color.LightGray,
-            selectedTextColor = Color.White,
+            selectedTextColor = MaterialTheme.colorScheme.onSurface,
             onItemSelected = { index, item ->
                 val time = selectedTime.withHour(item)
                 onTimeChanged(time)
@@ -103,7 +103,7 @@ fun TimePicker(viewModel: AppViewModel, onTimeChanged: (LocalTime) -> Unit){
             initialItem = selectedTime.minute / 5 * 5,
             textStyle = TextStyle(fontSize = 14.sp),
             textColor = Color.LightGray,
-            selectedTextColor = Color.White,
+            selectedTextColor = MaterialTheme.colorScheme.onSurface,
             onItemSelected = { index, item ->
                 val time = selectedTime.withMinute(item)
                 onTimeChanged(time)

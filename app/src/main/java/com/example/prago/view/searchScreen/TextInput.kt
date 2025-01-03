@@ -29,19 +29,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.prago.R
 import com.example.prago.view.LocalNavController
-import com.example.prago.ui.theme.Gray33
 
 @Composable
 fun LabelWithTextInput(
     label: String,
     placeholder: String,
     text: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    textFieldColor: Color
 ) {
     Column(modifier = Modifier.padding(vertical = 4.dp)) {
-        Text(text = label, fontWeight = FontWeight.Bold)
+        Text(
+            text = label,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
         Box(
             modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
                 .fillMaxWidth()
                 .height(56.dp)
                 .clickable {
@@ -52,7 +57,7 @@ fun LabelWithTextInput(
                     MaterialTheme.colorScheme.primary,
                     shape = MaterialTheme.shapes.small
                 )
-                .background(Gray33)
+                .background(textFieldColor)
                 .padding(8.dp),
             contentAlignment = Alignment.CenterStart
         ){
@@ -85,7 +90,7 @@ fun TextInput(
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(MaterialTheme.colorScheme.surface)
+            .background(MaterialTheme.colorScheme.primaryContainer)
             .padding(start = 8.dp, top = 0.dp, end = 8.dp, bottom = 4.dp)
     ) {
         Column {
@@ -93,7 +98,8 @@ fun TextInput(
                 label = stringResource(R.string.from) + ":",
                 placeholder = stringResource(R.string.source_stop),
                 text = fromText,
-                onClick = {navController.navigate("fromStopSelect")}
+                onClick = {navController.navigate("fromStopSelect")},
+                textFieldColor = MaterialTheme.colorScheme.secondaryContainer
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -102,7 +108,8 @@ fun TextInput(
                 label = stringResource(R.string.to) + ":",
                 placeholder = stringResource(R.string.destination_stop),
                 text = toText,
-                onClick = {navController.navigate("toStopSelect")}
+                onClick = {navController.navigate("toStopSelect")},
+                textFieldColor = MaterialTheme.colorScheme.secondaryContainer
             )
         }
         Row(

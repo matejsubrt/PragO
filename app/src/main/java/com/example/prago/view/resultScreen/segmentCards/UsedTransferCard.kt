@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.prago.R
 import com.example.prago.model.dataClasses.searchResult.UsedTransfer
+import com.example.prago.ui.theme.Gray112
 import com.example.prago.view.resultScreen.distanceTimeBoxSpacerWidth
 import com.example.prago.view.resultScreen.transferIconSize
 import com.example.prago.view.resultScreen.tripIconSize
@@ -30,7 +30,7 @@ import com.example.prago.view.resultScreen.tripIconSize
 fun UsedTransferCard(transfer: UsedTransfer) {
     Row(
         modifier = Modifier
-            .background(Color(0xFF686868))
+            .background(Gray112)
             .fillMaxWidth()
             .padding(start = 2.dp, top = 2.dp, end = 2.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -45,7 +45,7 @@ fun UsedTransferCard(transfer: UsedTransfer) {
                 modifier = Modifier
                     .size(transferIconSize.dp)
                     .padding(all = 4.dp),
-                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                tint = Color.White
             )
             Spacer(modifier = Modifier.width((tripIconSize.dp - transferIconSize.dp) / 2))
             Text(
@@ -53,7 +53,7 @@ fun UsedTransferCard(transfer: UsedTransfer) {
                 style = TextStyle(
                     fontWeight = FontWeight.Medium
                 ),
-                color = MaterialTheme.colorScheme.onSecondaryContainer
+                color = Color.White
             )
         }
 

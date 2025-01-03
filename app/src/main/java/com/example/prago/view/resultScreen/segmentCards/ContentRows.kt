@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -182,12 +181,12 @@ fun StopRow(stopName: String, time: LocalDateTime){
         Text(
             text = stopName,
             style = stopNameStyle,
-            color = MaterialTheme.colorScheme.onTertiaryContainer
+            color = Color.White
         )
         Text(
             text = formattedTime,
             style = stopNameStyle,
-            color = MaterialTheme.colorScheme.onTertiaryContainer
+            color = Color.White
         )
     }
 }

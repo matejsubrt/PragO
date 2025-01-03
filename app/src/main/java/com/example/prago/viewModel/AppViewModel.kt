@@ -172,7 +172,7 @@ class AppViewModel(
                 srcLon = startCoordinates.value.longitude,
                 destStopName = toSearchQuery.value,
                 dateTime = rangeStart.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
-                byEarliestDeparture = byEarliestDeparture.value,
+                byEarliestDeparture = !toPast,
                 settings = getSearchSettings()
             )
         } else {
@@ -180,7 +180,7 @@ class AppViewModel(
                 srcStopName = fromSearchQuery.value,
                 destStopName = toSearchQuery.value,
                 dateTime = rangeStart.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")),
-                byEarliestDeparture = byEarliestDeparture.value,
+                byEarliestDeparture = !toPast,
                 settings = getSearchSettings()
             )
         }
@@ -336,7 +336,7 @@ class AppViewModel(
         var nonIdenticalNewResults : List<ConnectionSearchResult> = newResults
         if(toPast){
             // Filter out completely identical connections
-            while(currentResults.contains(nonIdenticalNewResults.last())){
+            while(nonIdenticalNewResults.size > 0 && currentResults.contains(nonIdenticalNewResults.last())){
                 nonIdenticalNewResults = nonIdenticalNewResults.dropLast(1)
             }
 

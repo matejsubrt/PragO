@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.prago.R
 import com.example.prago.view.LocalAppViewModel
-//import com.example.prago.activities.LocalSharedViewModel
 import com.example.prago.view.common.SearchTopBar
 import com.example.prago.ui.theme.PragOTheme
 import com.example.prago.view.searchScreen.dateTimeSelecting.DateTimeBottomSheet
@@ -211,7 +210,8 @@ fun Body(){
                     ) {
                         viewModel.saveBikeMax15Minutes(it)
                     }
-                }
+                },
+                backgroundColor = MaterialTheme.colorScheme.primaryContainer
             )
 
 
@@ -230,7 +230,8 @@ fun Body(){
                     .width(256.dp)
                     .height(64.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
                 if(startingSearch){
@@ -242,7 +243,7 @@ fun Body(){
                         text = stringResource(R.string.search),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
 

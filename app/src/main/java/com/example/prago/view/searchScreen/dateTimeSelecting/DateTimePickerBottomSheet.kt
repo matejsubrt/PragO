@@ -1,5 +1,6 @@
 package com.example.prago.view.searchScreen.dateTimeSelecting
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -45,14 +47,15 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 
-fun getLabelFromDate(date: LocalDate): String {
+fun getLabelFromDate(context: Context, date: LocalDate): String {
     val formatter = DateTimeFormatter.ofPattern("E d.M.") // Format: Mo/Tue/... DD.MM.
     return when (date) {
-        LocalDate.now() -> "Today"
-        LocalDate.now().plusDays(1) -> "Tomorrow"
+        LocalDate.now() -> context.getString(R.string.today)
+        LocalDate.now().plusDays(1) -> context.getString(R.string.tomorrow) // Add to strings.xml
         else -> date.format(formatter)
     }
 }
+
 
 fun getLabelFromTime(time: LocalTime): String {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
@@ -141,7 +144,7 @@ fun DateTimeBottomSheet(
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(MaterialTheme.colorScheme.surface)
+            .background(MaterialTheme.colorScheme.primaryContainer)
             .padding(8.dp)
             .height(36.dp)
             .fillMaxSize()
@@ -169,7 +172,7 @@ fun DateTimeBottomSheet(
                 modifier = Modifier
                     .height(24.dp)
                     .padding(start = 4.dp, end = 4.dp),
-                tint = MaterialTheme.colorScheme.onSurface
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -177,12 +180,13 @@ fun DateTimeBottomSheet(
             val text = if(departureNow){
                 stringResource(R.string.now)
             }else{
-                getLabelFromDate(selectedDate) + " " + getLabelFromTime(selectedTime)
+                getLabelFromDate(LocalContext.current, selectedDate) + " " + getLabelFromTime(selectedTime)
             }
             Text(
                 text = text,
                 style = TextStyle(
-                    fontSize = 17.sp
+                    fontSize = 17.sp,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
 
@@ -220,7 +224,7 @@ fun DateTimeBottomSheet(
 
                 ArrivalDepartureButtonPair(byEarliestDeparture, onArrDepChange)
 
-                Spacer(modifier = Modifier.height(60.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
                 Row(
                     horizontalArrangement = Arrangement.Center,
@@ -245,7 +249,7 @@ fun DateTimeBottomSheet(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(60.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -265,13 +269,14 @@ fun DateTimeBottomSheet(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Done",
+                            text = stringResource(R.string.done),
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp
                         )
                     }
                 }
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }

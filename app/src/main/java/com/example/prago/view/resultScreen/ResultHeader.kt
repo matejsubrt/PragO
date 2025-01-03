@@ -151,7 +151,7 @@ fun CountDown(
     ){
         val walkStartSize = if (departedConnectionStart) headerTextSizeSmaller else headerTextSize
         val tripStartSize = if (departedConnectionStart) headerTextSize else headerTextSizeSmaller
-        val walkStartColor = if (departedConnectionStart) Color(0xFFE0E0E0) else MaterialTheme.colorScheme.onBackground
+        val walkStartColor = if (departedConnectionStart) Color(0xFFE0E0E0) else MaterialTheme.colorScheme.onPrimary
         val tripStartColor = if (departedConnectionStart){
             if(departedFirstTrip){
                 Color(0xFFE0E0E0)
@@ -163,7 +163,7 @@ fun CountDown(
                 Log.e("CountDown ERROR", "Impossible for the first trip to be departed, but connection not")
                 Color.Red
             } else {
-                MaterialTheme.colorScheme.onBackground
+                MaterialTheme.colorScheme.onPrimary
             }
         }
 

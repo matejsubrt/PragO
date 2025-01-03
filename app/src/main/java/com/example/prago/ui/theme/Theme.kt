@@ -12,6 +12,25 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
+//private val DarkColorScheme = darkColorScheme(
+//    primary = LightBlue,
+//    onPrimary = Color.White,
+//    secondary = LighterBlue,
+//    onSecondary = Color.White,
+//    tertiary = AccentOrange,
+//    onTertiary = Color.White,
+//    background = Gray47,
+//    onBackground = Color.White,
+//    surface = Gray3D,
+//    onSurface = Color.White,
+//    primaryContainer = Gray70,
+//    onPrimaryContainer = Color.White,
+//    secondaryContainer = Gray7A,
+//    onSecondaryContainer = Color.White,
+//    tertiaryContainer = Color(0xFF585858),
+//    onTertiaryContainer = Color.White
+//)
+
 private val DarkColorScheme = darkColorScheme(
     primary = LightBlue,
     onPrimary = Color.White,
@@ -19,26 +38,35 @@ private val DarkColorScheme = darkColorScheme(
     onSecondary = Color.White,
     tertiary = AccentOrange,
     onTertiary = Color.White,
-    background = Gray47,
+    background = Gray80,
     onBackground = Color.White,
-    surface = Gray3D,
+    surface = Gray112,
     onSurface = Color.White,
-    primaryContainer = Gray70,
+    primaryContainer = Gray64,
     onPrimaryContainer = Color.White,
-    secondaryContainer = Gray7A,
+    secondaryContainer = Gray80,
     onSecondaryContainer = Color.White,
-    tertiaryContainer = Color(0xFF585858),
+    tertiaryContainer = Gray96,
     onTertiaryContainer = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = LightBlue,
-    secondary = Color.White,
-    tertiary = DarkBlue,
-    background = White,
-    surface = Gray08,
+    onPrimary = Color.White,
+    secondary = LighterBlue,
+    onSecondary = Color.White,
+    tertiary = AccentOrange,
+    onTertiary = Color.White,
+    background = Color.White,
     onBackground = Color.Black,
-    onSurface = Color.Black
+    surface = Gray208,
+    onSurface = Color.Black,
+    primaryContainer = Gray224,
+    onPrimaryContainer = Color.Black,
+    secondaryContainer = Gray240,
+    onSecondaryContainer = Color.Black,
+    tertiaryContainer = Gray224,
+    onTertiaryContainer = Color.Black
 )
 
 @Composable

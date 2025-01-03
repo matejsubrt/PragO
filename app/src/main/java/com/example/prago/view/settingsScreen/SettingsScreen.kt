@@ -16,10 +16,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -44,6 +46,7 @@ import com.example.prago.view.LocalAppViewModel
 import com.example.prago.view.LocalNavController
 import com.example.prago.view.common.GoBackTopBar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditableIntSettingRow(
     currentValue: Int,
@@ -99,15 +102,19 @@ fun EditableIntSettingRow(
                     }),
                     modifier = Modifier
                         .weight(1f)
-                        .height(52.dp)
-                        .background(MaterialTheme.colorScheme.background)
+                        .height(52.dp),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        //unfocusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = units,
                     modifier = Modifier.weight(1f),
                     fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
         }
@@ -145,7 +152,7 @@ fun SettingsScreen() {
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Settings",
+                    text = stringResource(id = R.string.settings),
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
                 )
@@ -193,13 +200,14 @@ fun SettingsScreen() {
                     .width(256.dp)
                     .height(72.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
                 AutoResizedText(
                     text = stringResource(R.string.save_and_return),
                     style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }

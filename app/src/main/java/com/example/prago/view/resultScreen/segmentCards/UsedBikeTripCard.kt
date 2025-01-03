@@ -13,17 +13,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.prago.R
 import com.example.prago.model.dataClasses.searchResult.UsedBikeTrip
+import com.example.prago.ui.theme.Gray96
 import com.example.prago.view.resultScreen.distanceTimeBoxSpacerWidth
 import com.example.prago.view.resultScreen.stopNameStyle
 import com.example.prago.view.resultScreen.tripIconSize
@@ -42,7 +43,7 @@ fun UsedBikeTripCard(bikeTrip: UsedBikeTrip) {
 
     Row(
         modifier = Modifier
-            .background(MaterialTheme.colorScheme.tertiaryContainer)
+            .background(Gray96)
             .fillMaxWidth()
             .padding(start = 2.dp, top = 0.dp, end = 2.dp, bottom = 4.dp)
             .clickable {
@@ -56,7 +57,7 @@ fun UsedBikeTripCard(bikeTrip: UsedBikeTrip) {
             modifier = Modifier
                 .size(tripIconSize.dp)
                 .padding(all = 4.dp),
-            tint = MaterialTheme.colorScheme.onTertiaryContainer
+            tint = Color.White
         )
 
         Column(
@@ -74,12 +75,12 @@ fun UsedBikeTripCard(bikeTrip: UsedBikeTrip) {
                     Text(
                         text = bikeTrip.srcStopInfo.name,
                         style = stopNameStyle,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                        color = Color.White
                     )
                     Text(
                         text = bikeTrip.destStopInfo.name,
                         style = stopNameStyle,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                        color = Color.White
                     )
                 }
 

@@ -21,11 +21,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun LabelWithToggleSwitch(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+fun LabelWithToggleSwitch(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(MaterialTheme.colorScheme.surface)
+            .background(MaterialTheme.colorScheme.primaryContainer)
             .padding(start = 8.dp, top = 0.dp, end = 8.dp, bottom = 0.dp)
 
     ){
@@ -37,7 +41,8 @@ fun LabelWithToggleSwitch(label: String, checked: Boolean, onCheckedChange: (Boo
             Text(
                 text = label,
                 fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
+                fontSize = 20.sp,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Switch(
                 checked = checked,

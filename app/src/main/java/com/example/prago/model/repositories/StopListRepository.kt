@@ -96,8 +96,12 @@ class StopListRepository(
     val generatedAt: Flow<LocalDateTime> = stopListDataStore.data
         .take(1)
         .map { value ->
-            value.generatedAt?.let { LocalDateTime.parse(it) }
-                ?: LocalDateTime.MIN
+            if(value.generatedAt == null || value.generatedAt == "") {
+                return@map LocalDateTime.MIN
+            }
+            else{
+                return@map LocalDateTime.parse(value.generatedAt)
+            }
         }
 
 

@@ -72,7 +72,6 @@ fun StopNameSuggestion(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
             .clickable { onClick(stopName) }
             .height(56.dp),
         colors = CardDefaults.cardColors(
@@ -225,7 +224,6 @@ fun StopSearchScreen(
                                     Card(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .background(MaterialTheme.colorScheme.surface)
                                             .clickable {
                                                 handleLocationRequest(
                                                     locationPermissionState = locationPermissionState,
@@ -289,7 +287,7 @@ fun StopSearchScreen(
                 onActiveChange = {},
                 tonalElevation = 0.dp,
                 colors = SearchBarDefaults.colors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }

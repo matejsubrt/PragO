@@ -24,7 +24,7 @@
     <string name="cycling_pace">Tempo na kole</string>
     <string name="bike_unlock_time">Čas na odemčení kola</string>
     <string name="bike_lock_time">Čas na zamčení kola</string>
-    <string name="save_and_return">Uložit a vrátit se</string>
+    <string name="save_and_return">Uložit</string>
     <string name="no_stops_found">Nenalezeny žádné zastávky</string>
     <string name="try_adjusting_your_search">Zkuste pozměnit vyhledávání</string>
     <string name="clear_search">Vyčistit vyhledávní</string>
@@ -52,4 +52,6 @@
     <string name="current_location">Moje poloha</string>
     <string name="bike_max_15_min">Na kole max 15 min</string>
     <string name="no_other_results_msg">Nenalezeny žádné jiné relevantní výsledky. Zkuste změnit parametry vyhledávání.</string>
+    <string name="done">Hotovo</string>
+    <string name="settings">Nastavení</string>
 </resources>

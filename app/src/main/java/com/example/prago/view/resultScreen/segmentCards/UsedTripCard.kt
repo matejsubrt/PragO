@@ -17,11 +17,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.prago.R
 import com.example.prago.model.dataClasses.searchResult.TripAlternatives
 import com.example.prago.model.dataClasses.searchResult.UsedTrip
+import com.example.prago.ui.theme.Gray96
 import com.example.prago.view.resultScreen.tripIconSize
 
 @Composable
@@ -102,7 +104,7 @@ fun UsedTripCard(trip: UsedTrip, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
-            .background(MaterialTheme.colorScheme.tertiaryContainer)
+            .background(Gray96)
             .padding(start = 2.dp, top = 0.dp, end = 2.dp, bottom = 4.dp)
             .fillMaxWidth()
     ) {
@@ -129,7 +131,7 @@ fun UsedTripCard(trip: UsedTrip, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .size(tripIconSize.dp)
                 .padding(all = 4.dp),
-            tint = MaterialTheme.colorScheme.onTertiaryContainer
+            tint = Color.White
         )
         Column(
             modifier = Modifier.padding(start = 4.dp, top = 2.dp, end = 8.dp, bottom = 4.dp)

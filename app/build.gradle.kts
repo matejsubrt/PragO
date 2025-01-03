@@ -35,6 +35,20 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+    applicationVariants.all {
+        this.outputs
+            .map { it as com.android.build.gradle.internal.api.ApkVariantOutputImpl }
+            .forEach { output ->
+                //val variant = this.buildType.name
+                val apkName = "prago-v0.1.0.apk"
+//                var apkName =
+//                    this.flavorName[0].uppercase() + this.flavorName.substring(1) + "_" + this.versionName
+//                if (variant.isNotEmpty()) apkName += "_$variant"
+//                apkName += ".apk"
+//                println("ApkName=$apkName ${this.buildType.name}")
+                output.outputFileName = apkName
+            }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -74,7 +88,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

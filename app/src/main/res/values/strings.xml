@@ -51,4 +51,6 @@
     <string name="current_location">My location</string>
     <string name="bike_max_15_min">Bike max 15 min</string>
     <string name="no_other_results_msg">No other useful results have been found. Try modifying the search parameters.</string>
+    <string name="done">Done</string>
+    <string name="settings">Settings</string>
 </resources>

@@ -49,7 +49,8 @@ fun TopBar(
             Icon(
                 painter = painterResource(id = iconResource),
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                tint = MaterialTheme.colorScheme.onPrimary
             )
         }
         Spacer(modifier = Modifier.width(16.dp))

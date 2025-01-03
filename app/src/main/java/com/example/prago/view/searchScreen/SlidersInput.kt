@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -50,11 +51,15 @@ fun SliderWithLabels(
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surface)
+            .background(MaterialTheme.colorScheme.primaryContainer)
             .padding(start = 8.dp, top = 4.dp, end = 8.dp, bottom = 12.dp)
     ){
         Column(modifier = Modifier) {
-            Text(text = label, fontWeight = FontWeight.Bold)
+            Text(
+                text = label,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
             Slider(
                 value = value,
                 onValueChange = onValueChange,
@@ -65,7 +70,7 @@ fun SliderWithLabels(
                     .height(24.dp),
                 colors = SliderDefaults.colors(
                     activeTrackColor = MaterialTheme.colorScheme.primary,
-                    inactiveTrackColor = MaterialTheme.colorScheme.onSurface,
+                    inactiveTrackColor = Color.White,
                     thumbColor = MaterialTheme.colorScheme.primary
                 )
             )
@@ -88,7 +93,8 @@ fun SliderWithLabels(
                             overflow = TextOverflow.Ellipsis,
                             fontSize = 10.sp,
                             style = TextStyle(
-                                lineHeight = 8.sp
+                                lineHeight = 8.sp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         )
                     }
@@ -161,14 +167,15 @@ fun SlidersBox(
     maxValues: List<Float>,
     labelLists: List<List<String>>,
     useSharedBikes: Boolean,
-    bikeMax15MinSwitch: @Composable () -> Unit
+    bikeMax15MinSwitch: @Composable () -> Unit,
+    backgroundColor: Color
 ){
     var slidersInputVisible by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surface)
+            .background(backgroundColor)
             .padding(start = 8.dp, top = 4.dp, end = 8.dp, bottom = 12.dp)
     ){
         Column(){
@@ -179,7 +186,7 @@ fun SlidersBox(
                     }
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(6.dp))
-                    .background(MaterialTheme.colorScheme.surface)
+                    .background(backgroundColor)
                     .padding(start = 8.dp, top = 0.dp, end = 8.dp, bottom = 4.dp),
                 contentAlignment = Alignment.Center
             ) {
