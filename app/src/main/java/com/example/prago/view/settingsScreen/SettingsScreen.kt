@@ -103,11 +103,19 @@ fun EditableIntSettingRow(
                     modifier = Modifier
                         .weight(1f)
                         .height(52.dp),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        //unfocusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        focusedIndicatorColor = MaterialTheme.colorScheme.primary
                     )
+
+
+//                        .outlinedTextFieldColors(
+//                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+//                        //unfocusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
+//                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+//                    )
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
