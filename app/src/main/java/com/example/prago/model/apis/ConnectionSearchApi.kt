@@ -83,7 +83,7 @@ class ConnectionSearchApi {
     suspend fun searchForConnection(request: ConnectionRequest, context: Context): Flow<ConnectionSearchResultState> = flow {
         val response = sendConnectionRequest(request)
 
-        Log.i("DEBUG", "Request time: ${request.dateTime}")
+        Log.i("DEBUG", "Request time: ${request.dateTime}, byEarliestDeparture: ${request.byEarliestDeparture}")
 
         when (response.statusCode) {
             200 -> {

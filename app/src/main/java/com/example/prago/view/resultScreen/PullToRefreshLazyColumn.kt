@@ -1,5 +1,6 @@
 package com.example.prago.view.resultScreen
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -91,7 +92,8 @@ fun  PullToRefreshLazyColumn(
     LaunchedEffect(firstVisibleItem, isLoading, items) {
         if((!isLoading && !isExpandingToFuture) || items.size < 5){
             val itemsAfterFirstVisible = items.size - firstVisibleItem
-            if(itemsAfterFirstVisible < 5){
+            if(itemsAfterFirstVisible < 8){
+                Log.i("DEBUG", "Expanding to past, itemsAfterFirstVisible: $itemsAfterFirstVisible")
                 isLoading = true
                 onRefresh(false)
                 isLoading = false

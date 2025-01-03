@@ -121,7 +121,7 @@ fun TextInput(
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
-                    .offset(x = 0.dp, y = 92.dp)
+                    .offset(x = 0.dp, y = 88.dp)
                     .size(32.dp)
                     .clickable(onClick = onDirectionSwitch)
             )
