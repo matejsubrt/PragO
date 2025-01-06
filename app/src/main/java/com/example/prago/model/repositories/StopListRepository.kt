@@ -77,7 +77,7 @@ data class StopEntry(val czechName: String, val normalizedName: String, val id: 
 
 fun normalizeCzech(input: String): String {
     val normalized = Normalizer.normalize(input, Normalizer.Form.NFD)
-    return normalized.replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
+    return normalized.replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "").lowercase()
 }
 
 class StopListRepository(

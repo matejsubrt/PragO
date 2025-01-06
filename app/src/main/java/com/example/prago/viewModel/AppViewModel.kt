@@ -735,31 +735,12 @@ class AppViewModel(
             .replace("\\p{Mn}+".toRegex(), "")
             .lowercase()
     }
-//    private fun getStopSuggestions(query: String, stopNames: List<StopEntry>): List<StopEntry> {
-//        val queryParts = query.trim().split("\\s+".toRegex()).map { it.trim() }
-//        val matchedStops = stopNames.filter { stopName ->
-//            val nameParts = splitNormalizedWords(stopName.normalizedName)
-//            nameParts.windowed(queryParts.size).any { window ->
-//                queryParts.indices.all { index ->
-//                    window[index].startsWith(queryParts[index], ignoreCase = true)
-//                }
-//            }
-//        }
-//        val firstWordMatches = matchedStops.filter { stopName ->
-//            val nameParts = splitNormalizedWords(stopName.normalizedName)
-//            nameParts.firstOrNull()?.startsWith(queryParts.first(), ignoreCase = true) == true
-//        }
-//        val otherMatches = matchedStops.filterNot { stopName ->
-//            val nameParts = splitNormalizedWords(stopName.normalizedName)
-//            nameParts.firstOrNull()?.startsWith(queryParts.first(), ignoreCase = true) == true
-//        }
-//        return (firstWordMatches + otherMatches).take(16)
-//    }
 
     private fun getStopSuggestions(query: String, stopNames: List<StopEntry>): List<StopEntry> {
         val queryParts = query.trim().split("\\s+".toRegex()).map { normalizeString(it) }
         val matchedStops = stopNames.filter { stopName ->
-            val nameParts = splitNormalizedWords(normalizeString(stopName.normalizedName))
+            //val nameParts = splitNormalizedWords(normalizeString(stopName.normalizedName))
+            val nameParts = splitNormalizedWords(stopName.normalizedName)
             nameParts.windowed(queryParts.size).any { window ->
                 queryParts.indices.all { index ->
                     window[index].startsWith(queryParts[index], ignoreCase = true)
@@ -767,11 +748,13 @@ class AppViewModel(
             }
         }
         val firstWordMatches = matchedStops.filter { stopName ->
-            val nameParts = splitNormalizedWords(normalizeString(stopName.normalizedName))
+            //val nameParts = splitNormalizedWords(normalizeString(stopName.normalizedName))
+            val nameParts = splitNormalizedWords(stopName.normalizedName)
             nameParts.firstOrNull()?.startsWith(queryParts.first(), ignoreCase = true) == true
         }
         val otherMatches = matchedStops.filterNot { stopName ->
-            val nameParts = splitNormalizedWords(normalizeString(stopName.normalizedName))
+            //val nameParts = splitNormalizedWords(normalizeString(stopName.normalizedName))
+            val nameParts = splitNormalizedWords(stopName.normalizedName)
             nameParts.firstOrNull()?.startsWith(queryParts.first(), ignoreCase = true) == true
         }
         return (firstWordMatches + otherMatches).take(16)
