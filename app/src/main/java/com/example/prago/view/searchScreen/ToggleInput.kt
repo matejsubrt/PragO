@@ -49,7 +49,7 @@ fun LabelWithToggleSwitch(
                 onCheckedChange = onCheckedChange,
                 colors = SwitchDefaults.colors(
                     uncheckedThumbColor = Color.Gray,
-                    uncheckedTrackColor = Color.Black,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.background,
                     checkedThumbColor = Color.White,
                     checkedTrackColor = MaterialTheme.colorScheme.primary
                 )

@@ -258,7 +258,7 @@ fun DateTimeBottomSheet(
                     Spacer(modifier = Modifier.weight(1f))
                     Box(
                         modifier = Modifier
-                            .size(60.dp, 40.dp)
+                            .size(80.dp, 40.dp)
                             .clickable(
                                 onClick = {
                                     scope.launch {

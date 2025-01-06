@@ -209,7 +209,7 @@ fun CountDown(
             }
         } else {
             val fontWeight = if (departedFirstTrip) FontWeight.Normal else FontWeight.Bold
-            val color = if (departedFirstTrip) Color(0xFFE0E0E0) else MaterialTheme.colorScheme.onBackground
+            val color = if (departedFirstTrip) Color(0xFFE0E0E0) else MaterialTheme.colorScheme.onPrimary
 
             IconCountDownBlock(
                 size = headerTextSize,
