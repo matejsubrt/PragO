@@ -1,0 +1,281 @@
+Test Case 1: Search for Connection by Stop Names
+Requirement: R1
+Preconditions:
+- Application is installed and running.
+- User selects a source and destination stop name of any 2 stops within the PID network.
+Test Steps:
+1. Open the application.
+2. Enter the source stop name into the "Source stop" text box.
+3. Enter the destination stop name into the "Destination stop" text box.
+4. Click search.
+Expected Result:
+Any of the following:
+- A list of public transit connections between the two stops is displayed. The connections are ordered by ascending departure time. No 2 connections are the same. The source and destination stops of all displayed connections correspond to those selected.
+- The connection could not be found and an error message was displayed.
+And:
+- Upon clicking the "Back" button, the displayed source and destination stops correspond to those entered before.
+
+Test Case 2: Search for Connection by Current Location
+Requirement: R2
+Preconditions:
+- Device location services are enabled and the app has been granted bermissions to access location.
+- User is within 750m of a stop of the PID network.
+- User selects a destination stop name of a stop within the PID network.
+Test Steps:
+1. Open the application.
+2. Click the "Source stop" textbox.
+3. Select "My location"
+4. Click on the "Destination stop" textbox.
+5. Enter the destination stop name.
+6. Click search.
+Expected Result:
+Any of the following:
+- A list of public transit connections starting at the user's location is displayed. The connections are ordered by ascending departure time. No 2 connections are the same. The source is displayed as being the user's location and the destination stops of all displayed connections correspond to the one selected.
+- The connection could not be found and an error message was displayed.
+
+Test Case 3.1: Search by Departure Time
+Requirement: R3
+Preconditions:
+- Source and destination stop names have been entered (see TC1 and TC2). There exists a connection between these 2 stops (use TC1 to test this).
+- User selects a time (that is on the date they are performing the test).
+Test Steps:
+1. Click the time selecting bar
+2. Select the desired time by using the time selecting wheel.
+3. Click the "Departure" button.
+4. Click "Done".
+5. Click "Search".
+Expected Result:
+- Results are displayed, they are ordered by ascending departure time, the first displayed connection departs after the selected time.
+
+Test Case 3.2: Search by DArrival Time
+Requirement: R3
+Preconditions:
+- Source and destination stop names have been entered (see TC1 and TC2). There exists a connection between these 2 stops (use TC1 to test this).
+- User selects a time (that is on the date they are performing the test).
+Test Steps:
+1. Click the time selecting bar
+2. Select the desired time by using the time selecting wheel.
+3. Click the "Arrival" button.
+4. Click "Done".
+5. Click "Search".
+Expected Result:
+- Results are displayed, they are ordered by ascending departure time, the first displayed connection arrives before the selected time.
+
+Test Case 4: Adjust Walking Pace
+Requirement: R4
+Preconditions:
+- Source and destination stop names have been entered (see TC1 and TC2). There exists a connection between these 2 stops (use TC1 to test this). No direct line connects these 2 stops.
+Test Steps:
+1. Navigate to settings screen.
+2. Set a custom walking pace to 10.
+3. Return to search screen.
+4. Click search.
+5. Return to search screen.
+6. Navigate to settings screen.
+7. Set a custom walking pace to 20.
+8. Return to search screen.
+9. Click search.
+Expected Result:
+- In both searches, results reflect the updated walking pace - for every transfer, the displayed duration equals the displayed distance multiplied by the pace.
+
+Test Case 5: Set Transfer Buffer
+Requirement: R5
+Preconditions:
+- Source and destination stop names have been entered (see TC1 and TC2). There exists a connection between these 2 stops (use TC1 to test this). No direct line connects these 2 stops.
+Test Steps (Perform 3 times for the "Short", "Normal" and "Long" values):
+1. Open extended settings.
+2. Set transfer buffer to one of the values.
+3. Click "Search".
+Expected Result:
+- When searched with higher buffer values, the connections either are different, or the transfer times have been lengthened accordingly
+
+
+Test Case 6: Set Maximum Transfer Distance
+Requirement: R6
+Preconditions:
+- Source and destination stop names have been entered (see TC1 and TC2). There exists a connection between these 2 stops (use TC1 to test this). No direct line connects these 2 stops.
+Test Steps (Perform 3 times for all the max transfer distance values):
+1. Open extended settings.
+2. Set a maximum transfer distance to one of the slider values.
+3. Click "Search".
+Expected Result:
+- Every displayed transfer is shorter than the maximum allowed distance.
+
+Test Case 7: Set Comfort balance
+Requirement: R7
+Preconditions:
+- Source and destination stop names have been entered (see TC1 and TC2). There exists a connection between these 2 stops (use TC1 to test this). No direct line connects these 2 stops.
+Test Steps (Perform 4 times for all comfort balance setting values):
+1. Open extended settings.
+2. Set the comfort balance to the desired value.
+3. Click "Search"
+Expected Result:
+- If for 2 different comfort balance values two connections start or end with the same trip (same line and time), the one with higher comfort preference has the same or lower number of transfers.
+
+
+Test Case 8: Include Shared Bikes in Results
+Requirement: R8
+Preconditions:
+- There are currently bikes available in the bike stations near the "Kuchyňka" stop. (Check using nextbike application).
+Test Steps:
+1. Open the application.
+2. Navigate to settings screen.
+3. Set the cycling pace to 2.
+4. Return to search screen.
+5. Set the source station to "Kuchyňka".
+6. Set the destination station to "Palmovka".
+7. Set the departure time to 22:00.
+8. Set "Use shared bikes" to true.
+9. Click Search.
+Expected Result:
+- Results include options utilizing shared bikes.
+
+Test Case 9: Set bike time to max 15 minutes
+Requirement: R9
+Preconditions:
+- There are currently bikes available in the bike stations near the "Kuchyňka" stop. (Check using nextbike application).
+Test Steps:
+1. Open the application.
+2. Navigate to settings screen.
+3. Set the cycling pace to 2.
+4. Return to search screen.
+5. Set the source station to "Kuchyňka".
+6. Set the destination station to "Sibiřské náměstí".
+7. Set the departure time to 22:00.
+8. Set "Use shared bikes" to true.
+9. Open extended settings.
+10. Set "Bike max 15 min" to true.
+11. Click Search.
+Expected Result:
+- None of the displayed bike trips has duration longer than 15 minutes.
+
+
+Test Case 10: Set cycling pace
+Requirement: R10
+Preconditions:
+- There are currently bikes available in the bike stations near the "Kuchyňka" stop. (Check using nextbike application).
+Test Steps:
+1. Open the application.
+2. Navigate to settings screen.
+3. Set the cycling pace to 2.
+4. Return to search screen.
+5. Set the source station to "Kuchyňka".
+6. Set the destination station to "Palmovka".
+7. Set the departure time to 22:00.
+8. Set "Use shared bikes" to true.
+9. Open extended settings.
+10. Set "Bike max 15 min" to false.
+11. Click Search.
+12. Repeat with setting cycling pace to 10
+Expected Result:
+- All bike trips' durations have been changed accordingly.
+
+Test Case 11: Set Bike Trip Buffer
+Requirement: R11
+Preconditions:
+- There are currently bikes available in the bike stations near the "Kuchyňka" stop. (Check using nextbike application).
+Test Steps (Perform 3 times for the "Short", "Normal" and "Long" values):
+1. Open extended settings.
+2. Set transfer buffer to one of the values.
+3. Set the source station to "Kuchyňka".
+4. Set the destination station to "Palmovka".
+5. Click "Search".
+Expected Result:
+- When searched with higher buffer values, the connections either are different, or the bike trip times have been lengthened accordingly
+
+Test Case 12: Set Bike Trip Buffer
+Requirement: R12
+Preconditions:
+- There are currently bikes available in the bike stations near the "Kuchyňka" stop. (Check using nextbike application).
+Test Steps (Perform 2 times with times (1, 1) and (30, 30)):
+1. Open the application.
+2. Navigate to settings screen.
+3. Set the bike lock and unlock times.
+4. Navigate back to search screen.
+5. Ensure "use shared bikes" is set to true.
+6. Set the source station to "Kuchyňka".
+7. Set the destination station to "Palmovka".
+8. Click "Search".
+Expected Result:
+- The bike trips displayed with the higher setting are longer by 29 seconds.
+
+Test Case 13: Display Number of Free Bikes
+Requirement: R13
+Test Steps:
+1. Perform a search that includes shared bikes.
+2. View the results involving shared bike trips.
+Expected Result:
+- Each bike trip result displays the correct number of free bikes at the source station. This can be confirmed by using the nextbike app.
+
+Test Case 14: Search from near stops
+Requirement: R14
+Test Steps:
+1. Open the application.
+2. Set the source stop name to "Radimova".
+3. Set the destination stop to "Hradčanská".
+4. Set the time to departure, 22:00.
+5. Click "Search".
+Expected Result:
+Connections beginning with a transfer to a different stop are present.
+
+Test Case 15: Stop name suggestions
+Requirement: R15
+Test Steps:
+1. Open the application.
+2. Click on the "Source stop" textbox.
+3. Type in "malo nam"
+Expected Results:
+Suggestions matching the query have been displayed, including "Malostranské náměstí".
+
+Test Case 16: Exact times
+Requirement: R16
+Test Steps:
+1. Open the application.
+2. Run any search that will have results.
+Expected Results:
+All displayed public transit trips display their departure and arrival times exactly in seconds.
+
+Test Case 17: Exact times
+Requirement: R17
+Test Steps:
+1. Open the application.
+2. Run any search that will have results.
+Expected Results:
+Multiple different valid results are displayed.
+
+Test Case 18.1: Alternative trips
+Requirement: R18
+Test Steps:
+1. Open the application.
+2. Run any search that will have results containing public transit trips.
+3. Swipe right on any trip.
+Expected Results:
+A later trip from the same source to the same destination is displayed.
+
+Test Case 18.2: Alternative trips
+Requirement: R18
+Test Steps:
+1. Open the application.
+2. Run any search that will have results containing public transit trips.
+3. Swipe left on any trip.
+Expected Results:
+An earlier trip from the same source to the same destination is displayed.
+
+Test Case 19: Show Countdown Timers
+Requirement: R19
+Preconditions:
+- Search results include connections starting shortly.
+Test Steps:
+1. Perform a connection search.
+2. View details of a connection starting soon.
+Expected Result:
+- Countdown timers for walking start and trip departure are displayed.
+
+Test Case 20: Delays displayed
+Requirement: R20
+Test Steps:
+1. Open the application.
+2. Ensure the time is set to departure now.
+3. Run any search that will have results.
+Expected Results:
+Trips that are currently underway have delay information displayed.
