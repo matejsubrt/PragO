@@ -150,7 +150,7 @@ class AppViewModel(
 
     // Expands the search (either to the past or to the future)
     suspend fun expandSearch(toPast: Boolean, context: Context){
-        if(expandingHalted.value){
+        if(expandingHalted.value || searchResultList.value.isEmpty()){
             return
         }
 
@@ -589,7 +589,7 @@ class AppViewModel(
             bikeLockTime = bikeLockTime.value,
             useSharedBikes = useSharedBikes.value,
             bikeMax15Minutes = bikeMax15Minutes.value,
-            transferTime = transferBuffer.value.toInt(),
+            transferBuffer = transferBuffer.value.toInt(),
             comfortBalance = timeComfortBalance.value.toInt(),
             walkingPreference = transferLength.value.toInt(),
             bikeTripBuffer = bikeTripBuffer.value.toInt()

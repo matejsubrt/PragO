@@ -9,7 +9,7 @@ data class SearchSettings(
     @JsonName("BikeLockTime") val bikeLockTime: Int,
     @JsonName("UseSharedBikes") val useSharedBikes: Boolean,
     @JsonName("BikeMax15Minutes") val bikeMax15Minutes: Boolean,
-    @JsonName("TransferTime") val transferTime: Int,
+    @JsonName("TransferBuffer") val transferBuffer: Int,
     @JsonName("ComfortBalance") val comfortBalance: Int,
     @JsonName("WalkingPreference") val walkingPreference: Int,
     @JsonName("BikeTripBuffer") val bikeTripBuffer: Int
