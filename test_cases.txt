@@ -18,7 +18,7 @@ And:
 Test Case 2: Search for Connection by Current Location
 Requirement: R2
 Preconditions:
-- Device location services are enabled and the app has been granted bermissions to access location.
+- Device location services are enabled and the app has been granted permissions to access location.
 - User is within 750m of a stop of the PID network.
 - User selects a destination stop name of a stop within the PID network.
 Test Steps:
@@ -47,7 +47,7 @@ Test Steps:
 Expected Result:
 - Results are displayed, they are ordered by ascending departure time, the first displayed connection departs after the selected time.
 
-Test Case 3.2: Search by DArrival Time
+Test Case 3.2: Search by Arrival Time
 Requirement: R3
 Preconditions:
 - Source and destination stop names have been entered (see TC1 and TC2). There exists a connection between these 2 stops (use TC1 to test this).
@@ -183,7 +183,7 @@ Test Steps (Perform 3 times for the "Short", "Normal" and "Long" values):
 Expected Result:
 - When searched with higher buffer values, the connections either are different, or the bike trip times have been lengthened accordingly
 
-Test Case 12: Set Bike Trip Buffer
+Test Case 12: Set Bike Lock and Unlock times
 Requirement: R12
 Preconditions:
 - There are currently bikes available in the bike stations near the "Kuchyňka" stop. (Check using nextbike application).
@@ -235,7 +235,7 @@ Test Steps:
 Expected Results:
 All displayed public transit trips display their departure and arrival times exactly in seconds.
 
-Test Case 17: Exact times
+Test Case 17: Multiple results to select from
 Requirement: R17
 Test Steps:
 1. Open the application.
